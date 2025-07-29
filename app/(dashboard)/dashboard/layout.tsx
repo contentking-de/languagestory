@@ -4,7 +4,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight } from 'lucide-react';
+import { 
+  Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight,
+  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School
+} from 'lucide-react';
 
 interface NavItem {
   href: string;
@@ -20,9 +23,29 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>(['/dashboard']); // Team expanded by default
+  const [expandedItems, setExpandedItems] = useState<string[]>(['/dashboard/content']); // Content expanded by default
 
   const navItems: NavItem[] = [
+    { 
+      href: '/dashboard/content', 
+      icon: BookOpen, 
+      label: 'Content',
+      subItems: [
+        { href: '/dashboard/content/courses', icon: GraduationCap, label: 'Courses' },
+        { href: '/dashboard/content/lessons', icon: BookOpen, label: 'Lessons' },
+        { href: '/dashboard/content/quizzes', icon: FileQuestion, label: 'Quizzes' },
+        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' }
+      ]
+    },
+    { 
+      href: '/dashboard/institutions', 
+      icon: Building2, 
+      label: 'Institutions',
+      subItems: [
+        { href: '/dashboard/institutions/schools', icon: School, label: 'Schools' },
+        { href: '/dashboard/institutions/analytics', icon: BarChart3, label: 'Analytics' }
+      ]
+    },
     { 
       href: '/dashboard', 
       icon: Users, 

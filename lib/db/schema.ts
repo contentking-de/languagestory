@@ -297,3 +297,6 @@ export const LANGUAGE_PERMISSIONS = {
   student: ['french', 'german', 'spanish'], // Enrolled languages
   member: ['french', 'german', 'spanish'], // Individual subscription
 } as const;
+
+// Export content management schema for comprehensive content system
+export * from './content-schema';
