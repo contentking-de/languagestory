@@ -1,8 +1,28 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CreditCard, Database } from 'lucide-react';
+import { 
+  ArrowRight, 
+  BookOpen, 
+  Headphones, 
+  Users, 
+  GraduationCap,
+  Heart,
+  Languages,
+  Flag,
+  Volume2,
+  Trophy,
+  GamepadIcon,
+  BarChart3,
+  Download,
+  UserCircle
+} from 'lucide-react';
 import { Terminal } from './terminal';
+import { useState } from 'react';
 
 export default function HomePage() {
+  const [activeTab, setActiveTab] = useState('school');
+
   return (
     <main>
       <section className="py-20">
@@ -10,25 +30,22 @@ export default function HomePage() {
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
               <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-5xl md:text-6xl">
-                Build Your SaaS
-                <span className="block text-orange-500">Faster Than Ever</span>
+                Language Learning with
+                <span className="block text-orange-500">Short Stories</span>
               </h1>
               <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
-                Launch your SaaS product in record time with our powerful,
-                ready-to-use template. Packed with modern technologies and
-                essential integrations.
+                Master French, German, and Spanish through engaging stories with audio, 
+                comprehension exercises, and cultural insights. Perfect for beginner to 
+                intermediate learners who love reading and discovery.
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
-                <a
-                  href="https://vercel.com/templates/next.js/next-js-saas-starter"
-                  target="_blank"
-                >
+                <a href="/pricing">
                   <Button
                     size="lg"
                     variant="outline"
                     className="text-lg rounded-full"
                   >
-                    Deploy your own
+                    Start Your Journey
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </a>
@@ -46,53 +63,399 @@ export default function HomePage() {
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             <div>
               <div className="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white">
-                <svg viewBox="0 0 24 24" className="h-6 w-6">
-                  <path
-                    fill="currentColor"
-                    d="M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z"
-                  />
-                </svg>
+                <BookOpen className="h-6 w-6" />
               </div>
               <div className="mt-5">
                 <h2 className="text-lg font-medium text-gray-900">
-                  Next.js and React
+                  Story-Based Learning
                 </h2>
                 <p className="mt-2 text-base text-gray-500">
-                  Leverage the power of modern web technologies for optimal
-                  performance and developer experience.
+                  Learn through captivating short stories featuring memorable characters 
+                  and authentic cultural contexts from France, Germany, and Spain.
                 </p>
               </div>
             </div>
 
             <div className="mt-10 lg:mt-0">
               <div className="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white">
-                <Database className="h-6 w-6" />
+                <Users className="h-6 w-6" />
               </div>
               <div className="mt-5">
                 <h2 className="text-lg font-medium text-gray-900">
-                  Postgres and Drizzle ORM
+                  Four Skills Development
                 </h2>
                 <p className="mt-2 text-base text-gray-500">
-                  Robust database solution with an intuitive ORM for efficient
-                  data management and scalability.
+                  Practice reading, listening, writing, and speaking skills through 
+                  comprehensive exercises that build on each story's content.
                 </p>
               </div>
             </div>
 
             <div className="mt-10 lg:mt-0">
               <div className="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white">
-                <CreditCard className="h-6 w-6" />
+                <Headphones className="h-6 w-6" />
               </div>
               <div className="mt-5">
                 <h2 className="text-lg font-medium text-gray-900">
-                  Stripe Integration
+                  Audio & Comprehension
                 </h2>
                 <p className="mt-2 text-base text-gray-500">
-                  Seamless payment processing and subscription management with
-                  industry-leading Stripe integration.
+                  Listen to native speaker audio recordings and complete interactive 
+                  comprehension exercises to reinforce your learning.
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Languages Section */}
+      <section className="py-16 bg-orange-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
+              Learn Through Engaging Stories
+            </h2>
+            <p className="text-lg text-gray-600 mb-12 max-w-3xl mx-auto">
+              Master French, German, and Spanish with our collection of original short stories. 
+              Each story includes audio, comprehension exercises, and cultural insights.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Flag className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">French</h3>
+              <p className="text-gray-600">
+                Discover French culture through engaging stories set in Paris, Provence, and beyond. 
+                Learn authentic expressions and cultural nuances.
+              </p>
+            </div>
+            <div className="text-center bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Flag className="h-8 w-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">German</h3>
+              <p className="text-gray-600">
+                Explore German traditions and landmarks through captivating narratives. 
+                Master complex grammar in context with memorable characters.
+              </p>
+            </div>
+            <div className="text-center bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Flag className="h-8 w-8 text-yellow-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Spanish</h3>
+              <p className="text-gray-600">
+                Journey through Spanish-speaking countries and their rich cultures. 
+                Build vocabulary naturally through immersive storytelling.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Target Audiences Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
+              Perfect for Every Learning Journey
+            </h2>
+            <p className="mt-4 text-lg text-gray-600">
+              Whether you're learning independently, teaching others, or supporting a child's education
+            </p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <UserCircle className="h-10 w-10 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Individual Learners</h3>
+              <ul className="text-gray-600 space-y-2">
+                <li>• Build on your basic language level</li>
+                <li>• Check answers as you progress</li>
+                <li>• New grammar & vocabulary in each story</li>
+                <li>• Self-paced learning experience</li>
+              </ul>
+            </div>
+            <div className="text-center">
+              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <GraduationCap className="h-10 w-10 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Teachers & Tutors</h3>
+              <ul className="text-gray-600 space-y-2">
+                <li>• Motivate students with original stories</li>
+                <li>• Develop all four language skills</li>
+                <li>• Access cultural information resources</li>
+                <li>• Track student progress</li>
+              </ul>
+            </div>
+            <div className="text-center">
+              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Heart className="h-10 w-10 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Parents & Carers</h3>
+              <ul className="text-gray-600 space-y-2">
+                <li>• Support your child's language learning</li>
+                <li>• Monitor progress through activities</li>
+                <li>• Learn cultural facts together</li>
+                <li>• Encourage reading enjoyment</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Key Features Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
+              Everything You Need to Succeed
+            </h2>
+            <p className="mt-4 text-lg text-gray-600">
+              Comprehensive learning resources designed for beginner to intermediate levels
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <BookOpen className="h-6 w-6 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Original Stories</h3>
+              <p className="text-gray-600">Over 10 engaging stories for each language with memorable characters and authentic cultural contexts.</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <Volume2 className="h-6 w-6 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Audio Content</h3>
+              <p className="text-gray-600">Professional native speaker recordings for pronunciation practice and listening comprehension.</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <Languages className="h-6 w-6 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Cultural Insights</h3>
+              <p className="text-gray-600">Discover traditions, landmarks, and cultural facts about France, Germany, and Spain.</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <GamepadIcon className="h-6 w-6 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Interactive Games</h3>
+              <p className="text-gray-600">Fun vocabulary games and comprehension exercises to reinforce learning and track progress.</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <BarChart3 className="h-6 w-6 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Progress Tracking</h3>
+              <p className="text-gray-600">Monitor learning progress with detailed reports and achievements for students and teachers.</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <Download className="h-6 w-6 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Resources</h3>
+              <p className="text-gray-600">Access teaching materials, vocabulary lists, and sample stories to enhance your learning experience.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
+              Choose Your Learning Plan
+            </h2>
+            <p className="mt-4 text-lg text-gray-600">
+              Access to all short stories and teaching resources across all three languages
+            </p>
+          </div>
+
+          {/* Tab Buttons */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-gray-100 p-1 rounded-lg">
+              <button 
+                className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                  activeTab === 'school' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                onClick={() => setActiveTab('school')}
+              >
+                School Plans
+              </button>
+              <button 
+                className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                  activeTab === 'individual' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                onClick={() => setActiveTab('individual')}
+              >
+                Individual Plans
+              </button>
+            </div>
+          </div>
+
+          {/* School Plans */}
+          {activeTab === 'school' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            {/* All Access Pass */}
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-6 text-white relative">
+              <div className="absolute top-0 right-0 bg-yellow-400 text-orange-900 px-3 py-1 rounded-bl-lg rounded-tr-lg text-sm font-bold">
+                POPULAR
+              </div>
+              <h3 className="text-xl font-bold mb-2">All Access Pass</h3>
+              <div className="mb-4">
+                <span className="text-3xl font-bold">£199.99</span>
+                <span className="text-orange-100"> / year</span>
+              </div>
+              <ul className="space-y-2 mb-6 text-orange-100">
+                <li>• One Year Subscription</li>
+                <li>• 900 seats for students & staff</li>
+                <li>• Students logins</li>
+                <li>• All stories and resources</li>
+              </ul>
+              <button className="w-full bg-white text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
+                Subscribe Now
+              </button>
+            </div>
+
+            {/* German Plan */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">German</h3>
+              <div className="mb-4">
+                <span className="text-3xl font-bold text-gray-900">£79.99</span>
+                <span className="text-gray-500"> / year</span>
+              </div>
+              <ul className="space-y-2 mb-6 text-gray-600">
+                <li>• One year subscription</li>
+                <li>• 900 seats for students & staff</li>
+                <li>• Student logins</li>
+                <li>• German stories & resources</li>
+              </ul>
+              <button className="w-full border-2 border-orange-500 text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
+                Subscribe Now
+              </button>
+            </div>
+
+            {/* French Plan */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">French</h3>
+              <div className="mb-4">
+                <span className="text-3xl font-bold text-gray-900">£79.99</span>
+                <span className="text-gray-500"> / year</span>
+              </div>
+              <ul className="space-y-2 mb-6 text-gray-600">
+                <li>• One Year Subscription</li>
+                <li>• 900 seats for students & staff</li>
+                <li>• Student logins</li>
+                <li>• French stories & resources</li>
+              </ul>
+              <button className="w-full border-2 border-orange-500 text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
+                Subscribe Now
+              </button>
+            </div>
+
+            {/* Spanish Plan */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Spanish</h3>
+              <div className="mb-4">
+                <span className="text-3xl font-bold text-gray-900">£79.99</span>
+                <span className="text-gray-500"> / year</span>
+              </div>
+              <ul className="space-y-2 mb-6 text-gray-600">
+                <li>• One year subscription</li>
+                <li>• 900 seats for students & staff</li>
+                <li>• Student logins</li>
+                <li>• Spanish stories & resources</li>
+              </ul>
+              <button className="w-full border-2 border-orange-500 text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
+                Subscribe Now
+              </button>
+            </div>
+          </div>
+          )}
+
+          {/* Individual Plans */}
+          {activeTab === 'individual' && (
+          <div className="mb-16">
+            <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">Individual Membership Plans</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              
+              {/* Monthly Plan */}
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Monthly</h3>
+                <div className="mb-4">
+                  <span className="text-3xl font-bold text-gray-900">£7.99</span>
+                  <span className="text-gray-500"> / 30 Days</span>
+                </div>
+                <ul className="space-y-2 mb-6 text-gray-600">
+                  <li>• Access for 30 Days</li>
+                  <li>• Valid for single user</li>
+                  <li>• Access to stories, games and quizzes</li>
+                </ul>
+                <button className="w-full border-2 border-orange-500 text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
+                  Choose Your Course
+                </button>
+              </div>
+
+              {/* Quarterly Plan */}
+              <div className="bg-white border-2 border-orange-300 rounded-lg p-6 relative">
+                <div className="absolute top-0 right-0 bg-orange-500 text-white px-3 py-1 rounded-bl-lg rounded-tr-lg text-sm font-bold">
+                  BEST VALUE
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Quarterly</h3>
+                <div className="mb-4">
+                  <span className="text-3xl font-bold text-gray-900">£19.99</span>
+                  <span className="text-gray-500"> / 3 Months</span>
+                </div>
+                <ul className="space-y-2 mb-6 text-gray-600">
+                  <li>• Access for 3 Months</li>
+                  <li>• Valid for single user</li>
+                  <li>• Access to stories, games and quizzes</li>
+                </ul>
+                <button className="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors">
+                  Choose Your Course
+                </button>
+              </div>
+
+              {/* Annual Plan */}
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Annually</h3>
+                <div className="mb-4">
+                  <span className="text-3xl font-bold text-gray-900">£49.99</span>
+                  <span className="text-gray-500"> / year</span>
+                </div>
+                <ul className="space-y-2 mb-6 text-gray-600">
+                  <li>• Access for 1 Year</li>
+                  <li>• Valid for single user</li>
+                  <li>• Access to stories, games and quizzes</li>
+                </ul>
+                <button className="w-full border-2 border-orange-500 text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
+                  Choose Your Course
+                </button>
+              </div>
+            </div>
+          </div>
+          )}
+
+          {/* Contact Note */}
+          <div className="text-center mt-12 bg-gray-50 p-6 rounded-lg">
+            <p className="text-gray-600 mb-4">
+              Contact us if you have any questions and if you are considering a subscription for several schools 
+              or have any specific needs. Schools are also welcome to pay via bank transfer.
+            </p>
+            <button className="bg-orange-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+              Contact Us
+            </button>
           </div>
         </div>
       </section>
@@ -102,22 +465,22 @@ export default function HomePage() {
           <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-                Ready to launch your SaaS?
+                Ready to begin your language journey?
               </h2>
               <p className="mt-3 max-w-3xl text-lg text-gray-500">
-                Our template provides everything you need to get your SaaS up
-                and running quickly. Don't waste time on boilerplate - focus on
-                what makes your product unique.
+                Join thousands of learners who are already mastering new languages 
+                with A Language Story. Start with a free trial and discover how 
+                personalized learning can transform your fluency.
               </p>
             </div>
             <div className="mt-8 lg:mt-0 flex justify-center lg:justify-end">
-              <a href="https://github.com/nextjs/saas-starter" target="_blank">
+              <a href="/sign-up">
                 <Button
                   size="lg"
                   variant="outline"
                   className="text-lg rounded-full"
                 >
-                  View the code
+                  Start Free Trial
                   <ArrowRight className="ml-3 h-6 w-6" />
                 </Button>
               </a>
@@ -125,6 +488,120 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-100 text-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            
+            {/* About Us Section */}
+            <div className="lg:col-span-1">
+              <h3 className="text-xl font-bold mb-4">About Us</h3>
+              <p className="text-gray-600 mb-4 leading-relaxed">
+                A Language Story is a one stop learning platform where you can 
+                learn German, French and Spanish languages through fun and 
+                engaging stories and games.
+              </p>
+              <p className="text-gray-600 leading-relaxed">
+                A Language Story focusses on developing language skills in all four 
+                disciplines – Writing, Reading, Listening and Speaking. Each story 
+                is accompanied with a set of resources, which can be accessed in 
+                the classroom or at home.
+              </p>
+              <div className="mt-6">
+                <div className="w-12 h-12 bg-gray-300 rounded-lg flex items-center justify-center">
+                  <BookOpen className="h-6 w-6 text-gray-700" />
+                </div>
+              </div>
+            </div>
+
+            {/* Legal and Privacy Section */}
+            <div>
+              <h3 className="text-xl font-bold mb-4">Legal and Privacy</h3>
+              <ul className="space-y-3">
+                <li>
+                  <a href="/privacy-policy" className="text-gray-600 hover:text-gray-800 transition-colors">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="/cookie-policy" className="text-gray-600 hover:text-gray-800 transition-colors">
+                    Cookie Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="/terms-and-conditions" className="text-gray-600 hover:text-gray-800 transition-colors">
+                    Terms and Conditions
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Quick Links Section */}
+            <div>
+              <h3 className="text-xl font-bold mb-4">Quick Links</h3>
+              <ul className="space-y-3">
+                <li>
+                  <a href="/about" className="text-gray-600 hover:text-gray-800 transition-colors">
+                    About Us
+                  </a>
+                </li>
+                <li>
+                  <a href="/contact" className="text-gray-600 hover:text-gray-800 transition-colors">
+                    Contact Us
+                  </a>
+                </li>
+                <li>
+                  <a href="/free-resources" className="text-gray-600 hover:text-gray-800 transition-colors">
+                    Free Resources
+                  </a>
+                </li>
+                <li>
+                  <a href="/pricing" className="text-gray-600 hover:text-gray-800 transition-colors">
+                    Pricing
+                  </a>
+                </li>
+                <li>
+                  <a href="/redeem" className="text-gray-600 hover:text-gray-800 transition-colors">
+                    Redeem An Enrollment Key
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Buy Subscription Section */}
+            <div>
+              <h3 className="text-xl font-bold mb-4">Buy Subscription</h3>
+              <ul className="space-y-3">
+                <li>
+                  <a href="/shop" className="text-gray-600 hover:text-gray-800 transition-colors">
+                    Shopping Area
+                  </a>
+                </li>
+                <li>
+                  <a href="/dashboard" className="text-gray-600 hover:text-gray-800 transition-colors">
+                    My Account
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Footer Bottom */}
+                      <div className="border-t border-gray-300 mt-8 pt-6">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <p className="text-gray-600 text-sm">
+                © 2025 All Rights Reserved.
+              </p>
+              
+              {/* Accessibility Button */}
+              <button className="mt-4 md:mt-0 w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center hover:bg-gray-400 transition-all">
+                <span className="text-gray-700 font-bold text-sm">X</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

@@ -12,7 +12,7 @@ import {
 import { customerPortalAction } from '@/lib/payments/actions';
 import { useActionState } from 'react';
 import { TeamDataWithMembers, User } from '@/lib/db/schema';
-import { removeTeamMember, inviteTeamMember } from '@/app/(login)/actions';
+import { removeTeamMember, inviteEducationalUser } from '@/app/(login)/actions';
 import useSWR from 'swr';
 import { Suspense } from 'react';
 import { Input } from '@/components/ui/input';
@@ -189,11 +189,11 @@ function InviteTeamMemberSkeleton() {
 
 function InviteTeamMember() {
   const { data: user } = useSWR<User>('/api/user', fetcher);
-  const isOwner = user?.role === 'owner';
+  const canInvite = user?.role === 'institution_admin' || user?.role === 'super_admin';
   const [inviteState, inviteAction, isInvitePending] = useActionState<
     ActionState,
     FormData
-  >(inviteTeamMember, {});
+  >(inviteEducationalUser, {});
 
   return (
     <Card>
@@ -212,24 +212,28 @@ function InviteTeamMember() {
               type="email"
               placeholder="Enter email"
               required
-              disabled={!isOwner}
+              disabled={!canInvite}
             />
           </div>
           <div>
             <Label>Role</Label>
             <RadioGroup
-              defaultValue="member"
+              defaultValue="student"
               name="role"
               className="flex space-x-4"
-              disabled={!isOwner}
+              disabled={!canInvite}
             >
               <div className="flex items-center space-x-2 mt-2">
-                <RadioGroupItem value="member" id="member" />
-                <Label htmlFor="member">Member</Label>
+                <RadioGroupItem value="student" id="student" />
+                <Label htmlFor="student">Student</Label>
               </div>
               <div className="flex items-center space-x-2 mt-2">
-                <RadioGroupItem value="owner" id="owner" />
-                <Label htmlFor="owner">Owner</Label>
+                <RadioGroupItem value="teacher" id="teacher" />
+                <Label htmlFor="teacher">Teacher</Label>
+              </div>
+              <div className="flex items-center space-x-2 mt-2">
+                <RadioGroupItem value="parent" id="parent" />
+                <Label htmlFor="parent">Parent</Label>
               </div>
             </RadioGroup>
           </div>
@@ -242,7 +246,7 @@ function InviteTeamMember() {
           <Button
             type="submit"
             className="bg-orange-500 hover:bg-orange-600 text-white"
-            disabled={isInvitePending || !isOwner}
+            disabled={isInvitePending || !canInvite}
           >
             {isInvitePending ? (
               <>
@@ -252,16 +256,16 @@ function InviteTeamMember() {
             ) : (
               <>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Invite Member
+                Invite Educational User
               </>
             )}
           </Button>
         </form>
       </CardContent>
-      {!isOwner && (
+      {!canInvite && (
         <CardFooter>
           <p className="text-sm text-muted-foreground">
-            You must be a team owner to invite new members.
+            You must be an institution admin to invite new educational users.
           </p>
         </CardFooter>
       )}

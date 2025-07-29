@@ -4,7 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu } from 'lucide-react';
+import { Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight } from 'lucide-react';
+
+interface NavItem {
+  href: string;
+  icon: any;
+  label: string;
+  subItems?: NavItem[];
+}
 
 export default function DashboardLayout({
   children
@@ -13,13 +20,86 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<string[]>(['/dashboard']); // Team expanded by default
 
-  const navItems = [
-    { href: '/dashboard', icon: Users, label: 'Team' },
+  const navItems: NavItem[] = [
+    { 
+      href: '/dashboard', 
+      icon: Users, 
+      label: 'Team',
+      subItems: [
+        { href: '/dashboard/roles', icon: UserCheck, label: 'Roles' }
+      ]
+    },
     { href: '/dashboard/general', icon: Settings, label: 'General' },
     { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
     { href: '/dashboard/security', icon: Shield, label: 'Security' }
   ];
+
+  const toggleExpanded = (href: string) => {
+    setExpandedItems(prev => 
+      prev.includes(href) 
+        ? prev.filter(item => item !== href)
+        : [...prev, href]
+    );
+  };
+
+  const isExpanded = (href: string) => expandedItems.includes(href);
+  const isActiveOrChild = (item: NavItem) => {
+    if (pathname === item.href) return true;
+    if (item.subItems) {
+      return item.subItems.some(subItem => pathname === subItem.href);
+    }
+    return false;
+  };
+
+  const renderNavItem = (item: NavItem, isSubItem = false) => {
+    const hasSubItems = item.subItems && item.subItems.length > 0;
+    const expanded = isExpanded(item.href);
+    const isActive = isActiveOrChild(item);
+
+    return (
+      <div key={item.href}>
+        {hasSubItems ? (
+          <Button
+            variant={isActive ? 'secondary' : 'ghost'}
+            className={`shadow-none my-1 w-full justify-start ${
+              isActive ? 'bg-gray-100' : ''
+            } ${isSubItem ? 'pl-8' : ''}`}
+            onClick={() => toggleExpanded(item.href)}
+          >
+            <item.icon className="h-4 w-4" />
+            <span className="flex-1 text-left">{item.label}</span>
+            {expanded ? (
+              <ChevronDown className="h-3 w-3" />
+            ) : (
+              <ChevronRight className="h-3 w-3" />
+            )}
+          </Button>
+        ) : (
+          <Link href={item.href} passHref>
+            <Button
+              variant={pathname === item.href ? 'secondary' : 'ghost'}
+              className={`shadow-none my-1 w-full justify-start ${
+                pathname === item.href ? 'bg-gray-100' : ''
+              } ${isSubItem ? 'pl-8 text-sm' : ''}`}
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </Button>
+          </Link>
+        )}
+        
+        {/* Render sub-items if expanded */}
+        {hasSubItems && expanded && (
+          <div className="ml-2">
+            {item.subItems?.map(subItem => renderNavItem(subItem, true))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
@@ -48,20 +128,7 @@ export default function DashboardLayout({
           }`}
         >
           <nav className="h-full overflow-y-auto p-4">
-            {navItems.map((item) => (
-              <Link key={item.href} href={item.href} passHref>
-                <Button
-                  variant={pathname === item.href ? 'secondary' : 'ghost'}
-                  className={`shadow-none my-1 w-full justify-start ${
-                    pathname === item.href ? 'bg-gray-100' : ''
-                  }`}
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Button>
-              </Link>
-            ))}
+            {navItems.map(item => renderNavItem(item))}
           </nav>
         </aside>
 

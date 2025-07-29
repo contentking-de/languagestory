@@ -7,12 +7,12 @@ export function Terminal() {
   const [terminalStep, setTerminalStep] = useState(0);
   const [copied, setCopied] = useState(false);
   const terminalSteps = [
-    'git clone https://github.com/nextjs/saas-starter',
-    'pnpm install',
-    'pnpm db:setup',
-    'pnpm db:migrate',
-    'pnpm db:seed',
-    'pnpm dev 🎉',
+    '💬 Starting Spanish lesson: "At the Restaurant"',
+    '📚 Learning new vocabulary: "camarero, menú, cuenta"',
+    '🎯 Practice: "¿Puede traerme la cuenta, por favor?"',
+    '✅ Pronunciation score: 92% - Excellent!',
+    '🔥 Daily streak: 15 days maintained',
+    '🎉 Lesson completed! +50 XP earned',
   ];
 
   useEffect(() => {

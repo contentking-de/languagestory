@@ -1,30 +1,38 @@
 'use server';
 
 import { z } from 'zod';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/drizzle';
 import {
-  User,
   users,
   teams,
   teamMembers,
   activityLogs,
-  type NewUser,
-  type NewTeam,
-  type NewTeamMember,
-  type NewActivityLog,
+  invitations,
+  institutions,
+  teachingAssignments,
+  classes,
+  classEnrollments,
   ActivityType,
-  invitations
+  userRoleEnum,
+  languageEnum,
+} from '@/lib/db/schema';
+import type {
+  NewUser,
+  NewTeam,
+  NewTeamMember,
+  NewActivityLog,
+  User,
+  NewInstitution,
+  NewTeachingAssignment,
 } from '@/lib/db/schema';
 import { comparePasswords, hashPassword, setSession } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { validatedAction, validatedActionWithUser } from '@/lib/auth/middleware';
 import { createCheckoutSession } from '@/lib/payments/stripe';
 import { getUser, getUserWithTeam } from '@/lib/db/queries';
-import {
-  validatedAction,
-  validatedActionWithUser
-} from '@/lib/auth/middleware';
+import { UserRole, hasPermission, canManageUser } from '@/lib/auth/rbac';
 
 async function logActivity(
   teamId: number | null | undefined,
@@ -103,11 +111,14 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
 const signUpSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  role: z.enum(['student', 'teacher', 'parent', 'member']).default('student'),
+  institutionId: z.string().optional(),
+  parentEmail: z.string().email().optional(), // For linking parent-child accounts
   inviteId: z.string().optional()
 });
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
-  const { email, password, inviteId } = data;
+  const { email, password, role, institutionId, parentEmail, inviteId } = data;
 
   const existingUser = await db
     .select()
@@ -125,10 +136,27 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 
   const passwordHash = await hashPassword(password);
 
+  let parentId: number | undefined;
+  
+  // Handle parent-child relationship
+  if (parentEmail && role === 'student') {
+    const parentUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, parentEmail))
+      .limit(1);
+    
+    if (parentUser.length > 0 && parentUser[0].role === 'parent') {
+      parentId = parentUser[0].id;
+    }
+  }
+
   const newUser: NewUser = {
     email,
     passwordHash,
-    role: 'owner' // Default role, will be overridden if there's an invitation
+    role: role as UserRole,
+    institutionId: institutionId ? parseInt(institutionId) : undefined,
+    parentId,
   };
 
   const [createdUser] = await db.insert(users).values(newUser).returning();
@@ -142,11 +170,11 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   }
 
   let teamId: number;
-  let userRole: string;
+  let userRole: UserRole;
   let createdTeam: typeof teams.$inferSelect | null = null;
 
   if (inviteId) {
-    // Check if there's a valid invitation
+    // Handle invitation-based signup
     const [invitation] = await db
       .select()
       .from(invitations)
@@ -161,55 +189,53 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 
     if (invitation) {
       teamId = invitation.teamId;
-      userRole = invitation.role;
+      userRole = invitation.role as UserRole;
 
-      await db
-        .update(invitations)
-        .set({ status: 'accepted' })
-        .where(eq(invitations.id, invitation.id));
-
-      await logActivity(teamId, createdUser.id, ActivityType.ACCEPT_INVITATION);
-
-      [createdTeam] = await db
-        .select()
-        .from(teams)
-        .where(eq(teams.id, teamId))
-        .limit(1);
+      await Promise.all([
+        db.insert(teamMembers).values({
+          teamId: invitation.teamId,
+          userId: createdUser.id,
+          role: invitation.role,
+          language: invitation.language,
+        }),
+        db
+          .update(invitations)
+          .set({ status: 'accepted' })
+          .where(eq(invitations.id, invitation.id)),
+      ]);
     } else {
-      return { error: 'Invalid or expired invitation.', email, password };
+      return { error: 'Invalid or expired invitation.' };
     }
   } else {
-    // Create a new team if there's no invitation
-    const newTeam: NewTeam = {
-      name: `${email}'s Team`
-    };
+    // Create new team for individual users
+    const teamName = role === 'teacher' 
+      ? `${createdUser.name || createdUser.email}'s Classes`
+      : `${createdUser.name || createdUser.email}'s Learning`;
 
-    [createdTeam] = await db.insert(teams).values(newTeam).returning();
-
-    if (!createdTeam) {
-      return {
-        error: 'Failed to create team. Please try again.',
-        email,
-        password
-      };
-    }
+    [createdTeam] = await db
+      .insert(teams)
+      .values({
+        name: teamName,
+        subscriptionType: institutionId ? 'institution' : 'individual',
+        institutionId: institutionId ? parseInt(institutionId) : undefined,
+      })
+      .returning();
 
     teamId = createdTeam.id;
-    userRole = 'owner';
+    userRole = role === 'member' ? 'member' : role as UserRole;
 
-    await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM);
+    const newTeamMember: NewTeamMember = {
+      teamId,
+      userId: createdUser.id,
+      role: userRole,
+    };
+
+    await db.insert(teamMembers).values(newTeamMember);
   }
 
-  const newTeamMember: NewTeamMember = {
-    userId: createdUser.id,
-    teamId: teamId,
-    role: userRole
-  };
-
   await Promise.all([
-    db.insert(teamMembers).values(newTeamMember),
+    setSession(createdUser),
     logActivity(teamId, createdUser.id, ActivityType.SIGN_UP),
-    setSession(createdUser)
   ]);
 
   const redirectTo = formData.get('redirect') as string | null;
@@ -218,7 +244,16 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     return createCheckoutSession({ team: createdTeam, priceId });
   }
 
-  redirect('/dashboard');
+  // Redirect based on role
+  if (userRole === 'teacher' || userRole === 'institution_admin') {
+    redirect('/dashboard/classes');
+  } else if (userRole === 'student') {
+    redirect('/dashboard/learning');
+  } else if (userRole === 'parent') {
+    redirect('/dashboard/children');
+  } else {
+    redirect('/dashboard');
+  }
 });
 
 export async function signOut() {
@@ -391,21 +426,35 @@ export const removeTeamMember = validatedActionWithUser(
   }
 );
 
-const inviteTeamMemberSchema = z.object({
+// Enhanced invitation system for educational roles
+const inviteEducationalUserSchema = z.object({
   email: z.string().email('Invalid email address'),
-  role: z.enum(['member', 'owner'])
+  role: z.enum(['teacher', 'student', 'parent', 'content_creator', 'member']),
+  language: z.enum(['french', 'german', 'spanish', 'all']).default('all'),
+  institutionId: z.string().optional(),
+  classId: z.string().optional(),
 });
 
-export const inviteTeamMember = validatedActionWithUser(
-  inviteTeamMemberSchema,
+export const inviteEducationalUser = validatedActionWithUser(
+  inviteEducationalUserSchema,
   async (data, _, user) => {
-    const { email, role } = data;
+    const { email, role, language, institutionId, classId } = data;
     const userWithTeam = await getUserWithTeam(user.id);
 
     if (!userWithTeam?.teamId) {
       return { error: 'User is not part of a team' };
     }
 
+    // Check if current user has permission to invite users with this role
+    if (!hasPermission(user.role as UserRole, 'invite_users')) {
+      return { error: 'You do not have permission to invite users' };
+    }
+
+    if (!canManageUser(user.role as UserRole, role as UserRole)) {
+      return { error: 'You cannot invite users with this role level' };
+    }
+
+    // Check if user already exists and is part of the team
     const existingMember = await db
       .select()
       .from(users)
@@ -419,7 +468,7 @@ export const inviteTeamMember = validatedActionWithUser(
       return { error: 'User is already a member of this team' };
     }
 
-    // Check if there's an existing invitation
+    // Check for existing pending invitation
     const existingInvitation = await db
       .select()
       .from(invitations)
@@ -436,24 +485,171 @@ export const inviteTeamMember = validatedActionWithUser(
       return { error: 'An invitation has already been sent to this email' };
     }
 
-    // Create a new invitation
+    // Create invitation
     await db.insert(invitations).values({
       teamId: userWithTeam.teamId,
       email,
       role,
+      language,
       invitedBy: user.id,
-      status: 'pending'
     });
+
+    // If inviting a teacher, create teaching assignment
+    if (role === 'teacher' && language !== 'all') {
+      const newUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (newUser.length > 0) {
+        await db.insert(teachingAssignments).values({
+          teacherId: newUser[0].id,
+          language,
+          institutionId: institutionId ? parseInt(institutionId) : undefined,
+        });
+      }
+    }
 
     await logActivity(
       userWithTeam.teamId,
       user.id,
-      ActivityType.INVITE_TEAM_MEMBER
+      ActivityType.INVITE_TEAM_MEMBER,
+      undefined
     );
 
-    // TODO: Send invitation email and include ?inviteId={id} to sign-up URL
-    // await sendInvitationEmail(email, userWithTeam.team.name, role)
+    return { success: 'Educational user invited successfully' };
+  }
+);
 
-    return { success: 'Invitation sent successfully' };
+// Create institution (for super admins and institution admins)
+const createInstitutionSchema = z.object({
+  name: z.string().min(1, 'Institution name is required'),
+  type: z.enum(['school', 'university', 'language_center', 'private_tutor', 'corporate']),
+  address: z.string().optional(),
+  contactEmail: z.string().email().optional(),
+});
+
+export const createInstitution = validatedActionWithUser(
+  createInstitutionSchema,
+  async (data, _, user) => {
+    if (!hasPermission(user.role as UserRole, 'manage_institution')) {
+      return { error: 'You do not have permission to create institutions' };
+    }
+
+    const { name, type, address, contactEmail } = data;
+
+    const newInstitution: NewInstitution = {
+      name,
+      type,
+      address,
+      contactEmail,
+    };
+
+    const [createdInstitution] = await db
+      .insert(institutions)
+      .values(newInstitution)
+      .returning();
+
+    return { 
+      success: 'Institution created successfully',
+      institutionId: createdInstitution.id 
+    };
+  }
+);
+
+// Create class (for teachers and institution admins)
+const createClassSchema = z.object({
+  name: z.string().min(1, 'Class name is required'),
+  description: z.string().optional(),
+  language: z.enum(['french', 'german', 'spanish']),
+  institutionId: z.string().optional(),
+});
+
+export const createClass = validatedActionWithUser(
+  createClassSchema,
+  async (data, _, user) => {
+    if (!hasPermission(user.role as UserRole, 'create_class')) {
+      return { error: 'You do not have permission to create classes' };
+    }
+
+    const { name, description, language, institutionId } = data;
+
+    const [createdClass] = await db
+      .insert(classes)
+      .values({
+        name,
+        description,
+        language,
+        teacherId: user.id,
+        institutionId: institutionId ? parseInt(institutionId) : undefined,
+      })
+      .returning();
+
+    const userWithTeam = await getUserWithTeam(user.id);
+    if (userWithTeam?.teamId) {
+      await logActivity(
+        userWithTeam.teamId,
+        user.id,
+        ActivityType.CREATE_CLASS,
+        undefined
+      );
+    }
+
+    return { 
+      success: 'Class created successfully',
+      classId: createdClass.id 
+    };
+  }
+);
+
+// Enroll student in class
+const enrollStudentSchema = z.object({
+  studentId: z.number(),
+  classId: z.number(),
+});
+
+export const enrollStudent = validatedActionWithUser(
+  enrollStudentSchema,
+  async (data, _, user) => {
+    if (!hasPermission(user.role as UserRole, 'enroll_student')) {
+      return { error: 'You do not have permission to enroll students' };
+    }
+
+    const { studentId, classId } = data;
+
+    // Check if student is already enrolled
+    const existingEnrollment = await db
+      .select()
+      .from(classEnrollments)
+      .where(
+        and(
+          eq(classEnrollments.studentId, studentId),
+          eq(classEnrollments.classId, classId),
+          eq(classEnrollments.isActive, true)
+        )
+      )
+      .limit(1);
+
+    if (existingEnrollment.length > 0) {
+      return { error: 'Student is already enrolled in this class' };
+    }
+
+    await db.insert(classEnrollments).values({
+      studentId,
+      classId,
+    });
+
+    const userWithTeam = await getUserWithTeam(user.id);
+    if (userWithTeam?.teamId) {
+      await logActivity(
+        userWithTeam.teamId,
+        user.id,
+        ActivityType.ENROLL_STUDENT,
+        undefined
+      );
+    }
+
+    return { success: 'Student enrolled successfully' };
   }
 );
