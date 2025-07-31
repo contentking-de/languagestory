@@ -35,6 +35,12 @@ function UserMenu() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-4">
           <a
+            href="#why-choose-us"
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Why Choose Us
+          </a>
+          <a
             href="#short-stories"
             className="text-sm font-medium text-gray-700 hover:text-gray-900"
           >
@@ -88,6 +94,13 @@ function UserMenu() {
         {isMenuOpen && (
           <div className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg md:hidden z-50">
             <div className="px-4 py-6 space-y-4">
+              <a
+                href="#why-choose-us"
+                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Why Choose Us
+              </a>
               <a
                 href="#short-stories"
                 className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
