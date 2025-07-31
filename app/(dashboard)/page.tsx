@@ -37,22 +37,38 @@ const modalContent = {
     title: 'Privacy Policy',
     content: `
       <h2 class="text-xl font-bold mb-4">Privacy Policy</h2>
-      <p class="mb-4">Last updated: January 2025</p>
       
-      <h3 class="text-lg font-semibold mb-2">Information We Collect</h3>
-      <p class="mb-4">We collect information you provide directly to us, such as when you create an account, subscribe to our services, or contact us for support.</p>
+      <h3 class="text-lg font-semibold mb-2">Who we are</h3>
+      <p class="mb-4">Our website address is: <a href="https://alanguagestory.com" class="text-orange-600 hover:underline">https://alanguagestory.com</a></p>
+      <div class="mb-4">
+        <p class="font-semibold">Post:</p>
+        <p class="mb-2">30 Tithe Barn Road, Stafford, England, ST16 3PH, GB</p>
+        <p class="font-semibold">Email:</p>
+        <p>info@alanguagestory.com</p>
+      </div>
       
-      <h3 class="text-lg font-semibold mb-2">How We Use Your Information</h3>
-      <p class="mb-4">We use the information we collect to provide, maintain, and improve our services, process transactions, and communicate with you.</p>
+      <h3 class="text-lg font-semibold mb-2">Comments</h3>
+      <p class="mb-4">When visitors leave comments on the site we collect the data shown in the comments form, and also the visitor's IP address and browser user agent string to help spam detection. An anonymized string created from your email address (also called a hash) may be provided to the Gravatar service to see if you are using it. After approval of your comment, your profile picture is visible to the public in the context of your comment.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Information Sharing</h3>
-      <p class="mb-4">We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy.</p>
+      <h3 class="text-lg font-semibold mb-2">Media</h3>
+      <p class="mb-4">If you upload images to the website, you should avoid uploading images with embedded location data (EXIF GPS) included. Visitors to the website can download and extract any location data from images on the website.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Data Security</h3>
-      <p class="mb-4">We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+      <h3 class="text-lg font-semibold mb-2">Cookies</h3>
+      <p class="mb-4">If you leave a comment on our site you may opt-in to saving your name, email address and website in cookies. These are for your convenience so that you do not have to fill in your details again when you leave another comment. These cookies will last for one year.</p>
+      <p class="mb-4">If you visit our login page, we will set a temporary cookie to determine if your browser accepts cookies. This cookie contains no personal data and is discarded when you close your browser.</p>
+      <p class="mb-4">When you log in, we will also set up several cookies to save your login information and your screen display choices. Login cookies last for two days, and screen options cookies last for a year. If you select "Remember Me", your login will persist for two weeks. If you log out of your account, the login cookies will be removed.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Contact Us</h3>
-      <p>If you have any questions about this Privacy Policy, please contact us at privacy@alanguagestory.com</p>
+      <h3 class="text-lg font-semibold mb-2">Embedded content from other websites</h3>
+      <p class="mb-4">Articles on this site may include embedded content (e.g. videos, images, articles, etc.). Embedded content from other websites behaves in the exact same way as if the visitor has visited the other website. These websites may collect data about you, use cookies, embed additional third-party tracking, and monitor your interaction with that embedded content.</p>
+      
+      <h3 class="text-lg font-semibold mb-2">How long we retain your data</h3>
+      <p class="mb-4">If you leave a comment, the comment and its metadata are retained indefinitely. For users that register on our website, we also store the personal information they provide in their user profile. All users can see, edit, or delete their personal information at any time (except they cannot change their username).</p>
+      
+      <h3 class="text-lg font-semibold mb-2">What rights you have over your data</h3>
+      <p class="mb-4">If you have an account on this site, or have left comments, you can request to receive an exported file of the personal data we hold about you, including any data you have provided to us. You can also request that we erase any personal data we hold about you. This does not include any data we are obliged to keep for administrative, legal, or security purposes.</p>
+      
+      <h3 class="text-lg font-semibold mb-2">Where your data is sent</h3>
+      <p>Visitor comments may be checked through an automated spam detection service.</p>
     `
   },
   'cookie-policy': {
@@ -318,6 +334,75 @@ const modalContent = {
     `
   }
 };
+
+// Contact Form Component
+function ContactFormComponent() {
+  const [isConsentChecked, setIsConsentChecked] = useState(false);
+
+  return (
+    <div className="mt-8 lg:mt-0">
+      <div className="bg-gray-50 p-6 rounded-lg max-w-md ml-auto">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Get in Touch</h3>
+        <form className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+              placeholder="Your name"
+            />
+          </div>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+              placeholder="your@email.com"
+            />
+          </div>
+          <div>
+            <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+            <textarea
+              id="message"
+              name="message"
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none"
+              placeholder="How can we help you?"
+            ></textarea>
+          </div>
+          <div className="flex items-start space-x-2">
+            <input
+              type="checkbox"
+              id="consent"
+              name="consent"
+              checked={isConsentChecked}
+              onChange={(e) => setIsConsentChecked(e.target.checked)}
+              className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+            />
+            <label htmlFor="consent" className="text-sm text-gray-700">
+              I am aware that my data will be digitally stored and used for the purpose of contact and communication with this platform.
+            </label>
+          </div>
+          <button
+            type="submit"
+            disabled={!isConsentChecked}
+            className={`w-full font-medium py-2 px-4 rounded-lg transition-colors ${
+              isConsentChecked
+                ? 'bg-orange-500 text-white hover:bg-orange-600'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            Send Message
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 // Accessibility Settings Component
 function AccessibilityWidget({ 
@@ -1896,50 +1981,48 @@ export default function HomePage() {
                 please use our contact form and let us know what we can do for you. We will get back 
                 to you as soon as possible.
               </p>
-            </div>
-            <div className="mt-8 lg:mt-0">
-              <div className="bg-gray-50 p-6 rounded-lg max-w-md ml-auto">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Get in Touch</h3>
-                <form className="space-y-4">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                      placeholder="Your name"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                      placeholder="your@email.com"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none"
-                      placeholder="How can we help you?"
-                    ></textarea>
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-orange-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <p className="text-lg text-gray-700 mb-4">
+                  Already like what we do? Then share this with your friends and followers on the social web:
+                </p>
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                  <a
+                    href="https://www.facebook.com/sharer/sharer.php?u=https://alanguagestory.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Send Message
-                  </button>
-                </form>
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebook
+                  </a>
+                  <a
+                    href="https://www.instagram.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.62 5.367 11.987 11.988 11.987 6.62 0 11.987-5.367 11.987-11.987C24.014 5.367 18.637.001 12.017.001zM8.449 20.312c-1.297 0-2.348-1.051-2.348-2.348V6.036c0-1.297 1.051-2.348 2.348-2.348h7.102c1.297 0 2.348 1.051 2.348 2.348v11.928c0 1.297-1.051 2.348-2.348 2.348H8.449zm3.568-13.108c-2.173 0-3.93 1.757-3.93 3.93s1.757 3.93 3.93 3.93 3.93-1.757 3.93-3.93-1.757-3.93-3.93-3.93zm0 6.344c-1.332 0-2.414-1.082-2.414-2.414s1.082-2.414 2.414-2.414 2.414 1.082 2.414 2.414-1.082 2.414-2.414 2.414zm4.881-6.584c-.508 0-.92-.412-.92-.92s.412-.92.92-.92.92.412.92.92-.412.92-.92.92z"/>
+                    </svg>
+                    Instagram
+                  </a>
+                  <a
+                    href="https://www.linkedin.com/sharing/share-offsite/?url=https://alanguagestory.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                    LinkedIn
+                  </a>
+                </div>
               </div>
             </div>
+            <ContactFormComponent />
           </div>
         </div>
       </section>
