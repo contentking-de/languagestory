@@ -1,0 +1,27 @@
+CREATE TYPE "public"."game_category" AS ENUM('french', 'german', 'spanish', 'english', 'math', 'science', 'history', 'geography', 'vocabulary', 'grammar', 'general', 'quiz', 'matching', 'other');--> statement-breakpoint
+CREATE TABLE "games" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"title" varchar(200) NOT NULL,
+	"description" text,
+	"original_url" varchar(500) NOT NULL,
+	"normalized_url" varchar(500) NOT NULL,
+	"embed_html" text NOT NULL,
+	"thumbnail_url" varchar(500),
+	"author_name" varchar(200),
+	"author_url" varchar(500),
+	"provider_name" varchar(100) DEFAULT 'Wordwall',
+	"provider_url" varchar(500) DEFAULT 'https://wordwall.net',
+	"width" integer,
+	"height" integer,
+	"category" "game_category" DEFAULT 'general',
+	"language" varchar(20),
+	"difficulty_level" integer DEFAULT 1,
+	"estimated_duration" integer,
+	"tags" json,
+	"is_active" boolean DEFAULT true,
+	"is_featured" boolean DEFAULT false,
+	"added_by" integer NOT NULL,
+	"usage_count" integer DEFAULT 0,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);

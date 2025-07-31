@@ -42,6 +42,10 @@ export const achievementTypeEnum = pgEnum('achievement_type', [
   'perfect_score', 'fast_learner', 'culture_expert', 'vocabulary_champion'
 ]);
 export const cultureTypeEnum = pgEnum('culture_type', ['food', 'festival', 'tradition', 'geography', 'history', 'art', 'music']);
+export const gameCategoryEnum = pgEnum('game_category', [
+  'french', 'german', 'spanish', 'english', 'math', 'science', 'history', 
+  'geography', 'vocabulary', 'grammar', 'general', 'quiz', 'matching', 'other'
+]);
 
 // Main Courses table
 export const courses = pgTable('courses', {
@@ -195,6 +199,34 @@ export const cultural_content = pgTable('cultural_content', {
   external_links: json('external_links'), // Array of related links
   is_published: boolean('is_published').default(false),
   created_at: timestamp('created_at').defaultNow(),
+});
+
+// Wordwall Games
+export const games = pgTable('games', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 200 }).notNull(),
+  description: text('description'),
+  original_url: varchar('original_url', { length: 500 }).notNull(),
+  normalized_url: varchar('normalized_url', { length: 500 }).notNull(),
+  embed_html: text('embed_html').notNull(),
+  thumbnail_url: varchar('thumbnail_url', { length: 500 }),
+  author_name: varchar('author_name', { length: 200 }),
+  author_url: varchar('author_url', { length: 500 }),
+  provider_name: varchar('provider_name', { length: 100 }).default('Wordwall'),
+  provider_url: varchar('provider_url', { length: 500 }).default('https://wordwall.net'),
+  width: integer('width'),
+  height: integer('height'),
+  category: gameCategoryEnum('category').default('general'),
+  language: varchar('language', { length: 20 }),
+  difficulty_level: integer('difficulty_level').default(1), // 1-5 scale
+  estimated_duration: integer('estimated_duration'), // in minutes
+  tags: json('tags'), // Array of tag strings
+  is_active: boolean('is_active').default(true),
+  is_featured: boolean('is_featured').default(false),
+  added_by: integer('added_by').notNull(), // User ID who added the game
+  usage_count: integer('usage_count').default(0), // Track how often it's used
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // Student Achievements
@@ -358,6 +390,13 @@ export const cultural_contentRelations = relations(cultural_content, ({ one }) =
   }),
 }));
 
+export const gamesRelations = relations(games, ({ one }) => ({
+  addedBy: one(users, {
+    fields: [games.added_by],
+    references: [users.id],
+  }),
+}));
+
 export const achievementsRelations = relations(achievements, ({ one }) => ({
   student: one(users, {
     fields: [achievements.student_id],
@@ -415,6 +454,8 @@ export type Vocabulary = typeof vocabulary.$inferSelect;
 export type NewVocabulary = typeof vocabulary.$inferInsert;
 export type CulturalContent = typeof cultural_content.$inferSelect;
 export type NewCulturalContent = typeof cultural_content.$inferInsert;
+export type Game = typeof games.$inferSelect;
+export type NewGame = typeof games.$inferInsert;
 export type Achievement = typeof achievements.$inferSelect;
 export type NewAchievement = typeof achievements.$inferInsert;
 export type LearningStreak = typeof learning_streaks.$inferSelect;

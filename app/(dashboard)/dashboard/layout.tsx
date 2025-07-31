@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { 
   Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight,
-  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School
+  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2
 } from 'lucide-react';
 
 interface NavItem {
@@ -34,7 +34,8 @@ export default function DashboardLayout({
         { href: '/dashboard/content/courses', icon: GraduationCap, label: 'Courses' },
         { href: '/dashboard/content/lessons', icon: BookOpen, label: 'Lessons' },
         { href: '/dashboard/content/quizzes', icon: FileQuestion, label: 'Quizzes' },
-        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' }
+        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' },
+        { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
       ]
     },
     { 
