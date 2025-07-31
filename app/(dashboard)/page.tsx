@@ -75,75 +75,126 @@ const modalContent = {
     title: 'Cookie Policy',
     content: `
       <h2 class="text-xl font-bold mb-4">Cookie Policy</h2>
-      <p class="mb-4">Last updated: January 2025</p>
       
-      <h3 class="text-lg font-semibold mb-2">What Are Cookies</h3>
-      <p class="mb-4">Cookies are small text files that are placed on your device when you visit our website. They help us provide you with a better experience.</p>
+      <h3 class="text-lg font-semibold mb-2">About this cookie policy</h3>
+      <p class="mb-4">This Cookie Policy explains what cookies are and how we use them, the types of cookies we use i.e, the information we collect using cookies and how that information is used, and how to control the cookie preferences. For further information on how we use, store, and keep your personal data secure, see our Privacy Policy.</p>
+      <p class="mb-4">You can at any time change or withdraw your consent from the Cookie Declaration on our website. Learn more about who we are, how you can contact us, and how we process personal data in our Privacy Policy.</p>
+      <p class="mb-4">Your consent applies to the following domains: <span class="font-medium">alanguagestory.com</span></p>
       
-      <h3 class="text-lg font-semibold mb-2">How We Use Cookies</h3>
-      <p class="mb-4">We use cookies to remember your preferences, analyze site traffic, and personalize content. This helps us improve our services and provide a better user experience.</p>
+      <h3 class="text-lg font-semibold mb-2">What are cookies?</h3>
+      <p class="mb-4">Cookies are small text files that are used to store small pieces of information. They are stored on your device when the website is loaded on your browser. These cookies help us make the website function properly, make it more secure, provide better user experience, and understand how the website performs and to analyze what works and where it needs improvement.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Types of Cookies We Use</h3>
-      <ul class="list-disc list-inside mb-4">
-        <li>Essential cookies for basic site functionality</li>
-        <li>Analytics cookies to understand how you use our site</li>
-        <li>Preference cookies to remember your settings</li>
-        <li>Marketing cookies for personalized content</li>
-      </ul>
+      <h3 class="text-lg font-semibold mb-2">How do we use cookies?</h3>
+      <p class="mb-4">As most of the online services, our website uses first-party and third-party cookies for several purposes. First-party cookies are mostly necessary for the website to function the right way, and they do not collect any of your personally identifiable data.</p>
+      <p class="mb-4">The third-party cookies used on our website are mainly for understanding how the website performs, how you interact with our website, keeping our services secure, providing advertisements that are relevant to you, and all in all providing you with a better and improved user experience and help speed up your future interactions with our website.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Managing Cookies</h3>
-      <p>You can control and manage cookies through your browser settings. However, disabling certain cookies may affect the functionality of our website.</p>
+      <h3 class="text-lg font-semibold mb-2">What types of cookies do we use?</h3>
+      <div class="mb-4">
+        <p class="font-semibold mb-2">Essential:</p>
+        <p class="mb-4">Some cookies are essential for you to be able to experience the full functionality of our site. They allow us to maintain user sessions and prevent any security threats. They do not collect or store any personal information. For example, these cookies allow you to log-in to your account and add products to your basket, and checkout securely.</p>
+        
+        <p class="font-semibold mb-2">Statistics:</p>
+        <p class="mb-4">These cookies store information like the number of visitors to the website, the number of unique visitors, which pages of the website have been visited, the source of the visit, etc. These data help us understand and analyze how well the website performs and where it needs improvement.</p>
+        
+        <p class="font-semibold mb-2">Marketing:</p>
+        <p class="mb-4">Our website displays advertisements. These cookies are used to personalize the advertisements that we show to you so that they are meaningful to you. These cookies also help us keep track of the efficiency of these ad campaigns. The information stored in these cookies may also be used by the third-party ad providers to show you ads on other websites on the browser as well.</p>
+        
+        <p class="font-semibold mb-2">Functional:</p>
+        <p class="mb-4">These are the cookies that help certain non-essential functionalities on our website. These functionalities include embedding content like videos or sharing content of the website on social media platforms.</p>
+        
+        <p class="font-semibold mb-2">Preferences:</p>
+        <p class="mb-4">These cookies help us store your settings and browsing preferences like language preferences so that you have a better and efficient experience on future visits to the website.</p>
+      </div>
+      
+      <h3 class="text-lg font-semibold mb-2">How can I control the cookie preferences?</h3>
+      <p class="mb-4">Should you decide to change your preferences later through your browsing session, you can click on the "Manage consent" tab on your screen. This will display the consent notice again enabling you to change your preferences or withdraw your consent entirely.</p>
+      <p class="mb-4">In addition to this, different browsers provide different methods to block and delete cookies used by websites. You can change the settings of your browser to block/delete the cookies. To find out more about how to manage and delete cookies, visit <a href="http://www.allaboutcookies.org" class="text-orange-600 hover:underline" target="_blank" rel="noopener noreferrer">www.allaboutcookies.org</a>.</p>
     `
   },
   'terms-and-conditions': {
     title: 'Terms and Conditions',
     content: `
       <h2 class="text-xl font-bold mb-4">Terms and Conditions</h2>
-      <p class="mb-4">Last updated: January 2025</p>
       
-      <h3 class="text-lg font-semibold mb-2">Acceptance of Terms</h3>
-      <p class="mb-4">By accessing and using A Language Story, you accept and agree to be bound by the terms and provision of this agreement.</p>
+      <h3 class="text-lg font-semibold mb-2">Using the materials on A Language Story</h3>
+      <ul class="list-disc list-inside mb-4 space-y-2">
+        <li>Material from A Language Story may not be copied, reproduced, republished, downloaded, posted, broadcast, or transmitted in any way, except for your own use as a teacher and that of your pupils within your own educational establishment.</li>
+        <li>Any other use requires the prior written permission of A Language Story</li>
+        <li>The illustrations on the site are the legal property of A Language Story and cannot be copied or reproduced in any way.</li>
+        <li>You agree not to adapt or alter any of the material contained in this site or use it for any purpose other than your personal, non-commercial use.</li>
+        <li>Copies of this site should not be used for any promotional, administrative, or commercial purposes of the educational establishment.</li>
+        <li>If you register as an individual tutor, you will only be permitted to access and use the site with your own private pupils. Failure to comply will lead to your login details to become invalid.</li>
+      </ul>
       
-      <h3 class="text-lg font-semibold mb-2">Use License</h3>
-      <p class="mb-4">Permission is granted to temporarily access the materials on A Language Story for personal, non-commercial transitory viewing only.</p>
+      <h3 class="text-lg font-semibold mb-2">Legal</h3>
+      <ul class="list-disc list-inside mb-4 space-y-2">
+        <li>You agree to use this site only for lawful purposes, and in a manner that does not infringe the rights of any third party.</li>
+        <li>If any of these Terms and Conditions should be determined to be illegal, invalid or otherwise unenforceable by reason of the laws of any state or country in which these Terms and Conditions are intended to be effective, then to the extent and within the jurisdiction which that Term or Condition is illegal, invalid or unenforceable, it shall be severed and deleted from this clause and the remaining terms and conditions shall survive, remain in full force and effect and continue to be binding and enforceable.</li>
+        <li>These Terms and Conditions shall be governed by and construed in accordance with the laws of England and Wales. Disputes arising here from shall be exclusively subject to the jurisdiction of the courts of England and Wales.</li>
+        <li>If these Terms and Conditions are not accepted in full, you do not have permission to access the contents of this website and therefore should cease using this website immediately.</li>
+        <li>Use of this site constitutes your acceptance of these terms and conditions, from your first visit to this site.</li>
+      </ul>
       
-      <h3 class="text-lg font-semibold mb-2">User Accounts</h3>
-      <p class="mb-4">You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.</p>
+      <h3 class="text-lg font-semibold mb-2">Cancellation</h3>
+      <div class="mb-4">
+        <p class="mb-2"><strong>7 day cooling off period:</strong> In accordance with the above law, you have a 7 day 'cooling off period' in which you have the right to cancel your purchase and receive a refund. You do not need to give a reason for cancelling your purchase. Should you choose to cancel, we will refund your payment within 30 days of your cancellation.</p>
+        <p class="mb-2">Should you wish to cancel your purchase within the 7 days' cooling off' period, please email us at <a href="mailto:info@alanguagestory.com" class="text-orange-600 hover:underline">info@alanguagestory.com</a> or write to us at the following address:</p>
+        <div class="ml-4 mb-2">
+          <p>A Language Story</p>
+          <p>30 Tithe Barn Road, Stafford, ST163PH</p>
+        </div>
+        <p class="mb-2">Should you cancel your purchase within this 7 day 'cooling off' period, we will refund your payment. If you paid by credit or with debit card from this website, your refund will be made directly to your credit or debit card within 30 days of your cancellation.</p>
+        <p class="mb-2"><strong>Conditions of the refund:</strong> In the case of the request for a refund, A Language Story reserves the right to track usage by an individual (through his/her own unique code) of specific pages visited, frequency of use, and time of use. No refund will be granted if A Language Story has cause to believe that an individual has undertaken significant usage of the resource OR has printed off selected material.</p>
+      </div>
       
-      <h3 class="text-lg font-semibold mb-2">Subscription and Payment</h3>
-      <p class="mb-4">Subscription fees are billed in advance on a monthly or annual basis. All fees are non-refundable except as required by law.</p>
-      
-      <h3 class="text-lg font-semibold mb-2">Intellectual Property</h3>
-      <p class="mb-4">The content on A Language Story is protected by copyright and other intellectual property laws. You may not reproduce, distribute, or create derivative works without permission.</p>
-      
-      <h3 class="text-lg font-semibold mb-2">Limitation of Liability</h3>
-      <p>A Language Story shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the service.</p>
+      <h3 class="text-lg font-semibold mb-2">Payments</h3>
+      <ul class="list-disc list-inside mb-4 space-y-2">
+        <li>Buying a school licence will entitle you to use A Language Story with a limit on the number of teachers or pupils accessing it, depending on the subscription. Usage must remain only within your educational establishment. Failure to comply will lead to the educational establishment login to become invalid.</li>
+        <li>The fee is valid for a year. You will be sent a reminder a month before your registration expires.</li>
+        <li>You will be sent a confirmation of your received payment.</li>
+        <li>Due to the nature of our product(s) and service(s), our refund policy is such that each individual refund request will be considered on a case-by-case basis.</li>
+        <li>Refunds will only be given at the discretion of the Company Management.</li>
+      </ul>
     `
   },
   'about': {
     title: 'About Us',
     content: `
-      <h2 class="text-xl font-bold mb-4">About A Language Story</h2>
+      <h2 class="text-xl font-bold mb-4">About Us</h2>
       
-      <p class="mb-4">A Language Story is a comprehensive language learning platform designed to make learning French, German, and Spanish engaging, effective, and enjoyable.</p>
+      <h3 class="text-lg font-semibold mb-2">The roots of A Language Story</h3>
+      <p class="mb-4">Let me tell you about us and where the roots of A Language Story began.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Our Mission</h3>
-      <p class="mb-4">We believe that language learning should be accessible, engaging, and culturally rich. Our story-based approach combines traditional language learning methods with modern technology to create an immersive learning experience.</p>
+      <p class="mb-4">About 20 years ago, I left London on a train with a rucksack full of jeans samples and headed to Europe. The plan was to start up a European clothing wholesale business for a friend of mine. The first stop was Amsterdam, and then I travelled on to Hamburg. Within a year I had visited most major cities in Germany, The Netherlands, Denmark, Sweden, and Switzerland.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Our Approach</h3>
-      <ul class="list-disc list-inside mb-4">
-        <li>Story-based learning with authentic cultural contexts</li>
-        <li>Comprehensive skill development (reading, writing, listening, speaking)</li>
-        <li>Interactive exercises and games</li>
-        <li>Personalized learning paths</li>
-        <li>Progress tracking and achievements</li>
-      </ul>
+      <p class="mb-4">I then spent several years based in Köln, travelling around to visit the customers I had found. Many of them became good friends over the years. Looking back, it was without doubt the best time of my life. However, at the time I don't think I released the profound effect the time was going to have on my life. The experiences I had and the friends I made were going to stay with me for a very long time.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Our Team</h3>
-      <p class="mb-4">Our team consists of experienced language educators, native speakers, and technology experts who are passionate about making language learning accessible to everyone.</p>
+      <p class="mb-4">Following the business years, I decided I needed a big change and became a secondary school teacher. I have been teaching German and French for over 10 years now and of course my time abroad is reflected in my teaching constantly. Stories from Berlin and Hamburg, of friends at Lake Konstanz and of travelling experiences all around Europe, I hope to inspire and enthuse pupils about the joy of language learning.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Join Our Community</h3>
-      <p>Start your language learning journey today and become part of our growing community of learners from around the world.</p>
+      <p class="mb-4">A Language Story has been a long journey, with the initial idea coming to me whilst on holiday in Brazil. The concept has changed a lot over the years, was cast aside a few times, stored in jar for a while, until now. Finally, it has all come together and is ready to blossom and grow.</p>
+      
+      <p class="mb-4">The collection of stories is a personal collection in many ways, drawing on real events and experiences, but moulded to give it a purpose, which is ultimately to help people develop their language skills and their confidence in understanding and using a foreign language.</p>
+      
+      <p class="mb-4">Proven by much educational research, reading is essential to language acquisition, but the problem for foreign language learners is that authentic literature is nearly always too difficult for a beginner, which can be time consuming, off putting and just plain too difficult. My stories are linked to the UK curriculum and cover typical topics which are used in schools. This means pupils can recognise a lot of vocabulary and quickly gain confidence that they understand the language.</p>
+      
+      <p class="mb-4">Unveiling the essence of A Language Story, these narratives draw inspiration from my extensive travels across Germany, France, Spain, and beyond, weaving tales of the friends I encountered and the adventures that unfolded.</p>
+      
+      <p class="mb-4">Each story incorporates essential vocabulary taught in language classrooms across the world, serving as a powerful resource for both educators and learners.</p>
+      
+      <p class="mb-4">The stories and accompanying teaching and learning materials, offer a versatile toolkit to reinforce classroom learning or seamlessly integrate with existing curricula.</p>
+      
+      <p class="mb-4">Immerse yourself in our stories, which are invaluable for activities such as engaging read-outs, comprehensive listening exercises, dynamic grammar drills, and much more.</p>
+      
+      <p class="mb-4"><strong>Elevate language education with A Language Story—a fusion of adventure, culture, and linguistic enrichment!</strong></p>
+      
+      <h3 class="text-lg font-semibold mb-2">Language Learning Hub for Everyone</h3>
+      <p class="mb-4">Whether you want to learn a language as an individual or want to enroll bulk number of students to our courses, we have the solution.</p>
+      
+      <p class="mb-4"><strong>School Subscriptions:</strong> Purchase a subscription as a school admin where you get bulk number of seats and can enroll students, and teachers and access progress reports of students.</p>
+      
+      <p class="mb-4"><strong>Individual Subscriptions:</strong> Individual subscriptions allow one user access to courses they have subscribed. If you want access for more than one user, you have to add required number of copies of subscription.</p>
+      
+      <p class="mb-4">A Language Story focusses on developing language skills in all four disciplines – Writing, Reading, Listening and Speaking. Each story is accompanied with a set of resources, which can be accessed in the classroom or at home.</p>
     `
   },
   'contact': {
@@ -176,39 +227,48 @@ const modalContent = {
   'free-resources': {
     title: 'Free Resources',
     content: `
-      <h2 class="text-xl font-bold mb-4">Free Language Learning Resources</h2>
+      <h2 class="text-xl font-bold mb-4">Free Resources</h2>
       
-      <p class="mb-4">Start your language learning journey with our free resources designed to help you build a strong foundation in French, German, and Spanish.</p>
+      <p class="mb-4"><strong>As well as our amazing stories, we are building a library of useful FREE resources in German, French and Spanish for your classroom or to use at home.</strong></p>
       
-      <h3 class="text-lg font-semibold mb-2">Free Trial</h3>
-      <p class="mb-4">Try our platform for free with access to:</p>
-      <ul class="list-disc list-inside mb-4">
-        <li>3 complete stories with audio</li>
-        <li>Basic vocabulary exercises</li>
-        <li>Progress tracking</li>
-        <li>Sample quizzes and games</li>
-      </ul>
+      <p class="mb-4">We believe that reading short stories is a key part of second language acquisition and will motivate learners to improve their language skills.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Free Downloads</h3>
-      <p class="mb-4">Download free resources to support your learning:</p>
-      <ul class="list-disc list-inside mb-4">
-        <li>Vocabulary flashcards</li>
-        <li>Grammar cheat sheets</li>
-        <li>Pronunciation guides</li>
-        <li>Cultural fact sheets</li>
-      </ul>
+      <p class="mb-4">Language learners will be enthused, with fun comprehension games and activities and inspired by the cultural references about the places our characters visit.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Learning Tips</h3>
-      <p class="mb-4">Access our blog with tips on:</p>
-      <ul class="list-disc list-inside mb-4">
-        <li>Effective study techniques</li>
-        <li>Cultural insights</li>
-        <li>Language learning motivation</li>
-        <li>Practice exercises</li>
-      </ul>
+      <p class="mb-4">Teachers have an almost endless resource with our collection of short stories, as there are so many ways to use the texts and activities, depending on the style of activity required, the size of the class, homework, classwork, consolidation or retrieval.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Get Started</h3>
-      <p>Sign up for a free account to access all these resources and start your language learning journey today!</p>
+      <p class="mb-4">Of course, teachers also have Schemes of Work to follow, and we want to try and help with that as well. Click on the icons below to find an ever growing range of useful FREE MFL resources for you to use in your general everyday lessons.</p>
+      
+      <div class="mt-6 space-y-4">
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h3 class="text-lg font-semibold mb-2 text-blue-800">🇩🇪 Free German Resources</h3>
+          <p class="text-blue-700">Click here to view FREE German resources for your classroom and home learning.</p>
+        </div>
+        
+        <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+          <h3 class="text-lg font-semibold mb-2 text-red-800">🇫🇷 Free French Resources</h3>
+          <p class="text-red-700">Click here to view FREE French resources for your classroom and home learning.</p>
+        </div>
+        
+        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+          <h3 class="text-lg font-semibold mb-2 text-yellow-800">🇪🇸 Free Spanish Resources</h3>
+          <p class="text-yellow-700">Click here to view FREE Spanish resources for your classroom and home learning.</p>
+        </div>
+      </div>
+      
+      <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+        <h3 class="text-lg font-semibold mb-2">What's Included</h3>
+        <ul class="list-disc list-inside space-y-1 text-gray-700">
+          <li>Curriculum-linked resources for all levels</li>
+          <li>Schemes of Work support materials</li>
+          <li>Classroom activities and homework exercises</li>
+          <li>Consolidation and retrieval practice</li>
+          <li>Cultural reference materials</li>
+          <li>Comprehension games and activities</li>
+        </ul>
+      </div>
+      
+      <p class="mt-4 text-center text-gray-600">Start exploring our free resources today and enhance your language learning experience!</p>
     `
   },
   'redeem': {
