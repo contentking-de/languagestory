@@ -11,6 +11,11 @@ export const metadata: Metadata = {
     index: false,
     follow: false,
   },
+  icons: {
+    icon: '/favicon.webp',
+    shortcut: '/favicon.webp',
+    apple: '/favicon.webp',
+  },
   openGraph: {
     title: 'A Language Story - Learn French, German & Spanish Through Stories',
     description: 'Master French, German, and Spanish through engaging short stories with audio, comprehension exercises, and cultural insights. Perfect for beginner to intermediate learners.',

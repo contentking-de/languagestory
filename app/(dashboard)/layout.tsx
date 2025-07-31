@@ -58,10 +58,10 @@ function UserMenu() {
           >
             Plans & Pricing
           </a>
-          <Button asChild className="rounded-full" style={{ backgroundColor: '#f97316' }}>
+          <Button asChild className="rounded-full bg-orange-500 hover:bg-orange-600">
             <Link href="/sign-in">Login</Link>
           </Button>
-          <Button asChild className="rounded-full" style={{ backgroundColor: '#115675' }}>
+          <Button asChild className="rounded-full bg-blue-700 hover:bg-blue-800">
             <Link href="/sign-up">Sign Up</Link>
           </Button>
         </div>
@@ -111,10 +111,10 @@ function UserMenu() {
                 Plans & Pricing
               </a>
               <div className="pt-4 space-y-3">
-                <Button asChild className="w-full rounded-full" style={{ backgroundColor: '#f97316' }}>
+                <Button asChild className="w-full rounded-full bg-orange-500 hover:bg-orange-600">
                   <Link href="/sign-in" onClick={() => setIsMenuOpen(false)}>Login</Link>
                 </Button>
-                <Button asChild className="w-full rounded-full" style={{ backgroundColor: '#115675' }}>
+                <Button asChild className="w-full rounded-full bg-blue-700 hover:bg-blue-800">
                   <Link href="/sign-up" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
                 </Button>
               </div>
@@ -169,8 +169,8 @@ function Header() {
             className="h-10 w-10 object-contain"
           />
           <div className="ml-2">
-            <div className="text-xl font-semibold text-gray-900">A Language Story</div>
-            <div className="text-xs text-orange-500">boost your language skills</div>
+            <div className="text-xl font-bold text-gray-900">A Language Story</div>
+            <div className="text-xs font-bold text-orange-500">boost your language skills</div>
           </div>
         </Link>
         <div className="flex items-center space-x-4">
