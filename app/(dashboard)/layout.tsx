@@ -64,10 +64,10 @@ function UserMenu() {
           >
             Plans & Pricing
           </a>
-          <Button asChild className="rounded-full bg-orange-500 hover:bg-orange-600">
+          <Button asChild className="rounded-lg bg-orange-500 hover:bg-orange-600">
             <Link href="/sign-in">Login</Link>
           </Button>
-          <Button asChild className="rounded-full bg-blue-700 hover:bg-blue-800">
+          <Button asChild className="rounded-lg bg-slate-600 hover:bg-slate-700">
             <Link href="/sign-up">Sign Up</Link>
           </Button>
         </div>
@@ -124,10 +124,10 @@ function UserMenu() {
                 Plans & Pricing
               </a>
               <div className="pt-4 space-y-3">
-                <Button asChild className="w-full rounded-full bg-orange-500 hover:bg-orange-600">
+                <Button asChild className="w-full rounded-lg bg-orange-500 hover:bg-orange-600">
                   <Link href="/sign-in" onClick={() => setIsMenuOpen(false)}>Login</Link>
                 </Button>
-                <Button asChild className="w-full rounded-full bg-blue-700 hover:bg-blue-800">
+                <Button asChild className="w-full rounded-lg bg-slate-600 hover:bg-slate-700">
                   <Link href="/sign-up" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
                 </Button>
               </div>

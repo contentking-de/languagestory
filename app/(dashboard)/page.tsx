@@ -936,9 +936,9 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
-              <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-5xl md:text-6xl">
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight sm:text-4xl md:text-5xl">
                 Language Learning with
-                <span className="block text-orange-500">Short Stories</span>
+                <span className="block text-orange-500">Short Stories, Quizzes & Games</span>
               </h1>
               <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
                 Master French, German, and Spanish through engaging stories with audio, 
@@ -946,9 +946,9 @@ export default function HomePage() {
                 intermediate learners who love reading and discovery.
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
-                <a href="/pricing">
+                <a href="#pricing">
                   <button
-                    className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-lg font-medium transition-all px-6 py-3 border-2 ${
+                    className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-lg font-medium transition-all px-6 py-3 border-2 ${
                       accessibilitySettings.colorScheme === 'high-contrast'
                         ? 'bg-white text-black border-white hover:bg-gray-100'
                         : accessibilitySettings.colorScheme === 'dark'
@@ -1709,7 +1709,7 @@ export default function HomePage() {
             <div className="mt-8 lg:mt-0 flex justify-center lg:justify-end">
               <a href="/sign-up">
                 <button
-                  className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-lg font-medium transition-all px-6 py-3 border-2 ${
+                  className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-lg font-medium transition-all px-6 py-3 border-2 ${
                     accessibilitySettings.colorScheme === 'high-contrast'
                       ? 'bg-white text-black border-white hover:bg-gray-100'
                       : accessibilitySettings.colorScheme === 'dark'
