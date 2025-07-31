@@ -1388,8 +1388,139 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Short Story Collection Section */}
-      <section id="short-stories" className="py-16 bg-white">
+              {/* Features Section */}
+        <section id="features" className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">Platform Features</h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Discover the comprehensive tools and features that make A Language Story the complete solution for language learning and teaching
+              </p>
+            </div>
+
+            {/* Interactive Learning Features */}
+            <div className="mb-16">
+              <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Interactive Learning Experience</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h6m2 5.291A7.962 7.962 0 0112 21a7.962 7.962 0 01-5.291-1.709L3 21l1.709-3.709A7.962 7.962 0 013 12a7.962 7.962 0 011.709-5.291m0 10.582A7.962 7.962 0 0112 19a7.962 7.962 0 015.291-1.709M6.709 6.709A7.962 7.962 0 0112 5a7.962 7.962 0 015.291 1.709" />
+                    </svg>
+                  </div>
+                  <h4 className="text-xl font-semibold text-gray-900 mb-4 text-center">Native Audio Integration</h4>
+                  <p className="text-gray-600 text-center">Professional native speaker recordings for perfect pronunciation practice and listening comprehension development.</p>
+                </div>
+
+                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a1 1 0 01-1-1V9a1 1 0 011-1h1a2 2 0 100-4H4a1 1 0 01-1-1V4a1 1 0 011-1h3a1 1 0 001-1v1z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-xl font-semibold text-gray-900 mb-4 text-center">Interactive Quizzes & Games</h4>
+                  <p className="text-gray-600 text-center">Engaging Wordwall games and interactive activities to reinforce learning through play and gamification.</p>
+                </div>
+
+                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
+                    <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-xl font-semibold text-gray-900 mb-4 text-center">Progress Analytics</h4>
+                  <p className="text-gray-600 text-center">Comprehensive tracking and analytics to monitor student progress, engagement, and learning outcomes.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Administrative Features */}
+            <div className="mb-16">
+              <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Administrative & Management Tools</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Institution Management</h4>
+                  <p className="text-gray-600 text-sm">Manage schools, universities, and educational institutions with comprehensive administrative tools.</p>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Team & Role Management</h4>
+                  <p className="text-gray-600 text-sm">Organize teams, assign roles, and manage permissions for teachers, administrators, and students.</p>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Activity Monitoring</h4>
+                  <p className="text-gray-600 text-sm">Real-time activity tracking and comprehensive logs for platform usage and student engagement.</p>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Security & Privacy</h4>
+                  <p className="text-gray-600 text-sm">Advanced security features, data protection, and privacy controls to keep educational data safe.</p>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">General Settings</h4>
+                  <p className="text-gray-600 text-sm">Customize platform settings, account preferences, and personal configurations for optimal learning experience.</p>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Advanced Analytics</h4>
+                  <p className="text-gray-600 text-sm">Detailed analytics dashboard with insights into learning patterns, content performance, and institutional metrics.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Platform Benefits */}
+            <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl p-8 text-center">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Complete Language Learning Ecosystem</h3>
+              <p className="text-lg text-gray-700 mb-6 max-w-4xl mx-auto">
+                From content creation to student assessment, from institutional management to detailed analytics - 
+                A Language Story provides everything you need for successful language education in one integrated platform.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 text-sm font-medium">
+                <span className="bg-white text-orange-600 px-4 py-2 rounded-full">Multi-Language Support</span>
+                <span className="bg-white text-orange-600 px-4 py-2 rounded-full">Scalable for Any Institution</span>
+                <span className="bg-white text-orange-600 px-4 py-2 rounded-full">Real-Time Collaboration</span>
+                <span className="bg-white text-orange-600 px-4 py-2 rounded-full">Comprehensive Reporting</span>
+                <span className="bg-white text-orange-600 px-4 py-2 rounded-full">Mobile-Friendly Design</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Short Story Collection Section */}
+        <section id="short-stories" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">

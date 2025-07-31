@@ -41,6 +41,12 @@ function UserMenu() {
             Why Choose Us
           </a>
           <a
+            href="#features"
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Features
+          </a>
+          <a
             href="#short-stories"
             className="text-sm font-medium text-gray-700 hover:text-gray-900"
           >
@@ -100,6 +106,13 @@ function UserMenu() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Why Choose Us
+              </a>
+              <a
+                href="#features"
+                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Features
               </a>
               <a
                 href="#short-stories"
