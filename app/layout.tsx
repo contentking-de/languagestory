@@ -5,8 +5,23 @@ import { getUser, getTeamForUser } from '@/lib/db/queries';
 import { SWRConfig } from 'swr';
 
 export const metadata: Metadata = {
-  title: 'A Language Story',
-  description: 'Your personalized language learning journey starts here.'
+  title: 'A Language Story - Learn French, German & Spanish Through Stories',
+  description: 'Master French, German, and Spanish through engaging short stories with audio, comprehension exercises, and cultural insights. Perfect for beginner to intermediate learners. Start your language learning journey today with our story-based approach.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+  openGraph: {
+    title: 'A Language Story - Learn French, German & Spanish Through Stories',
+    description: 'Master French, German, and Spanish through engaging short stories with audio, comprehension exercises, and cultural insights. Perfect for beginner to intermediate learners.',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'A Language Story - Learn French, German & Spanish Through Stories',
+    description: 'Master French, German, and Spanish through engaging short stories with audio, comprehension exercises, and cultural insights.',
+  },
 };
 
 export const viewport: Viewport = {
