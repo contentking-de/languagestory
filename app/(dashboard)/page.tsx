@@ -232,39 +232,89 @@ const modalContent = {
     content: `
       <h2 class="text-xl font-bold mb-4">Shopping Area</h2>
       
-      <p class="mb-4">Choose the perfect subscription plan for your language learning needs.</p>
+      <p class="mb-6">Choose the perfect subscription plan for your language learning needs. Access all short stories and teaching resources across French, German, and Spanish.</p>
       
-      <h3 class="text-lg font-semibold mb-2">Individual Plans</h3>
-      <div class="bg-gray-50 p-4 rounded-lg mb-4">
-        <h4 class="font-semibold mb-2">Monthly Plan - €9.99/month</h4>
-        <ul class="list-disc list-inside mb-2">
-          <li>Access to all stories and exercises</li>
-          <li>Progress tracking</li>
-          <li>Mobile app access</li>
-          <li>Email support</li>
-        </ul>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Subscribe Monthly</button>
-      </div>
+      <h3 class="text-lg font-semibold mb-4 text-orange-600">Individual Plans</h3>
       
       <div class="bg-gray-50 p-4 rounded-lg mb-4">
-        <h4 class="font-semibold mb-2">Annual Plan - €99.99/year (Save 17%)</h4>
-        <ul class="list-disc list-inside mb-2">
-          <li>All monthly features</li>
-          <li>Priority customer support</li>
-          <li>Exclusive bonus content</li>
-          <li>Free cancellation anytime</li>
+        <h4 class="font-semibold mb-2">Monthly Plan - £7.99/30 days</h4>
+        <ul class="list-disc list-inside mb-3 text-sm">
+          <li>Access for 30 Days</li>
+          <li>Valid for single user</li>
+          <li>Access to stories, games and quizzes</li>
         </ul>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Subscribe Annually</button>
+        <button class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 text-sm">Choose Your Course</button>
       </div>
       
-      <h3 class="text-lg font-semibold mb-2">School Plans</h3>
-      <p class="mb-4">Contact us for custom pricing and features designed specifically for educational institutions.</p>
+      <div class="bg-orange-50 border-2 border-orange-300 p-4 rounded-lg mb-4 relative">
+        <div class="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 rounded text-xs font-bold">BEST VALUE</div>
+        <h4 class="font-semibold mb-2">Quarterly Plan - £19.99/3 months</h4>
+        <ul class="list-disc list-inside mb-3 text-sm">
+          <li>Access for 3 Months</li>
+          <li>Valid for single user</li>
+          <li>Access to stories, games and quizzes</li>
+        </ul>
+        <button class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 text-sm">Choose Your Course</button>
+      </div>
       
-      <h3 class="text-lg font-semibold mb-2">Payment Methods</h3>
-      <p class="mb-4">We accept all major credit cards, PayPal, and bank transfers for annual plans.</p>
+      <div class="bg-gray-50 p-4 rounded-lg mb-6">
+        <h4 class="font-semibold mb-2">Annual Plan - £49.99/year</h4>
+        <ul class="list-disc list-inside mb-3 text-sm">
+          <li>Access for 1 Year</li>
+          <li>Valid for single user</li>
+          <li>Access to stories, games and quizzes</li>
+        </ul>
+        <button class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 text-sm">Choose Your Course</button>
+      </div>
       
-      <h3 class="text-lg font-semibold mb-2">Money-Back Guarantee</h3>
-      <p>Not satisfied? We offer a 30-day money-back guarantee on all subscriptions.</p>
+      <h3 class="text-lg font-semibold mb-4 text-orange-600">School Plans</h3>
+      
+      <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-lg mb-3 relative">
+        <div class="absolute top-2 right-2 bg-yellow-400 text-orange-900 px-2 py-1 rounded text-xs font-bold">POPULAR</div>
+        <h4 class="font-semibold mb-2">All Access Pass - £199.99/year</h4>
+        <ul class="list-disc list-inside mb-3 text-sm text-orange-100">
+          <li>One Year Subscription</li>
+          <li>900 seats for students & staff</li>
+          <li>Students logins</li>
+          <li>All stories and resources</li>
+        </ul>
+        <button class="bg-white text-orange-600 px-4 py-2 rounded-lg hover:bg-orange-50 text-sm font-semibold">Subscribe Now</button>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <h5 class="font-semibold mb-1 text-sm">German - £79.99/year</h5>
+          <ul class="text-xs text-gray-600 mb-2">
+            <li>• 900 seats</li>
+            <li>• German stories & resources</li>
+          </ul>
+          <button class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-600">Subscribe</button>
+        </div>
+        
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <h5 class="font-semibold mb-1 text-sm">French - £79.99/year</h5>
+          <ul class="text-xs text-gray-600 mb-2">
+            <li>• 900 seats</li>
+            <li>• French stories & resources</li>
+          </ul>
+          <button class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-600">Subscribe</button>
+        </div>
+        
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <h5 class="font-semibold mb-1 text-sm">Spanish - £79.99/year</h5>
+          <ul class="text-xs text-gray-600 mb-2">
+            <li>• 900 seats</li>
+            <li>• Spanish stories & resources</li>
+          </ul>
+          <button class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-600">Subscribe</button>
+        </div>
+      </div>
+      
+      <div class="bg-gray-100 p-4 rounded-lg">
+        <h3 class="text-sm font-semibold mb-2">Need Help?</h3>
+        <p class="text-sm mb-3">Contact us for custom pricing and features designed specifically for educational institutions.</p>
+        <p class="text-xs text-gray-600">We accept all major credit cards, PayPal, and bank transfers. 14-day free trial available for all plans.</p>
+      </div>
     `
   }
 };
@@ -1805,22 +1855,11 @@ export default function HomePage() {
             </div>
           </div>
           )}
-
-          {/* Contact Note */}
-          <div className="text-center mt-12 bg-gray-50 p-6 rounded-lg">
-            <p className="text-gray-600 mb-4">
-              Contact us if you have any questions and if you are considering a subscription for several schools 
-              or have any specific needs. Schools are also welcome to pay via bank transfer.
-            </p>
-            <button className="bg-orange-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-600 transition-colors">
-              Contact Us
-            </button>
-          </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-6">
             Not sure yet?
@@ -1840,7 +1879,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
             <div>
@@ -1852,22 +1891,54 @@ export default function HomePage() {
                 with A Language Story. Start with a free trial and discover how 
                 personalized learning can transform your fluency.
               </p>
+              <p className="mt-4 max-w-3xl text-lg text-gray-500">
+                In case of any questions concerning our platform, pricing and any other feedback, 
+                please use our contact form and let us know what we can do for you. We will get back 
+                to you as soon as possible.
+              </p>
             </div>
-            <div className="mt-8 lg:mt-0 flex justify-center lg:justify-end">
-              <a href="/sign-up">
-                <button
-                  className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-lg font-medium transition-all px-6 py-3 border-2 ${
-                    accessibilitySettings.colorScheme === 'high-contrast'
-                      ? 'bg-white text-black border-white hover:bg-gray-100'
-                      : accessibilitySettings.colorScheme === 'dark'
-                      ? 'bg-white text-gray-900 border-white hover:bg-gray-100'
-                      : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  Start Free Trial
-                  <ArrowRight className="ml-3 h-6 w-6" />
-                </button>
-              </a>
+            <div className="mt-8 lg:mt-0">
+              <div className="bg-gray-50 p-6 rounded-lg max-w-md ml-auto">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Get in Touch</h3>
+                <form className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                      placeholder="Your name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none"
+                      placeholder="How can we help you?"
+                    ></textarea>
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-orange-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
+                  >
+                    Send Message
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         </div>
@@ -1955,7 +2026,7 @@ export default function HomePage() {
                   </a>
                 </li>
                 <li>
-                  <a href="/pricing" className="text-gray-600 hover:text-gray-800 transition-colors">
+                  <a href="#pricing" className="text-gray-600 hover:text-gray-800 transition-colors">
                     Pricing
                   </a>
                 </li>
