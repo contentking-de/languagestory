@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   ArrowRight, 
   BookOpen, 
@@ -16,10 +17,19 @@ import {
   BarChart3,
   Download,
   UserCircle,
-  X
+  X,
+  Settings,
+  Type,
+  Eye,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Minus,
+  Plus,
+  Palette
 } from 'lucide-react';
 import { Terminal } from './terminal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // Modal content data
 const modalContent = {
@@ -259,10 +269,656 @@ const modalContent = {
   }
 };
 
+// Accessibility Settings Component
+function AccessibilityWidget({ 
+  settings, 
+  setSettings 
+}: { 
+  settings: {
+    fontSize: number;
+    contrast: string;
+    alignment: string;
+    lineSpacing: string;
+    colorScheme: string;
+  };
+  setSettings: React.Dispatch<React.SetStateAction<{
+    fontSize: number;
+    contrast: string;
+    alignment: string;
+    lineSpacing: string;
+    colorScheme: string;
+  }>>;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure component only renders on client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Apply accessibility settings to the document
+  useEffect(() => {
+    // Prevent hydration mismatch by only running on client side
+    if (typeof window === 'undefined') return;
+    
+    const root = document.documentElement;
+    
+    // Font size
+    root.style.setProperty('--accessibility-font-size', `${settings.fontSize}%`);
+    
+    // Contrast
+    if (settings.contrast === 'high') {
+      root.style.setProperty('--accessibility-contrast', 'high');
+    } else if (settings.contrast === 'low') {
+      root.style.setProperty('--accessibility-contrast', 'low');
+    } else {
+      root.style.setProperty('--accessibility-contrast', 'normal');
+    }
+    
+    // Alignment
+    root.style.setProperty('--accessibility-alignment', settings.alignment);
+    
+    // Line spacing
+    root.style.setProperty('--accessibility-line-spacing', settings.lineSpacing);
+    
+    // Color scheme
+    root.style.setProperty('--accessibility-color-scheme', settings.colorScheme);
+    
+    // Apply CSS custom properties
+    document.body.style.fontSize = `calc(1rem * ${settings.fontSize / 100})`;
+    
+    if (settings.contrast === 'high') {
+      document.body.style.filter = 'contrast(1.5)';
+    } else if (settings.contrast === 'low') {
+      document.body.style.filter = 'contrast(0.8)';
+    } else {
+      document.body.style.filter = 'none';
+    }
+    
+    if (settings.alignment === 'center') {
+      document.body.style.textAlign = 'center';
+    } else if (settings.alignment === 'right') {
+      document.body.style.textAlign = 'right';
+    } else {
+      document.body.style.textAlign = 'left';
+    }
+    
+    if (settings.lineSpacing === 'large') {
+      document.body.style.lineHeight = '1.8';
+    } else if (settings.lineSpacing === 'extra-large') {
+      document.body.style.lineHeight = '2.2';
+    } else {
+      document.body.style.lineHeight = '1.5';
+    }
+    
+    // Color scheme changes
+    if (settings.colorScheme === 'high-contrast') {
+      // High contrast: black background, white text, high contrast colors
+      document.body.style.backgroundColor = '#000000';
+      document.body.style.color = '#ffffff';
+      document.body.style.setProperty('--high-contrast-mode', 'true');
+      
+      // Override specific elements for high contrast
+      const elements = document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, a, button, li');
+      elements.forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.color = '#ffffff';
+          el.style.backgroundColor = el.style.backgroundColor || 'transparent';
+        }
+      });
+      
+      // Override cards and sections
+      const cards = document.querySelectorAll('.bg-white, .bg-gray-50, .bg-orange-50');
+      cards.forEach(card => {
+        if (card instanceof HTMLElement) {
+          card.style.backgroundColor = '#000000';
+          card.style.borderColor = '#ffffff';
+        }
+      });
+      
+      // Override footer specifically
+      const footer = document.querySelector('footer');
+      if (footer instanceof HTMLElement) {
+        footer.style.backgroundColor = '#000000';
+      }
+      
+    } else if (settings.colorScheme === 'dark') {
+      // Dark mode: dark background, light text
+      document.body.style.backgroundColor = '#1a1a1a';
+      document.body.style.color = '#ffffff';
+      document.body.style.setProperty('--dark-mode', 'true');
+      
+      // Override specific elements for dark mode
+      const elements = document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, a, button, li');
+      elements.forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.color = '#ffffff';
+        }
+      });
+      
+      // Override cards and sections
+      const cards = document.querySelectorAll('.bg-white, .bg-gray-50, .bg-orange-50');
+      cards.forEach(card => {
+        if (card instanceof HTMLElement) {
+          card.style.backgroundColor = '#2d2d2d';
+          card.style.borderColor = '#404040';
+        }
+      });
+      
+      // Override footer specifically
+      const footer = document.querySelector('footer');
+      if (footer instanceof HTMLElement) {
+        footer.style.backgroundColor = '#1a1a1a';
+      }
+      
+      // Override text colors
+      const textElements = document.querySelectorAll('.text-gray-600, .text-gray-700, .text-gray-800, .text-gray-900');
+      textElements.forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.color = '#e5e5e5';
+        }
+      });
+      
+    } else {
+      // Default: reset all custom styles
+      document.body.style.backgroundColor = '';
+      document.body.style.color = '';
+      document.body.style.removeProperty('--high-contrast-mode');
+      document.body.style.removeProperty('--dark-mode');
+      
+      // Reset all elements to their original styles
+      const elements = document.querySelectorAll('*');
+      elements.forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.removeProperty('color');
+          el.style.removeProperty('background-color');
+          el.style.removeProperty('border-color');
+        }
+      });
+      
+      // Reset footer specifically
+      const footer = document.querySelector('footer');
+      if (footer instanceof HTMLElement) {
+        footer.style.removeProperty('background-color');
+      }
+    }
+  }, [settings]);
+
+  const resetSettings = () => {
+    setSettings({
+      fontSize: 100,
+      contrast: 'normal',
+      alignment: 'left',
+      lineSpacing: 'normal',
+      colorScheme: 'default',
+    });
+  };
+
+  // Don't render anything during SSR
+  if (!isClient) return null;
+
+  return (
+    <>
+      {/* Accessibility Toggle Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-6 right-6 z-50 bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+        aria-label="Accessibility Settings"
+      >
+        <Settings className="h-6 w-6" />
+      </button>
+
+      {/* Accessibility Panel */}
+      {isOpen && (
+        <div className={`fixed bottom-20 right-6 z-50 w-80 rounded-lg shadow-xl border transition-colors ${
+          settings.colorScheme === 'high-contrast' 
+            ? 'bg-black border-white' 
+            : settings.colorScheme === 'dark'
+            ? 'bg-gray-800 border-gray-600'
+            : 'bg-white border-gray-200'
+        }`}>
+          <Card className={`${
+            settings.colorScheme === 'high-contrast' 
+              ? 'bg-black border-white' 
+              : settings.colorScheme === 'dark'
+              ? 'bg-gray-800 border-gray-600'
+              : 'bg-white border-gray-200'
+          }`}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className={`text-lg font-semibold flex items-center gap-2 ${
+                  settings.colorScheme === 'high-contrast' 
+                    ? 'text-white' 
+                    : settings.colorScheme === 'dark'
+                    ? 'text-white'
+                    : 'text-gray-900'
+                }`}>
+                  <Settings className="h-5 w-5" />
+                  Accessibility Settings
+                </CardTitle>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className={`transition-colors ${
+                    settings.colorScheme === 'high-contrast' 
+                      ? 'text-white hover:text-gray-300' 
+                      : settings.colorScheme === 'dark'
+                      ? 'text-gray-300 hover:text-white'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              
+                             {/* Font Size */}
+               <div>
+                 <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${
+                   settings.colorScheme === 'high-contrast' 
+                     ? 'text-white' 
+                     : settings.colorScheme === 'dark'
+                     ? 'text-gray-200'
+                     : 'text-gray-700'
+                 }`}>
+                   <Type className="h-4 w-4" />
+                   Font Size
+                 </label>
+                 <div className="flex items-center gap-2">
+                   <button
+                     onClick={() => setSettings(prev => ({ ...prev, fontSize: Math.max(80, prev.fontSize - 10) }))}
+                     className={`p-1 rounded transition-colors ${
+                       settings.colorScheme === 'high-contrast' 
+                         ? 'hover:bg-gray-800 text-white' 
+                         : settings.colorScheme === 'dark'
+                         ? 'hover:bg-gray-700 text-gray-200'
+                         : 'hover:bg-gray-100 text-gray-700'
+                     }`}
+                     aria-label="Decrease font size"
+                   >
+                     <Minus className="h-4 w-4" />
+                   </button>
+                   <span className={`text-sm font-medium min-w-[3rem] text-center ${
+                     settings.colorScheme === 'high-contrast' 
+                       ? 'text-white' 
+                       : settings.colorScheme === 'dark'
+                       ? 'text-gray-200'
+                       : 'text-gray-700'
+                   }`}>
+                     {settings.fontSize}%
+                   </span>
+                   <button
+                     onClick={() => setSettings(prev => ({ ...prev, fontSize: Math.min(200, prev.fontSize + 10) }))}
+                     className={`p-1 rounded transition-colors ${
+                       settings.colorScheme === 'high-contrast' 
+                         ? 'hover:bg-gray-800 text-white' 
+                         : settings.colorScheme === 'dark'
+                         ? 'hover:bg-gray-700 text-gray-200'
+                         : 'hover:bg-gray-100 text-gray-700'
+                     }`}
+                     aria-label="Increase font size"
+                   >
+                     <Plus className="h-4 w-4" />
+                   </button>
+                 </div>
+               </div>
+
+                             {/* Contrast */}
+               <div>
+                 <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${
+                   settings.colorScheme === 'high-contrast' 
+                     ? 'text-white' 
+                     : settings.colorScheme === 'dark'
+                     ? 'text-gray-200'
+                     : 'text-gray-700'
+                 }`}>
+                   <Eye className="h-4 w-4" />
+                   Contrast
+                 </label>
+                 <div className="grid grid-cols-3 gap-2">
+                   {['low', 'normal', 'high'].map((level) => (
+                     <button
+                       key={level}
+                       onClick={() => setSettings(prev => ({ ...prev, contrast: level }))}
+                       className={`px-3 py-1 text-xs rounded transition-colors ${
+                         settings.contrast === level
+                           ? 'bg-orange-500 text-white'
+                           : settings.colorScheme === 'high-contrast'
+                           ? 'bg-gray-800 text-white hover:bg-gray-700'
+                           : settings.colorScheme === 'dark'
+                           ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                       }`}
+                     >
+                       {level.charAt(0).toUpperCase() + level.slice(1)}
+                     </button>
+                   ))}
+                 </div>
+               </div>
+
+                             {/* Text Alignment */}
+               <div>
+                 <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${
+                   settings.colorScheme === 'high-contrast' 
+                     ? 'text-white' 
+                     : settings.colorScheme === 'dark'
+                     ? 'text-gray-200'
+                     : 'text-gray-700'
+                 }`}>
+                   <AlignLeft className="h-4 w-4" />
+                   Text Alignment
+                 </label>
+                 <div className="flex gap-2">
+                   {[
+                     { value: 'left', icon: AlignLeft },
+                     { value: 'center', icon: AlignCenter },
+                     { value: 'right', icon: AlignRight }
+                   ].map(({ value, icon: Icon }) => (
+                     <button
+                       key={value}
+                       onClick={() => setSettings(prev => ({ ...prev, alignment: value }))}
+                       className={`p-2 rounded transition-colors ${
+                         settings.alignment === value
+                           ? 'bg-orange-500 text-white'
+                           : settings.colorScheme === 'high-contrast'
+                           ? 'bg-gray-800 text-white hover:bg-gray-700'
+                           : settings.colorScheme === 'dark'
+                           ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                       }`}
+                       aria-label={`Align text ${value}`}
+                     >
+                       <Icon className="h-4 w-4" />
+                     </button>
+                   ))}
+                 </div>
+               </div>
+
+                             {/* Line Spacing */}
+               <div>
+                 <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${
+                   settings.colorScheme === 'high-contrast' 
+                     ? 'text-white' 
+                     : settings.colorScheme === 'dark'
+                     ? 'text-gray-200'
+                     : 'text-gray-700'
+                 }`}>
+                   <Type className="h-4 w-4" />
+                   Line Spacing
+                 </label>
+                 <div className="grid grid-cols-3 gap-2">
+                   {[
+                     { value: 'normal', label: 'Normal' },
+                     { value: 'large', label: 'Large' },
+                     { value: 'extra-large', label: 'Extra Large' }
+                   ].map(({ value, label }) => (
+                     <button
+                       key={value}
+                       onClick={() => setSettings(prev => ({ ...prev, lineSpacing: value }))}
+                       className={`px-3 py-1 text-xs rounded transition-colors ${
+                         settings.lineSpacing === value
+                           ? 'bg-orange-500 text-white'
+                           : settings.colorScheme === 'high-contrast'
+                           ? 'bg-gray-800 text-white hover:bg-gray-700'
+                           : settings.colorScheme === 'dark'
+                           ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                       }`}
+                     >
+                       {label}
+                     </button>
+                   ))}
+                 </div>
+               </div>
+
+               {/* Color Scheme */}
+               <div>
+                 <label className={`flex items-center gap-2 text-sm font-medium mb-2 ${
+                   settings.colorScheme === 'high-contrast' 
+                     ? 'text-white' 
+                     : settings.colorScheme === 'dark'
+                     ? 'text-gray-200'
+                     : 'text-gray-700'
+                 }`}>
+                   <Palette className="h-4 w-4" />
+                   Color Scheme
+                 </label>
+                 <div className="grid grid-cols-3 gap-2">
+                   {[
+                     { value: 'default', label: 'Default' },
+                     { value: 'high-contrast', label: 'High Contrast' },
+                     { value: 'dark', label: 'Dark' }
+                   ].map(({ value, label }) => (
+                     <button
+                       key={value}
+                       onClick={() => setSettings(prev => ({ ...prev, colorScheme: value }))}
+                       className={`px-3 py-1 text-xs rounded transition-colors ${
+                         settings.colorScheme === value
+                           ? 'bg-orange-500 text-white'
+                           : settings.colorScheme === 'high-contrast'
+                           ? 'bg-gray-800 text-white hover:bg-gray-700'
+                           : settings.colorScheme === 'dark'
+                           ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                       }`}
+                     >
+                       {label}
+                     </button>
+                   ))}
+                 </div>
+               </div>
+
+               {/* Reset Button */}
+               <div className={`pt-2 border-t transition-colors ${
+                 settings.colorScheme === 'high-contrast' 
+                   ? 'border-white' 
+                   : settings.colorScheme === 'dark'
+                   ? 'border-gray-600'
+                   : 'border-gray-200'
+               }`}>
+                 <button
+                   onClick={resetSettings}
+                   className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                     settings.colorScheme === 'high-contrast'
+                       ? 'text-white bg-gray-800 hover:bg-gray-700'
+                       : settings.colorScheme === 'dark'
+                       ? 'text-gray-200 bg-gray-700 hover:bg-gray-600'
+                       : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                   }`}
+                 >
+                   Reset to Default
+                 </button>
+               </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Consent Preferences Component
+function ConsentPreferences() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [preferences, setPreferences] = useState({
+    necessary: true, // Always required
+    analytics: false,
+    marketing: false,
+    preferences: false
+  });
+
+  // Ensure component only renders on client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const savePreferences = () => {
+    // Save preferences to localStorage
+    localStorage.setItem('cookie-preferences', JSON.stringify(preferences));
+    setIsOpen(false);
+  };
+
+  const acceptAll = () => {
+    setPreferences({
+      necessary: true,
+      analytics: true,
+      marketing: true,
+      preferences: true
+    });
+    localStorage.setItem('cookie-preferences', JSON.stringify({
+      necessary: true,
+      analytics: true,
+      marketing: true,
+      preferences: true
+    }));
+    setIsOpen(false);
+  };
+
+  // Don't render anything during SSR
+  if (!isClient) return null;
+
+  return (
+    <>
+      {/* Consent Preferences Toggle Button */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-6 right-20 z-40 w-12 h-12 bg-gray-800 text-white rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors shadow-lg"
+        aria-label="Cookie preferences"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </button>
+
+      {/* Consent Preferences Modal */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">
+                Cookie Preferences
+              </h2>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <p className="text-gray-600 text-sm">
+                We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. 
+                By clicking "Accept All", you consent to our use of cookies.
+              </p>
+
+              {/* Necessary Cookies */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-900">Necessary Cookies</h3>
+                  <div className="w-12 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-gray-600">Always</span>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600">
+                  These cookies are essential for the website to function properly and cannot be disabled.
+                </p>
+              </div>
+
+              {/* Analytics Cookies */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-900">Analytics Cookies</h3>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preferences.analytics}
+                      onChange={(e) => setPreferences(prev => ({ ...prev, analytics: e.target.checked }))}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+                <p className="text-sm text-gray-600">
+                  These cookies help us understand how visitors interact with our website by collecting and reporting information anonymously.
+                </p>
+              </div>
+
+              {/* Marketing Cookies */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-900">Marketing Cookies</h3>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preferences.marketing}
+                      onChange={(e) => setPreferences(prev => ({ ...prev, marketing: e.target.checked }))}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+                <p className="text-sm text-gray-600">
+                  These cookies are used to track visitors across websites to display relevant and engaging advertisements.
+                </p>
+              </div>
+
+              {/* Preferences Cookies */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-900">Preferences Cookies</h3>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={preferences.preferences}
+                      onChange={(e) => setPreferences(prev => ({ ...prev, preferences: e.target.checked }))}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+                <p className="text-sm text-gray-600">
+                  These cookies allow the website to remember choices you make and provide enhanced, more personal features.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-200">
+              <button
+                onClick={savePreferences}
+                className="flex-1 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Save Preferences
+              </button>
+              <button
+                onClick={acceptAll}
+                className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                Accept All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('school');
   const [modalOpen, setModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState('');
+  
+  // Accessibility settings state
+  const [accessibilitySettings, setAccessibilitySettings] = useState({
+    fontSize: 100, // percentage
+    contrast: 'normal', // low, normal, high
+    alignment: 'left', // left, center, right
+    lineSpacing: 'normal', // normal, large, extra-large
+    colorScheme: 'default', // default, high-contrast, dark
+  });
 
   const openModal = (modalType: string) => {
     setActiveModal(modalType);
@@ -291,14 +947,18 @@ export default function HomePage() {
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
                 <a href="/pricing">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="text-lg rounded-full"
+                  <button
+                    className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-lg font-medium transition-all px-6 py-3 border-2 ${
+                      accessibilitySettings.colorScheme === 'high-contrast'
+                        ? 'bg-white text-black border-white hover:bg-gray-100'
+                        : accessibilitySettings.colorScheme === 'dark'
+                        ? 'bg-white text-gray-900 border-white hover:bg-gray-100'
+                        : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'
+                    }`}
                   >
                     Start Your Journey
                     <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                  </button>
                 </a>
               </div>
             </div>
@@ -460,7 +1120,7 @@ export default function HomePage() {
       </section>
 
       {/* Key Features Section */}
-      <section className="py-16 bg-gray-50">
+      <section id="learning-resources" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
@@ -518,7 +1178,7 @@ export default function HomePage() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-16 bg-white">
+      <section id="pricing" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
@@ -531,11 +1191,25 @@ export default function HomePage() {
 
           {/* Tab Buttons */}
           <div className="flex justify-center mb-8">
-            <div className="bg-gray-100 p-1 rounded-lg">
+            <div className={`p-1 rounded-lg transition-colors ${
+              accessibilitySettings.colorScheme === 'high-contrast' 
+                ? 'bg-gray-800' 
+                : accessibilitySettings.colorScheme === 'dark'
+                ? 'bg-gray-700'
+                : 'bg-gray-100'
+            }`}>
               <button 
                 className={`px-6 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'school' 
-                    ? 'bg-white text-gray-900 shadow-sm' 
+                    ? accessibilitySettings.colorScheme === 'high-contrast'
+                      ? 'bg-white text-black shadow-sm'
+                      : accessibilitySettings.colorScheme === 'dark'
+                      ? 'bg-gray-800 text-white shadow-sm'
+                      : 'bg-white text-gray-900 shadow-sm'
+                    : accessibilitySettings.colorScheme === 'high-contrast'
+                    ? 'text-white hover:text-gray-300'
+                    : accessibilitySettings.colorScheme === 'dark'
+                    ? 'text-gray-300 hover:text-white'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
                 onClick={() => setActiveTab('school')}
@@ -545,7 +1219,15 @@ export default function HomePage() {
               <button 
                 className={`px-6 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'individual' 
-                    ? 'bg-white text-gray-900 shadow-sm' 
+                    ? accessibilitySettings.colorScheme === 'high-contrast'
+                      ? 'bg-white text-black shadow-sm'
+                      : accessibilitySettings.colorScheme === 'dark'
+                      ? 'bg-gray-800 text-white shadow-sm'
+                      : 'bg-white text-gray-900 shadow-sm'
+                    : accessibilitySettings.colorScheme === 'high-contrast'
+                    ? 'text-white hover:text-gray-300'
+                    : accessibilitySettings.colorScheme === 'dark'
+                    ? 'text-gray-300 hover:text-white'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
                 onClick={() => setActiveTab('individual')}
@@ -726,14 +1408,18 @@ export default function HomePage() {
             </div>
             <div className="mt-8 lg:mt-0 flex justify-center lg:justify-end">
               <a href="/sign-up">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="text-lg rounded-full"
+                <button
+                  className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-lg font-medium transition-all px-6 py-3 border-2 ${
+                    accessibilitySettings.colorScheme === 'high-contrast'
+                      ? 'bg-white text-black border-white hover:bg-gray-100'
+                      : accessibilitySettings.colorScheme === 'dark'
+                      ? 'bg-white text-gray-900 border-white hover:bg-gray-100'
+                      : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'
+                  }`}
                 >
                   Start Free Trial
                   <ArrowRight className="ml-3 h-6 w-6" />
-                </Button>
+                </button>
               </a>
             </div>
           </div>
@@ -748,22 +1434,12 @@ export default function HomePage() {
             {/* About Us Section */}
             <div className="lg:col-span-1">
               <h3 className="text-xl font-bold mb-4">About Us</h3>
-              <p className="text-gray-600 mb-4 leading-relaxed">
-                A Language Story is a one stop learning platform where you can 
-                learn German, French and Spanish languages through fun and 
-                engaging stories and games.
-              </p>
               <p className="text-gray-600 leading-relaxed">
                 A Language Story focusses on developing language skills in all four 
                 disciplines – Writing, Reading, Listening and Speaking. Each story 
                 is accompanied with a set of resources, which can be accessed in 
                 the classroom or at home.
               </p>
-              <div className="mt-6">
-                <div className="w-12 h-12 bg-gray-300 rounded-lg flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-gray-700" />
-                </div>
-              </div>
             </div>
 
             {/* Legal and Privacy Section */}
@@ -871,16 +1547,11 @@ export default function HomePage() {
           </div>
 
           {/* Footer Bottom */}
-                      <div className="border-t border-gray-300 mt-8 pt-6">
+          <div className="border-t border-gray-300 mt-8 pt-6">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-gray-600 text-sm">
                 © 2025 All Rights Reserved.
               </p>
-              
-              {/* Accessibility Button */}
-              <button className="mt-4 md:mt-0 w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center hover:bg-gray-400 transition-all">
-                <span className="text-gray-700 font-bold text-sm">X</span>
-              </button>
             </div>
           </div>
         </div>
@@ -917,6 +1588,11 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* Accessibility Widget */}
+      <AccessibilityWidget settings={accessibilitySettings} setSettings={setAccessibilitySettings} />
+      {/* Consent Preferences Component */}
+      <ConsentPreferences />
     </main>
   );
 }

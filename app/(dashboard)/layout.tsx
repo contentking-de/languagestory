@@ -32,12 +32,18 @@ function UserMenu() {
   if (!user) {
     return (
       <>
-        <Link
-          href="/pricing"
+        <a
+          href="#learning-resources"
+          className="text-sm font-medium text-gray-700 hover:text-gray-900"
+        >
+          Learning Resources
+        </a>
+        <a
+          href="#pricing"
           className="text-sm font-medium text-gray-700 hover:text-gray-900"
         >
           Pricing
-        </Link>
+        </a>
         <Button asChild className="rounded-full" style={{ backgroundColor: '#115675' }}>
           <Link href="/sign-up">Sign Up</Link>
         </Button>
@@ -83,7 +89,11 @@ function Header() {
     <header className="border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center">
-          <CircleIcon className="h-6 w-6 text-orange-500" />
+          <img 
+            src="/favicon.webp" 
+            alt="A Language Story Logo" 
+            className="h-10 w-10 object-contain"
+          />
           <span className="ml-2 text-xl font-semibold text-gray-900">A Language Story</span>
         </Link>
         <div className="flex items-center space-x-4">
