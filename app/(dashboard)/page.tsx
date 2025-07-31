@@ -1172,6 +1172,105 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Quizzes Section */}
+      <section id="quizzes" className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
+              Quizzes
+            </h2>
+            <h3 className="text-xl font-semibold text-gray-700 mb-6">
+              Test your knowledge with interactive quizzes!
+            </h3>
+            <p className="text-lg text-gray-600 max-w-4xl mx-auto">
+              Challenge yourself with our comprehensive quiz system designed to reinforce your learning. 
+              Choose from different quiz types to match your learning style and track your progress 
+              as you master new vocabulary and grammar concepts.
+            </p>
+            <p className="text-lg font-medium text-gray-700 mt-6 mb-8">
+              Select your preferred quiz type to get started.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* True or False Quiz */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
+              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <div className="text-center text-gray-700">
+                  <h4 className="text-2xl font-bold mb-2">True or False</h4>
+                  <p className="text-gray-600">quick assessment</p>
+                </div>
+              </div>
+              <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">True or False Quizzes</h3>
+                <p className="text-gray-600 mb-4">
+                  Test your understanding with simple true or false questions. Perfect for quick assessments 
+                  and reviewing key concepts from your language lessons.
+                </p>
+                <p className="text-gray-700 font-medium mb-6">
+                  Fast-paced questions to reinforce learning and build confidence!
+                </p>
+                <div className="mt-auto">
+                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                    Start Quiz
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Multiple Choice Quiz */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
+              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <div className="text-center text-gray-700">
+                  <h4 className="text-2xl font-bold mb-2">Multiple Choice</h4>
+                  <p className="text-gray-600">comprehensive testing</p>
+                </div>
+              </div>
+              <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Multiple Choice Quizzes</h3>
+                <p className="text-gray-600 mb-4">
+                  Choose the correct answer from multiple options. These quizzes cover vocabulary, 
+                  grammar, and comprehension to give you a well-rounded assessment.
+                </p>
+                <p className="text-gray-700 font-medium mb-6">
+                  Detailed questions with instant feedback to enhance your learning!
+                </p>
+                <div className="mt-auto">
+                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                    Start Quiz
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Fill the Gap Quiz */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
+              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <div className="text-center text-gray-700">
+                  <h4 className="text-2xl font-bold mb-2">Fill the Gap</h4>
+                  <p className="text-gray-600">active recall</p>
+                </div>
+              </div>
+              <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Fill the Gap Quizzes</h3>
+                <p className="text-gray-600 mb-4">
+                  Complete sentences by filling in the missing words. These exercises help you 
+                  practice context clues and reinforce proper usage of vocabulary and grammar.
+                </p>
+                <p className="text-gray-700 font-medium mb-6">
+                  Interactive exercises that improve retention and practical application!
+                </p>
+                <div className="mt-auto">
+                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                    Start Quiz
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Vocabulary Games Section */}
       <section id="vocabulary-games" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

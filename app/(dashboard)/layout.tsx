@@ -47,6 +47,12 @@ function UserMenu() {
             Vocabulary Games
           </a>
           <a
+            href="#quizzes"
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Quizzes
+          </a>
+          <a
             href="#learning-resources"
             className="text-sm font-medium text-gray-700 hover:text-gray-900"
           >
@@ -95,6 +101,13 @@ function UserMenu() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Vocabulary Games
+              </a>
+              <a
+                href="#quizzes"
+                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Quizzes
               </a>
               <a
                 href="#learning-resources"
