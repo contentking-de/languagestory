@@ -116,7 +116,8 @@ export async function getTeamForUser() {
                 columns: {
                   id: true,
                   name: true,
-                  email: true
+                  email: true,
+                  role: true
                 }
               }
             }
