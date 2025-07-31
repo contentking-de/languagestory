@@ -1067,6 +1067,207 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Short Story Collection Section */}
+      <section id="short-stories" className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
+              Short Story Collection
+            </h2>
+            <h3 className="text-xl font-semibold text-gray-700 mb-6">
+              Learn languages with short stories!
+            </h3>
+            <p className="text-lg text-gray-600 max-w-4xl mx-auto">
+              Welcome to A Language Story! Consolidate language skills and vocabulary with our short stories, 
+              in-line with topics you recognise from the classroom. Each page has references to culture, 
+              audio from a native speaker, games and activities to support learning.
+            </p>
+            <p className="text-lg font-medium text-gray-700 mt-6 mb-8">
+              Click one of the images below to choose the language you want to learn.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Spanish Stories */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
+              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <div className="text-center text-gray-700">
+                  <h4 className="text-2xl font-bold mb-2">Spanish</h4>
+                  <p className="text-gray-600">short stories</p>
+                </div>
+              </div>
+              <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Spanish short stories</h3>
+                <p className="text-gray-600 mb-4">
+                  Welcome to our library of Spanish short stories, following the adventures of 
+                  <strong> Los dos amigos</strong>. As Carlos and Carla travel around Spain, they will reveal 
+                  many interesting cultural facts about the places they visit, as well as the specialties, 
+                  and traditions they discover.
+                </p>
+                <p className="text-gray-700 font-medium mb-6">
+                  Practice reading aloud, listening, dictation, translation, vocabulary, comprehension, and more!
+                </p>
+                <div className="mt-auto">
+                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                    Enroll Now
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* German Stories */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
+              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <div className="text-center text-gray-700">
+                  <h4 className="text-2xl font-bold mb-2">German</h4>
+                  <p className="text-gray-600">short stories</p>
+                </div>
+              </div>
+              <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">German short stories</h3>
+                <p className="text-gray-600 mb-4">
+                  Welcome to our library of German short stories, following the adventures of 
+                  <strong> Johnny German & Friends</strong>. As Johnny travels around Germany, Switzerland, 
+                  and Austria, he will reveal many interesting cultural facts about the places he visits, 
+                  as well as the specialities and traditions he discovers.
+                </p>
+                <p className="text-gray-700 font-medium mb-6">
+                  Practice reading aloud, listening, dictation, translation, vocabulary, comprehension and more!
+                </p>
+                <div className="mt-auto">
+                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                    Enroll Now
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* French Stories */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
+              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <div className="text-center text-gray-700">
+                  <h4 className="text-2xl font-bold mb-2">French</h4>
+                  <p className="text-gray-600">short stories</p>
+                </div>
+              </div>
+              <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">French short stories</h3>
+                <p className="text-gray-600 mb-4">
+                  Welcome to our library of French short stories following the adventures of 
+                  <strong> Les amis d'Annie</strong>. As Annie travels around France, she will reveal 
+                  many interesting cultural facts about the places she visits, as well as the specialities 
+                  and traditions she discovers.
+                </p>
+                <p className="text-gray-700 font-medium mb-6">
+                  Practice reading aloud, listening, dictation, translation, vocabulary, comprehension and more!
+                </p>
+                <div className="mt-auto">
+                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                    Enroll Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Vocabulary Games Section */}
+      <section id="vocabulary-games" className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
+              Vocabulary Games
+            </h2>
+            <h3 className="text-xl font-semibold text-gray-700 mb-6">
+              Games are a great way to learn new vocabulary and consolidate prior knowledge.
+            </h3>
+            <p className="text-lg text-gray-600 max-w-4xl mx-auto mb-8">
+              Using Wordwall, we have created some fun games for you to try out. 
+              Enroll in the course below for the language you would like to practice. 
+              All the vocabulary games are linked to the stories, to help your understanding of each page. Have fun!
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Spanish Games */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
+              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
+                <div className="text-center text-gray-700">
+                  <h4 className="text-2xl font-bold mb-2">Spanish</h4>
+                  <p className="text-gray-600">vocabulary games</p>
+                </div>
+                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                  Free
+                </div>
+              </div>
+              <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Spanish vocabulary games</h3>
+                <p className="text-gray-600 mb-4">
+                  Practice Spanish vocabulary through interactive games designed to reinforce your learning 
+                  from our stories. Perfect for building vocabulary and improving retention.
+                </p>
+                <div className="mt-auto">
+                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                    Enroll Now
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* German Games */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
+              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
+                <div className="text-center text-gray-700">
+                  <h4 className="text-2xl font-bold mb-2">German</h4>
+                  <p className="text-gray-600">vocabulary games</p>
+                </div>
+                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                  Free
+                </div>
+              </div>
+              <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">German vocabulary games</h3>
+                <p className="text-gray-600 mb-4">
+                  Enhance your German vocabulary with engaging games that complement our story-based learning approach. 
+                  Strengthen your language skills through interactive practice.
+                </p>
+                <div className="mt-auto">
+                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                    Continue Study
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* French Games */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
+              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
+                <div className="text-center text-gray-700">
+                  <h4 className="text-2xl font-bold mb-2">French</h4>
+                  <p className="text-gray-600">vocabulary games</p>
+                </div>
+                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                  Free
+                </div>
+              </div>
+              <div className="p-6 flex flex-col flex-grow">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">French vocabulary games</h3>
+                <p className="text-gray-600 mb-4">
+                  Master French vocabulary with our interactive games that support your learning journey. 
+                  Practice and reinforce new words in a fun, engaging way.
+                </p>
+                <div className="mt-auto">
+                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                    Continue Study
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Target Audiences Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

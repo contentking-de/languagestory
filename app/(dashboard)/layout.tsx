@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { use, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { CircleIcon, Home, LogOut } from 'lucide-react';
+import { CircleIcon, Home, LogOut, Menu, X } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,21 +32,95 @@ function UserMenu() {
   if (!user) {
     return (
       <>
-        <a
-          href="#learning-resources"
-          className="text-sm font-medium text-gray-700 hover:text-gray-900"
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center space-x-4">
+          <a
+            href="#short-stories"
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Short Stories
+          </a>
+          <a
+            href="#vocabulary-games"
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Vocabulary Games
+          </a>
+          <a
+            href="#learning-resources"
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Learning Resources
+          </a>
+          <a
+            href="#pricing"
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Plans & Pricing
+          </a>
+          <Button asChild className="rounded-full" style={{ backgroundColor: '#f97316' }}>
+            <Link href="/sign-in">Login</Link>
+          </Button>
+          <Button asChild className="rounded-full" style={{ backgroundColor: '#115675' }}>
+            <Link href="/sign-up">Sign Up</Link>
+          </Button>
+        </div>
+
+        {/* Mobile Burger Menu Button */}
+        <button
+          className="md:hidden p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
-          Learning Resources
-        </a>
-        <a
-          href="#pricing"
-          className="text-sm font-medium text-gray-700 hover:text-gray-900"
-        >
-          Pricing
-        </a>
-        <Button asChild className="rounded-full" style={{ backgroundColor: '#115675' }}>
-          <Link href="/sign-up">Sign Up</Link>
-        </Button>
+          {isMenuOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
+        </button>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg md:hidden z-50">
+            <div className="px-4 py-6 space-y-4">
+              <a
+                href="#short-stories"
+                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Short Stories
+              </a>
+              <a
+                href="#vocabulary-games"
+                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Vocabulary Games
+              </a>
+              <a
+                href="#learning-resources"
+                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Learning Resources
+              </a>
+              <a
+                href="#pricing"
+                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Plans & Pricing
+              </a>
+              <div className="pt-4 space-y-3">
+                <Button asChild className="w-full rounded-full" style={{ backgroundColor: '#f97316' }}>
+                  <Link href="/sign-in" onClick={() => setIsMenuOpen(false)}>Login</Link>
+                </Button>
+                <Button asChild className="w-full rounded-full" style={{ backgroundColor: '#115675' }}>
+                  <Link href="/sign-up" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   }
@@ -86,7 +160,7 @@ function UserMenu() {
 
 function Header() {
   return (
-    <header className="border-b border-gray-200">
+    <header className="border-b border-gray-200 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center">
           <img 
@@ -94,7 +168,10 @@ function Header() {
             alt="A Language Story Logo" 
             className="h-10 w-10 object-contain"
           />
-          <span className="ml-2 text-xl font-semibold text-gray-900">A Language Story</span>
+          <div className="ml-2">
+            <div className="text-xl font-semibold text-gray-900">A Language Story</div>
+            <div className="text-xs text-orange-500">boost your language skills</div>
+          </div>
         </Link>
         <div className="flex items-center space-x-4">
           <Suspense fallback={<div className="h-9" />}>
