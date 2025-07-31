@@ -153,8 +153,8 @@ export default function VocabularyPage() {
   };
 
   // Get unique values for filters
-  const uniqueLanguages = [...new Set(vocabulary.map(word => word.course_language).filter(Boolean))];
-  const uniqueTypes = [...new Set(vocabulary.map(word => word.word_type).filter(Boolean))];
+  const uniqueLanguages = [...new Set(vocabulary.map(word => word.course_language).filter((lang): lang is string => Boolean(lang)))];
+  const uniqueTypes = [...new Set(vocabulary.map(word => word.word_type).filter((type): type is string => Boolean(type)))];
   const uniqueDifficulties = [...new Set(vocabulary.map(word => word.difficulty_level))].sort();
 
   if (loading) {

@@ -6,10 +6,11 @@ import { eq } from 'drizzle-orm';
 // GET: Fetch a single game by ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const gameId = parseInt(params.id);
+    const { id } = await params;
+    const gameId = parseInt(id);
     
     if (isNaN(gameId)) {
       return NextResponse.json(
@@ -44,10 +45,11 @@ export async function GET(
 // DELETE: Remove a game from the database
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const gameId = parseInt(params.id);
+    const { id } = await params;
+    const gameId = parseInt(id);
     
     if (isNaN(gameId)) {
       return NextResponse.json(
@@ -89,10 +91,11 @@ export async function DELETE(
 // PATCH: Update a game (e.g., increment usage count, toggle featured status)
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const gameId = parseInt(params.id);
+    const { id } = await params;
+    const gameId = parseInt(id);
     
     if (isNaN(gameId)) {
       return NextResponse.json(

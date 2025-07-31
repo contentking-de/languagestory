@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +29,7 @@ interface Course {
   level: string;
 }
 
-export default function CreateLessonPage() {
+function CreateLessonForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedCourseId = searchParams.get('courseId');
@@ -367,5 +367,19 @@ export default function CreateLessonPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function CreateLessonPage() {
+  return (
+    <Suspense fallback={
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        </div>
+      </div>
+    }>
+      <CreateLessonForm />
+    </Suspense>
   );
 } 

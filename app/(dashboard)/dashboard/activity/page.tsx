@@ -9,6 +9,13 @@ import {
   UserMinus,
   Mail,
   CheckCircle,
+  BookOpen,
+  GraduationCap,
+  Users,
+  Play,
+  CheckSquare,
+  FileText,
+  BarChart3,
   type LucideIcon,
 } from 'lucide-react';
 import { ActivityType } from '@/lib/db/schema';
@@ -25,6 +32,15 @@ const iconMap: Record<ActivityType, LucideIcon> = {
   [ActivityType.REMOVE_TEAM_MEMBER]: UserMinus,
   [ActivityType.INVITE_TEAM_MEMBER]: Mail,
   [ActivityType.ACCEPT_INVITATION]: CheckCircle,
+  // Educational activities
+  [ActivityType.CREATE_CLASS]: BookOpen,
+  [ActivityType.ENROLL_STUDENT]: GraduationCap,
+  [ActivityType.REMOVE_STUDENT]: UserMinus,
+  [ActivityType.ASSIGN_TEACHER]: Users,
+  [ActivityType.START_LESSON]: Play,
+  [ActivityType.COMPLETE_LESSON]: CheckSquare,
+  [ActivityType.SUBMIT_EXERCISE]: FileText,
+  [ActivityType.VIEW_PROGRESS]: BarChart3,
 };
 
 function getRelativeTime(date: Date) {
@@ -63,6 +79,23 @@ function formatAction(action: ActivityType): string {
       return 'You invited a team member';
     case ActivityType.ACCEPT_INVITATION:
       return 'You accepted an invitation';
+    // Educational activities
+    case ActivityType.CREATE_CLASS:
+      return 'You created a new class';
+    case ActivityType.ENROLL_STUDENT:
+      return 'You enrolled a student';
+    case ActivityType.REMOVE_STUDENT:
+      return 'You removed a student';
+    case ActivityType.ASSIGN_TEACHER:
+      return 'You assigned a teacher';
+    case ActivityType.START_LESSON:
+      return 'You started a lesson';
+    case ActivityType.COMPLETE_LESSON:
+      return 'You completed a lesson';
+    case ActivityType.SUBMIT_EXERCISE:
+      return 'You submitted an exercise';
+    case ActivityType.VIEW_PROGRESS:
+      return 'You viewed progress';
     default:
       return 'Unknown action occurred';
   }
