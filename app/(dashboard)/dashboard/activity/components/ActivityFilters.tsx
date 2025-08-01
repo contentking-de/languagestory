@@ -11,7 +11,7 @@ import { Filter } from 'lucide-react';
 
 interface TeamMember {
   id: number;
-  name: string;
+  name: string | null;
   role: string;
   email: string;
 }
@@ -109,7 +109,7 @@ export function ActivityFilters({ teamMembers, currentUser }: ActivityFiltersPro
                   <SelectItem value="all">All users</SelectItem>
                   {teamMembers?.map((member) => (
                     <SelectItem key={member.id} value={member.id.toString()}>
-                      {member.name} ({member.role})
+                      {member.name || 'Unknown User'} ({member.role})
                     </SelectItem>
                   ))}
                 </SelectContent>
