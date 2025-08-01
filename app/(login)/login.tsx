@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X, Eye, EyeOff } from 'lucide-react';
 import { signIn, signUp } from './actions';
 import { ActionState } from '@/lib/auth/middleware';
 
@@ -24,6 +24,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
     { error: '' }
   );
   const [gdprAccepted, setGdprAccepted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState('');
@@ -208,11 +209,11 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
             >
               Password
             </Label>
-            <div className="mt-1">
+            <div className="mt-1 relative">
               <Input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 autoComplete={
                   mode === 'signin' ? 'current-password' : 'new-password'
                 }
@@ -220,13 +221,22 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                 required
                 minLength={8}
                 maxLength={100}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-lg relative block w-full px-3 py-2 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
                 placeholder="Enter your password"
               />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Eye className="h-4 w-4" aria-hidden="true" />
+                )}
+              </button>
             </div>
           </div>
-
-
 
           {mode === 'signup' && (
             <div className="flex items-start space-x-2">
@@ -287,6 +297,17 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               )}
             </Button>
           </div>
+
+          {mode === 'signin' && (
+            <div className="text-center mt-4">
+              <Link 
+                href="/forgot-password" 
+                className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+              >
+                Forgot your password?
+              </Link>
+            </div>
+          )}
         </form>
 
         <div className="mt-6">
