@@ -217,6 +217,16 @@ function InviteTeamMember() {
   // State for bulk invitation
   const [emails, setEmails] = useState('');
   const [uploadedEmails, setUploadedEmails] = useState<string[]>([]);
+  const [uploadedNames, setUploadedNames] = useState<string[]>([]);
+  const [uploadedClasses, setUploadedClasses] = useState<string[]>([]);
+  const [uploadedYearGroups, setUploadedYearGroups] = useState<string[]>([]);
+  const [fileInfo, setFileInfo] = useState<{
+    emailColumn: number;
+    nameColumn: number | null;
+    classColumn: number | null;
+    yearGroupColumn: number | null;
+    hasHeaders: boolean;
+  } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -230,22 +240,48 @@ function InviteTeamMember() {
     formData.append('file', file);
 
     try {
+      console.log('Uploading file:', file.name);
       const response = await fetch('/api/upload-excel', {
         method: 'POST',
         body: formData,
       });
 
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', errorText);
+        try {
+          const errorJson = JSON.parse(errorText);
+          alert(errorJson.error || errorJson.details || 'Failed to process file');
+        } catch {
+          alert(`Server error: ${response.status} - ${errorText}`);
+        }
+        return;
+      }
+
       const result = await response.json();
+      console.log('API Result:', result);
 
       if (result.success) {
         setUploadedEmails(result.emails);
+        setUploadedNames(result.names);
+        setUploadedClasses(result.classes || []);
+        setUploadedYearGroups(result.yearGroups || []);
         setEmails(result.emails.join(', '));
+        setFileInfo({
+          emailColumn: result.emailColumn,
+          nameColumn: result.nameColumn,
+          classColumn: result.classColumn,
+          yearGroupColumn: result.yearGroupColumn,
+          hasHeaders: result.hasHeaders
+        });
       } else {
         alert(result.error || 'Failed to process file');
       }
     } catch (error) {
       console.error('Error uploading file:', error);
-      alert('Failed to upload file');
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsUploading(false);
     }
@@ -356,26 +392,66 @@ function InviteTeamMember() {
                       className="hidden"
                     />
                     <span className="text-sm text-gray-500">
-                      Excel/CSV with emails in first column
+                      Excel/CSV with emails (auto-detected column)
                     </span>
                   </div>
                   {uploadedEmails.length > 0 && (
-                    <div className="mt-2">
-                      <Badge variant="secondary" className="mb-2">
-                        {uploadedEmails.length} emails loaded
-                      </Badge>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setUploadedEmails([]);
-                          setEmails('');
-                        }}
-                        className="ml-2"
-                      >
-                        Clear
-                      </Button>
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">
+                          {uploadedEmails.length} emails loaded
+                        </Badge>
+                        {fileInfo && (
+                          <Badge variant="outline">
+                            Email: Column {fileInfo.emailColumn}
+                            {fileInfo.nameColumn && ` | Name: Column ${fileInfo.nameColumn}`}
+                            {fileInfo.classColumn && ` | Class: Column ${fileInfo.classColumn}`}
+                            {fileInfo.yearGroupColumn && ` | Year Group: Column ${fileInfo.yearGroupColumn}`}
+                          </Badge>
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setUploadedEmails([]);
+                            setUploadedNames([]);
+                            setUploadedClasses([]);
+                            setUploadedYearGroups([]);
+                            setEmails('');
+                            setFileInfo(null);
+                          }}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                      
+                      {/* Preview of loaded data */}
+                      <div className="bg-gray-50 rounded-md p-3 max-h-40 overflow-y-auto">
+                        <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+                        <div className="space-y-1">
+                          {uploadedEmails.slice(0, 5).map((email, index) => (
+                            <div key={index} className="text-sm text-gray-600">
+                              {uploadedNames[index] && (
+                                <span className="font-medium">{uploadedNames[index]}</span>
+                              )}
+                              {uploadedNames[index] && ' - '}
+                              <span className="text-gray-500">{email}</span>
+                              {uploadedClasses[index] && (
+                                <span className="text-gray-500">, {uploadedClasses[index]}</span>
+                              )}
+                              {uploadedYearGroups[index] && (
+                                <span className="text-gray-500">, {uploadedYearGroups[index]}</span>
+                              )}
+                            </div>
+                          ))}
+                          {uploadedEmails.length > 5 && (
+                            <p className="text-sm text-gray-500">
+                              ... and {uploadedEmails.length - 5} more
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -428,6 +504,9 @@ function InviteTeamMember() {
 
                 <form action={bulkInviteAction} className="space-y-4">
                   <input type="hidden" name="emails" value={emails} />
+                  <input type="hidden" name="names" value={uploadedNames.join(', ')} />
+                  <input type="hidden" name="classes" value={uploadedClasses.join(', ')} />
+                  <input type="hidden" name="yearGroups" value={uploadedYearGroups.join(', ')} />
                   <Button
                     type="submit"
                     className="bg-orange-500 hover:bg-orange-600 text-white w-full"

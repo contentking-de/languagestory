@@ -37,6 +37,8 @@ export const users = pgTable('users', {
   preferredLanguage: languageEnum('preferred_language').default('all'),
   institutionId: integer('institution_id'),
   parentId: integer('parent_id'), // For parent-child relationships
+  class: varchar('class', { length: 50 }), // Student's class (e.g., "Class 3A", "Year 7B")
+  yearGroup: varchar('year_group', { length: 20 }), // Student's year group (e.g., "Year 7", "Grade 10")
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

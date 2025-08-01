@@ -455,12 +455,16 @@ const bulkInviteStudentsSchema = z.object({
   language: z.enum(['french', 'german', 'spanish', 'all']).default('all'),
   institutionId: z.string().optional(),
   classId: z.string().optional(),
+  // Additional data from Excel upload
+  names: z.string().optional(),
+  classes: z.string().optional(),
+  yearGroups: z.string().optional(),
 });
 
 export const bulkInviteStudents = validatedActionWithUser(
   bulkInviteStudentsSchema,
   async (data, _, user) => {
-    const { emails, language, institutionId, classId } = data;
+    const { emails, language, institutionId, classId, names, classes, yearGroups } = data;
     const userWithTeam = await getUserWithTeam(user.id);
 
     if (!userWithTeam?.teamId) {
@@ -486,6 +490,11 @@ export const bulkInviteStudents = validatedActionWithUser(
     if (emailList.length === 0) {
       return { error: 'No valid email addresses provided' };
     }
+
+    // Parse additional data if provided
+    const nameList = names ? names.split(/[,;\n]/).map(n => n.trim()) : [];
+    const classList = classes ? classes.split(/[,;\n]/).map(c => c.trim()) : [];
+    const yearGroupList = yearGroups ? yearGroups.split(/[,;\n]/).map(y => y.trim()) : [];
 
     // Validate all emails
     const invalidEmails = emailList.filter(email => !z.string().email().safeParse(email).success);
@@ -514,7 +523,12 @@ export const bulkInviteStudents = validatedActionWithUser(
     const teamName = team[0]?.name || 'A Language Story Team';
 
     // Process each email
-    for (const email of emailList) {
+    for (let i = 0; i < emailList.length; i++) {
+      const email = emailList[i];
+      const name = nameList[i] || '';
+      const classValue = classList[i] || '';
+      const yearGroup = yearGroupList[i] || '';
+      
       try {
         // Check if user already exists and is part of the team
         const existingMember = await db
@@ -549,7 +563,7 @@ export const bulkInviteStudents = validatedActionWithUser(
           continue;
         }
 
-        // Create invitation
+        // Create invitation with additional data
         const invitation = await db.insert(invitations).values({
           teamId: userWithTeam.teamId,
           email,
