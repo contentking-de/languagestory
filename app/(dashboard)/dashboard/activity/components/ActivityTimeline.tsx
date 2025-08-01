@@ -28,10 +28,10 @@ import { ActivityType } from '@/lib/db/schema';
 interface Activity {
   id: number;
   action: string;
-  timestamp: string;
-  userId: number;
-  userName: string;
-  userRole: string;
+  timestamp: Date;
+  userId: number | null;
+  userName: string | null;
+  userRole: string | null;
 }
 
 interface ActivityTimelineProps {
@@ -235,10 +235,10 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <p className="text-sm font-medium text-gray-900">
-                          {activity.userName}
+                          {activity.userName || 'Unknown User'}
                         </p>
-                        <Badge variant="outline" className={`text-xs ${getRoleColor(activity.userRole)}`}>
-                          {activity.userRole}
+                        <Badge variant="outline" className={`text-xs ${getRoleColor(activity.userRole || 'unknown')}`}>
+                          {activity.userRole || 'unknown'}
                         </Badge>
                       </div>
                       <p className="text-xs text-gray-500">
