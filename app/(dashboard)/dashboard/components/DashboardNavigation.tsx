@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { 
   Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight,
-  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain
+  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart
 } from 'lucide-react';
 
 interface NavItem {
@@ -28,6 +28,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
 
   // Full navigation for Super Admin and Content Creator
   const fullNavItems: NavItem[] = [
+    { href: '/dashboard/welcome', icon: Heart, label: 'Welcome' },
     { href: '/dashboard/ai-creator', icon: Brain, label: 'AI Creator' },
     { 
       href: '/dashboard/content', 
@@ -65,6 +66,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
 
   // Stripped navigation for Teachers
   const teacherNavItems: NavItem[] = [
+    { href: '/dashboard/welcome', icon: Heart, label: 'Welcome' },
     { 
       href: '/dashboard/content', 
       icon: BookOpen, 

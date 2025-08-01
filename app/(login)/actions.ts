@@ -107,7 +107,7 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
     return createCheckoutSession({ team: foundTeam, priceId });
   }
 
-  redirect('/dashboard');
+  redirect('/dashboard/welcome');
 });
 
 const signUpSchema = z.object({
@@ -266,8 +266,8 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     return createCheckoutSession({ team: createdTeam, priceId });
   }
 
-  // Redirect to main dashboard
-  redirect('/dashboard');
+  // Redirect to welcome page
+  redirect('/dashboard/welcome');
 });
 
 export async function signOut() {
