@@ -398,19 +398,123 @@ const modalContent = {
 // Contact Form Component
 function ContactFormComponent() {
   const [isConsentChecked, setIsConsentChecked] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<{
+    type: 'success' | 'error' | null;
+    message: string;
+  }>({ type: null, message: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!isConsentChecked) {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Please provide consent to proceed.'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus({ type: null, message: '' });
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          consent: isConsentChecked
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSubmitStatus({
+          type: 'success',
+          message: result.message
+        });
+        // Reset form
+        setFormData({ name: '', email: '', message: '' });
+        setIsConsentChecked(false);
+      } else {
+        setSubmitStatus({
+          type: 'error',
+          message: result.error || 'Failed to send message. Please try again.'
+        });
+      }
+    } catch (error) {
+      console.error('Contact form error:', error);
+      setSubmitStatus({
+        type: 'error',
+        message: 'Network error. Please check your connection and try again.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="mt-8 lg:mt-0">
       <div className="bg-gray-50 p-6 rounded-lg max-w-md ml-auto">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Get in Touch</h3>
-        <form className="space-y-4">
+        
+        {/* Status Messages */}
+        {submitStatus.type && (
+          <div className={`mb-4 p-4 rounded-lg ${
+            submitStatus.type === 'success' 
+              ? 'bg-green-50 text-green-800 border border-green-200' 
+              : 'bg-red-50 text-red-800 border border-red-200'
+          }`}>
+            {submitStatus.type === 'success' ? (
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-green-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <div>
+                  <p className="font-medium text-sm">Message sent successfully!</p>
+                  <p className="text-sm mt-1">{submitStatus.message}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-red-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                <p className="text-sm">{submitStatus.message}</p>
+              </div>
+            )}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <input
               type="text"
               id="name"
               name="name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+              disabled={isSubmitting}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="Your name"
             />
           </div>
@@ -420,7 +524,11 @@ function ContactFormComponent() {
               type="email"
               id="email"
               name="email"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              disabled={isSubmitting}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="your@email.com"
             />
           </div>
@@ -429,8 +537,12 @@ function ContactFormComponent() {
             <textarea
               id="message"
               name="message"
+              value={formData.message}
+              onChange={handleInputChange}
+              required
+              disabled={isSubmitting}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="How can we help you?"
             ></textarea>
           </div>
@@ -441,7 +553,8 @@ function ContactFormComponent() {
               name="consent"
               checked={isConsentChecked}
               onChange={(e) => setIsConsentChecked(e.target.checked)}
-              className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+              disabled={isSubmitting}
+              className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded disabled:cursor-not-allowed"
             />
             <label htmlFor="consent" className="text-sm text-gray-700">
               I am aware that my data will be digitally stored and used for the purpose of contact and communication with this platform.
@@ -449,14 +562,14 @@ function ContactFormComponent() {
           </div>
           <button
             type="submit"
-            disabled={!isConsentChecked}
+            disabled={!isConsentChecked || isSubmitting}
             className={`w-full font-medium py-2 px-4 rounded-lg transition-colors ${
-              isConsentChecked
+              isConsentChecked && !isSubmitting
                 ? 'bg-orange-500 text-white hover:bg-orange-600'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            Send Message
+            {isSubmitting ? 'Sending...' : 'Send Message'}
           </button>
         </form>
       </div>

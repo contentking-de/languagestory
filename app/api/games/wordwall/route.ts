@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { games } from '@/lib/db/content-schema';
+import { games, lessons, courses } from '@/lib/db/content-schema';
 import { eq, desc } from 'drizzle-orm';
+import { logGameActivityServer } from '@/lib/activity-logger-server';
 
 // Helper function to determine game category from title and content
 function categorizeGame(title: string, authorName: string): string {
@@ -27,8 +28,39 @@ function categorizeGame(title: string, authorName: string): string {
 export async function GET() {
   try {
     const allGames = await db
-      .select()
+      .select({
+        id: games.id,
+        title: games.title,
+        description: games.description,
+        original_url: games.original_url,
+        normalized_url: games.normalized_url,
+        embed_html: games.embed_html,
+        thumbnail_url: games.thumbnail_url,
+        author_name: games.author_name,
+        author_url: games.author_url,
+        provider_name: games.provider_name,
+        provider_url: games.provider_url,
+        width: games.width,
+        height: games.height,
+        category: games.category,
+        language: games.language,
+        difficulty_level: games.difficulty_level,
+        estimated_duration: games.estimated_duration,
+        lesson_id: games.lesson_id,
+        lesson_title: lessons.title,
+        course_title: courses.title,
+        course_language: courses.language,
+        tags: games.tags,
+        is_active: games.is_active,
+        is_featured: games.is_featured,
+        added_by: games.added_by,
+        usage_count: games.usage_count,
+        created_at: games.created_at,
+        updated_at: games.updated_at,
+      })
       .from(games)
+      .leftJoin(lessons, eq(games.lesson_id, lessons.id))
+      .leftJoin(courses, eq(lessons.course_id, courses.id))
       .where(eq(games.is_active, true))
       .orderBy(desc(games.created_at));
 
@@ -274,6 +306,9 @@ async function saveGameToDatabase(gameData: any, originalUrl: string, normalized
       .insert(games)
       .values(newGame)
       .returning();
+
+    // Log the activity after successful game creation
+    await logGameActivityServer('CREATE_GAME');
 
     return savedGame;
   } catch (error) {

@@ -17,7 +17,8 @@ import {
   Globe,
   Star,
   Clock,
-  MessageSquare
+  MessageSquare,
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -51,6 +52,7 @@ export default function VocabularyPage() {
   const [languageFilter, setLanguageFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
+  const [lessonFilter, setLessonFilter] = useState('all');
 
   useEffect(() => {
     fetchVocabulary();
@@ -58,7 +60,7 @@ export default function VocabularyPage() {
 
   useEffect(() => {
     filterVocabulary();
-  }, [vocabulary, searchTerm, languageFilter, typeFilter, difficultyFilter]);
+  }, [vocabulary, searchTerm, languageFilter, typeFilter, difficultyFilter, lessonFilter]);
 
   const fetchVocabulary = async () => {
     try {
@@ -101,6 +103,15 @@ export default function VocabularyPage() {
     // Difficulty filter
     if (difficultyFilter !== 'all') {
       filtered = filtered.filter(word => word.difficulty_level === parseInt(difficultyFilter));
+    }
+
+    // Lesson filter
+    if (lessonFilter !== 'all') {
+      if (lessonFilter === 'assigned') {
+        filtered = filtered.filter(word => word.lesson_id);
+      } else if (lessonFilter === 'unassigned') {
+        filtered = filtered.filter(word => !word.lesson_id);
+      }
     }
 
     setFilteredVocabulary(filtered);
@@ -156,6 +167,7 @@ export default function VocabularyPage() {
   const uniqueLanguages = [...new Set(vocabulary.map(word => word.course_language).filter((lang): lang is string => Boolean(lang)))];
   const uniqueTypes = [...new Set(vocabulary.map(word => word.word_type).filter((type): type is string => Boolean(type)))];
   const uniqueDifficulties = [...new Set(vocabulary.map(word => word.difficulty_level))].sort();
+  const assignedWords = vocabulary.filter(word => word.lesson_id).length;
 
   if (loading) {
     return (
@@ -235,12 +247,11 @@ export default function VocabularyPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Avg. Difficulty</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {vocabulary.length > 0 ? (vocabulary.reduce((sum, word) => sum + word.difficulty_level, 0) / vocabulary.length).toFixed(1) : '0'}
-                </p>
+                <p className="text-sm font-medium text-gray-600">Assigned to Lessons</p>
+                <p className="text-2xl font-bold text-orange-600">{assignedWords}</p>
+                <p className="text-xs text-gray-500">{vocabulary.length - assignedWords} unassigned</p>
               </div>
-              <Star className="h-8 w-8 text-orange-500" />
+              <BookOpen className="h-8 w-8 text-orange-500" />
             </div>
           </CardContent>
         </Card>
@@ -249,7 +260,7 @@ export default function VocabularyPage() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-600 mb-1 block">Search</label>
               <div className="relative">
@@ -314,6 +325,20 @@ export default function VocabularyPage() {
               </Select>
             </div>
 
+            <div>
+              <label className="text-sm font-medium text-gray-600 mb-1 block">Lesson Assignment</label>
+              <Select value={lessonFilter} onValueChange={setLessonFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All words" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Words</SelectItem>
+                  <SelectItem value="assigned">📚 Assigned to Lesson</SelectItem>
+                  <SelectItem value="unassigned">⚠️ Not Assigned</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-end">
               <Button 
                 variant="outline" 
@@ -322,6 +347,7 @@ export default function VocabularyPage() {
                   setLanguageFilter('all');
                   setTypeFilter('all');
                   setDifficultyFilter('all');
+                  setLessonFilter('all');
                 }}
                 className="w-full"
               >
@@ -404,26 +430,33 @@ export default function VocabularyPage() {
                   </div>
                 )}
 
-                {/* Lesson Link */}
-                {word.lesson_title && (
-                  <div className="pt-2 border-t">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <BookOpen className="h-4 w-4" />
-                      <span>From:</span>
-                      <Link 
-                        href={`/dashboard/content/lessons/${word.lesson_id}`}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        {word.lesson_title}
-                      </Link>
+                {/* Lesson Assignment */}
+                <div className="pt-2 border-t">
+                  {word.lesson_title ? (
+                    <div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <BookOpen className="h-4 w-4" />
+                        <span><strong>Lesson:</strong></span>
+                        <Link 
+                          href={`/dashboard/content/lessons/${word.lesson_id}`}
+                          className="text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          {word.lesson_title}
+                        </Link>
+                      </div>
+                      {word.course_language && (
+                        <p className="text-xs text-gray-500 mt-1 ml-6">
+                          {getLanguageFlag(word.course_language)} {word.course_title}
+                        </p>
+                      )}
                     </div>
-                    {word.course_language && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {getLanguageFlag(word.course_language)} {word.course_title}
-                      </p>
-                    )}
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-orange-600">
+                      <BookOpen className="h-4 w-4" />
+                      <span><em>No lesson assigned</em></span>
+                    </div>
+                  )}
+                </div>
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-2">
@@ -437,6 +470,31 @@ export default function VocabularyPage() {
                       Edit
                     </Button>
                   </Link>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={async () => {
+                      if (confirm(`Are you sure you want to delete the word "${word.word_english}"?`)) {
+                        try {
+                          const response = await fetch(`/api/vocabulary/${word.id}`, {
+                            method: 'DELETE'
+                          });
+                          if (response.ok) {
+                            fetchVocabulary(); // Reload the vocabulary list
+                          } else {
+                            alert('Failed to delete vocabulary word');
+                          }
+                        } catch (error) {
+                          console.error('Error deleting vocabulary:', error);
+                          alert('Failed to delete vocabulary word');
+                        }
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -467,6 +525,7 @@ export default function VocabularyPage() {
                   setLanguageFilter('all');
                   setTypeFilter('all');
                   setDifficultyFilter('all');
+                  setLessonFilter('all');
                 }}
               >
                 Clear All Filters

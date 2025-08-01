@@ -33,6 +33,7 @@ import { validatedAction, validatedActionWithUser } from '@/lib/auth/middleware'
 import { createCheckoutSession } from '@/lib/payments/stripe';
 import { getUser, getUserWithTeam } from '@/lib/db/queries';
 import { UserRole, hasPermission, canManageUser } from '@/lib/auth/rbac';
+import { sendWelcomeEmail } from '@/lib/email/welcome-email';
 
 async function logActivity(
   teamId: number | null | undefined,
@@ -109,6 +110,7 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
 });
 
 const signUpSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
   email: z.string().email(),
   password: z.string().min(8),
   role: z.enum(['student', 'teacher', 'parent', 'member']).default('student'),
@@ -118,7 +120,7 @@ const signUpSchema = z.object({
 });
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
-  const { email, password, role, institutionId, parentEmail, inviteId } = data;
+  const { name, email, password, role, institutionId, parentEmail, inviteId } = data;
 
   const existingUser = await db
     .select()
@@ -152,6 +154,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   }
 
   const newUser: NewUser = {
+    name,
     email,
     passwordHash,
     role: role as UserRole,
@@ -238,22 +241,23 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     logActivity(teamId, createdUser.id, ActivityType.SIGN_UP),
   ]);
 
+  // Send welcome email (don't await to avoid blocking the redirect)
+  sendWelcomeEmail({
+    name: createdUser.name || 'there',
+    email: createdUser.email,
+    role: userRole
+  }).catch(error => {
+    console.error('Failed to send welcome email:', error);
+  });
+
   const redirectTo = formData.get('redirect') as string | null;
   if (redirectTo === 'checkout') {
     const priceId = formData.get('priceId') as string;
     return createCheckoutSession({ team: createdTeam, priceId });
   }
 
-  // Redirect based on role
-  if (userRole === 'teacher' || userRole === 'institution_admin') {
-    redirect('/dashboard/classes');
-  } else if (userRole === 'student') {
-    redirect('/dashboard/learning');
-  } else if (userRole === 'parent') {
-    redirect('/dashboard/children');
-  } else {
-    redirect('/dashboard');
-  }
+  // Redirect to main dashboard
+  redirect('/dashboard');
 });
 
 export async function signOut() {

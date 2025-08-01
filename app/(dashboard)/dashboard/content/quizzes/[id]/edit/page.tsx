@@ -31,7 +31,16 @@ interface Quiz {
   max_attempts: number;
   points_value: number;
   is_published: boolean;
+  lesson_id?: number;
   lesson_title?: string;
+}
+
+interface Lesson {
+  id: number;
+  title: string;
+  course_title: string;
+  course_language: string;
+  course_level: string;
 }
 
 export default function QuizEditPage() {
@@ -40,12 +49,14 @@ export default function QuizEditPage() {
   const quizId = params.id as string;
   
   const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     quiz_type: '',
+    lesson_id: undefined as number | undefined,
     pass_percentage: 70,
     time_limit: 0,
     max_attempts: 0,
@@ -56,6 +67,7 @@ export default function QuizEditPage() {
   useEffect(() => {
     if (quizId) {
       fetchQuiz();
+      fetchLessons();
     }
   }, [quizId]);
 
@@ -83,6 +95,7 @@ export default function QuizEditPage() {
           title: quizData.title,
           description: actualDescription,
           quiz_type: quizData.quiz_type,
+          lesson_id: quizData.lesson_id,
           pass_percentage: quizData.pass_percentage || 70,
           time_limit: quizData.time_limit || 0,
           max_attempts: quizData.max_attempts || 0,
@@ -94,6 +107,18 @@ export default function QuizEditPage() {
       console.error('Error fetching quiz:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLessons = async () => {
+    try {
+      const response = await fetch('/api/lessons/simple');
+      if (response.ok) {
+        const lessonsData = await response.json();
+        setLessons(lessonsData);
+      }
+    } catch (error) {
+      console.error('Error fetching lessons:', error);
     }
   };
 
@@ -200,6 +225,32 @@ export default function QuizEditPage() {
                   className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   placeholder="Brief description of the quiz..."
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="lesson_id">Assign to Lesson</Label>
+                <Select 
+                  value={formData.lesson_id ? formData.lesson_id.toString() : 'unassigned'} 
+                  onValueChange={(value) => setFormData(prev => ({ 
+                    ...prev, 
+                    lesson_id: value === 'unassigned' ? undefined : parseInt(value) 
+                  }))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a lesson" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">No lesson assigned</SelectItem>
+                    {lessons.map((lesson) => (
+                      <SelectItem key={lesson.id} value={lesson.id.toString()}>
+                        {lesson.title} ({lesson.course_language} - {lesson.course_title})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-gray-500 mt-1">
+                  Assign this quiz to a specific lesson for better organization
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

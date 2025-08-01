@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { 
   Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight,
-  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2
+  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain
 } from 'lucide-react';
 
 interface NavItem {
@@ -26,6 +26,7 @@ export default function DashboardLayout({
   const [expandedItems, setExpandedItems] = useState<string[]>(['/dashboard/content']); // Content expanded by default
 
   const navItems: NavItem[] = [
+    { href: '/dashboard/ai-creator', icon: Brain, label: 'AI Creator' },
     { 
       href: '/dashboard/content', 
       icon: BookOpen, 

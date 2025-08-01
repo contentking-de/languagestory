@@ -14,7 +14,8 @@ import {
   Trophy,
   Plus,
   ArrowRight,
-  BarChart3
+  BarChart3,
+  Brain
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -157,7 +158,24 @@ export default function ContentOverviewPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <Link href="/dashboard/ai-creator">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Brain className="h-8 w-8 text-purple-600" />
+                  <div>
+                    <h3 className="font-medium text-gray-900">AI Creator</h3>
+                    <p className="text-sm text-gray-600">Generate content with AI</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
         <Link href="/dashboard/content/courses">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-6">

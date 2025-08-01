@@ -1,157 +1,107 @@
+import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings,
-  LogOut,
-  UserPlus,
-  Lock,
-  UserCog,
-  AlertCircle,
-  UserMinus,
-  Mail,
-  CheckCircle,
-  BookOpen,
-  GraduationCap,
-  Users,
-  Play,
-  CheckSquare,
-  FileText,
-  BarChart3,
-  type LucideIcon,
+  TrendingUp,
+  Clock,
 } from 'lucide-react';
 import { ActivityType } from '@/lib/db/schema';
-import { getActivityLogs } from '@/lib/db/queries';
+import { getActivityAnalytics, getActivityStatistics, getTeamMembers, getUserWithTeamData } from '@/lib/db/queries';
+import { ActivityCharts } from './components/ActivityCharts';
+import { ActivityStats } from './components/ActivityStats';
+import { ActivityTimeline } from './components/ActivityTimeline';
+import { ActivityFilters } from './components/ActivityFilters';
 
-const iconMap: Record<ActivityType, LucideIcon> = {
-  [ActivityType.SIGN_UP]: UserPlus,
-  [ActivityType.SIGN_IN]: UserCog,
-  [ActivityType.SIGN_OUT]: LogOut,
-  [ActivityType.UPDATE_PASSWORD]: Lock,
-  [ActivityType.DELETE_ACCOUNT]: UserMinus,
-  [ActivityType.UPDATE_ACCOUNT]: Settings,
-  [ActivityType.CREATE_TEAM]: UserPlus,
-  [ActivityType.REMOVE_TEAM_MEMBER]: UserMinus,
-  [ActivityType.INVITE_TEAM_MEMBER]: Mail,
-  [ActivityType.ACCEPT_INVITATION]: CheckCircle,
-  // Educational activities
-  [ActivityType.CREATE_CLASS]: BookOpen,
-  [ActivityType.ENROLL_STUDENT]: GraduationCap,
-  [ActivityType.REMOVE_STUDENT]: UserMinus,
-  [ActivityType.ASSIGN_TEACHER]: Users,
-  [ActivityType.START_LESSON]: Play,
-  [ActivityType.COMPLETE_LESSON]: CheckSquare,
-  [ActivityType.SUBMIT_EXERCISE]: FileText,
-  [ActivityType.VIEW_PROGRESS]: BarChart3,
-};
 
-function getRelativeTime(date: Date) {
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (diffInSeconds < 60) return 'just now';
-  if (diffInSeconds < 3600)
-    return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400)
-    return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  if (diffInSeconds < 604800)
-    return `${Math.floor(diffInSeconds / 86400)} days ago`;
-  return date.toLocaleDateString();
+interface ActivityPageProps {
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-function formatAction(action: ActivityType): string {
-  switch (action) {
-    case ActivityType.SIGN_UP:
-      return 'You signed up';
-    case ActivityType.SIGN_IN:
-      return 'You signed in';
-    case ActivityType.SIGN_OUT:
-      return 'You signed out';
-    case ActivityType.UPDATE_PASSWORD:
-      return 'You changed your password';
-    case ActivityType.DELETE_ACCOUNT:
-      return 'You deleted your account';
-    case ActivityType.UPDATE_ACCOUNT:
-      return 'You updated your account';
-    case ActivityType.CREATE_TEAM:
-      return 'You created a new team';
-    case ActivityType.REMOVE_TEAM_MEMBER:
-      return 'You removed a team member';
-    case ActivityType.INVITE_TEAM_MEMBER:
-      return 'You invited a team member';
-    case ActivityType.ACCEPT_INVITATION:
-      return 'You accepted an invitation';
-    // Educational activities
-    case ActivityType.CREATE_CLASS:
-      return 'You created a new class';
-    case ActivityType.ENROLL_STUDENT:
-      return 'You enrolled a student';
-    case ActivityType.REMOVE_STUDENT:
-      return 'You removed a student';
-    case ActivityType.ASSIGN_TEACHER:
-      return 'You assigned a teacher';
-    case ActivityType.START_LESSON:
-      return 'You started a lesson';
-    case ActivityType.COMPLETE_LESSON:
-      return 'You completed a lesson';
-    case ActivityType.SUBMIT_EXERCISE:
-      return 'You submitted an exercise';
-    case ActivityType.VIEW_PROGRESS:
-      return 'You viewed progress';
-    default:
-      return 'Unknown action occurred';
+export default async function ActivityPage({ searchParams }: ActivityPageProps) {
+  // Parse search parameters for filtering
+  const dateFrom = searchParams.from as string;
+  const dateTo = searchParams.to as string;
+  const selectedUserId = searchParams.userId as string;
+
+  const dateRange = dateFrom && dateTo ? {
+    from: new Date(dateFrom),
+    to: new Date(dateTo)
+  } : undefined;
+
+  const userId = selectedUserId ? parseInt(selectedUserId) : undefined;
+
+  // Get current user to get team ID
+  const currentUser = await getUserWithTeamData();
+  if (!currentUser || !currentUser.teamId) {
+    throw new Error('User not authenticated or no team found');
   }
-}
 
-export default async function ActivityPage() {
-  const logs = await getActivityLogs();
+  // Fetch data
+  const [analytics, statistics, teamMembers] = await Promise.all([
+    getActivityAnalytics(dateRange, userId),
+    getActivityStatistics(dateRange, userId),
+    getTeamMembers(currentUser.teamId)
+  ]);
 
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium text-gray-900 mb-6">
-        Activity Log
-      </h1>
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+            Learning Analytics
+          </h1>
+          <p className="text-gray-600">
+            Track learning progress and activity patterns
+          </p>
+        </div>
+        <div className="flex items-center gap-2 mt-4 lg:mt-0">
+          <Badge variant="outline" className="text-orange-600 border-orange-200">
+            <TrendingUp className="w-3 h-3 mr-1" />
+            {statistics.totalActivities} Total Activities
+          </Badge>
+        </div>
+      </div>
+
+      {/* Quick Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <Suspense fallback={<div>Loading...</div>}>
+          <ActivityStats statistics={statistics} />
+        </Suspense>
+      </div>
+
+      {/* Filters */}
+      <div className="mb-8">
+        <ActivityFilters 
+          teamMembers={teamMembers || []} 
+          currentUser={{ role: currentUser.role || 'student' }}
+        />
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <Suspense fallback={<div>Loading charts...</div>}>
+          <ActivityCharts statistics={statistics} />
+        </Suspense>
+      </div>
+
+      {/* Recent Activity Timeline */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            Recent Activity Timeline
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {logs.length > 0 ? (
-            <ul className="space-y-4">
-              {logs.map((log) => {
-                const Icon = iconMap[log.action as ActivityType] || Settings;
-                const formattedAction = formatAction(
-                  log.action as ActivityType
-                );
-
-                return (
-                  <li key={log.id} className="flex items-center space-x-4">
-                    <div className="bg-orange-100 rounded-full p-2">
-                      <Icon className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        {formattedAction}
-                        {log.ipAddress && ` from IP ${log.ipAddress}`}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {getRelativeTime(new Date(log.timestamp))}
-                      </p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-center py-12">
-              <AlertCircle className="h-12 w-12 text-orange-500 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No activity yet
-              </h3>
-              <p className="text-sm text-gray-500 max-w-sm">
-                When you perform actions like signing in or updating your
-                account, they'll appear here.
-              </p>
-            </div>
-          )}
+          <Suspense fallback={<div>Loading timeline...</div>}>
+            <ActivityTimeline activities={analytics} />
+          </Suspense>
         </CardContent>
       </Card>
     </section>

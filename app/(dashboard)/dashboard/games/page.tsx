@@ -21,6 +21,7 @@ import {
   Target,
   Calendar,
   Eye,
+  Edit,
   Trash2
 } from 'lucide-react';
 import Link from 'next/link';
@@ -43,6 +44,10 @@ interface DatabaseGame {
   language: string | null;
   difficulty_level: number;
   estimated_duration: number | null;
+  lesson_id?: number;
+  lesson_title?: string;
+  course_title?: string;
+  course_language?: string;
   tags: string[] | null;
   is_active: boolean;
   is_featured: boolean;
@@ -80,6 +85,7 @@ export default function GamesPage() {
   const [isTestingUrl, setIsTestingUrl] = useState(false);
   const [expandedGame, setExpandedGame] = useState<number | null>(null);
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [lessonFilter, setLessonFilter] = useState('all');
 
   // Sample Wordwall game URLs for different subjects and languages (verified working URLs)
   const sampleGames = [
@@ -330,16 +336,21 @@ export default function GamesPage() {
 
   const filteredGames = games.filter(game => {
     const matchesSearch = game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        game.author_name?.toLowerCase().includes(searchTerm.toLowerCase());
+                        game.author_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (game.lesson_title && game.lesson_title.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = categoryFilter === 'all' || game.category === categoryFilter;
+    const matchesLesson = lessonFilter === 'all' || 
+                         (lessonFilter === 'assigned' && game.lesson_id) ||
+                         (lessonFilter === 'unassigned' && !game.lesson_id);
     
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && matchesLesson;
   });
 
   const uniqueCategories = [...new Set(games.map(game => game.category))];
   const uniqueAuthors = [...new Set(games.map(game => game.author_name).filter(Boolean))];
   const totalUsage = games.reduce((sum, game) => sum + game.usage_count, 0);
   const featuredGames = games.filter(game => game.is_featured);
+  const assignedGames = games.filter(game => game.lesson_id).length;
 
   if (loading) {
     return (
@@ -439,10 +450,11 @@ export default function GamesPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Featured</p>
-                <p className="text-2xl font-bold text-yellow-600">{featuredGames.length}</p>
+                <p className="text-sm font-medium text-gray-600">Assigned to Lessons</p>
+                <p className="text-2xl font-bold text-yellow-600">{assignedGames}</p>
+                <p className="text-xs text-gray-500">{games.length - assignedGames} unassigned</p>
               </div>
-              <Star className="h-8 w-8 text-yellow-500" />
+              <BookOpen className="h-8 w-8 text-yellow-500" />
             </div>
           </CardContent>
         </Card>
@@ -451,7 +463,7 @@ export default function GamesPage() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-600 mb-1 block">Search Games</label>
               <div className="relative">
@@ -482,12 +494,27 @@ export default function GamesPage() {
               </Select>
             </div>
 
+            <div>
+              <label className="text-sm font-medium text-gray-600 mb-1 block">Lesson Assignment</label>
+              <Select value={lessonFilter} onValueChange={setLessonFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All games" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Games</SelectItem>
+                  <SelectItem value="assigned">📚 Assigned to Lesson</SelectItem>
+                  <SelectItem value="unassigned">⚠️ Not Assigned</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-end">
               <Button 
                 variant="outline" 
                 onClick={() => {
                   setSearchTerm('');
                   setCategoryFilter('all');
+                  setLessonFilter('all');
                 }}
                 className="w-full"
               >
@@ -665,6 +692,47 @@ export default function GamesPage() {
                       </a>
                     </div>
 
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-2">
+                      <Link href={`/dashboard/games/${game.id}`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
+                      </Link>
+                      <Link href={`/dashboard/games/${game.id}/edit`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={async () => {
+                          if (confirm('Are you sure you want to delete this game?')) {
+                            try {
+                              const response = await fetch(`/api/games/wordwall/${game.id}`, {
+                                method: 'DELETE'
+                              });
+                              if (response.ok) {
+                                loadGamesFromDatabase(); // Reload the games list
+                              } else {
+                                alert('Failed to delete game');
+                              }
+                            } catch (error) {
+                              console.error('Error deleting game:', error);
+                              alert('Failed to delete game');
+                            }
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
+
                     {/* Embedded Game */}
                     {isExpanded && (
                       <div className="border rounded-lg overflow-hidden bg-gray-50">
@@ -691,6 +759,27 @@ export default function GamesPage() {
                         <div>
                           <span className="font-medium">Usage:</span> {game.usage_count} times
                         </div>
+                      </div>
+                      
+                      {/* Lesson Assignment */}
+                      <div className="pt-2 border-t">
+                        {game.lesson_title ? (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <BookOpen className="h-4 w-4" />
+                            <span><strong>Lesson:</strong></span>
+                            <Link 
+                              href={`/dashboard/content/lessons/${game.lesson_id}`}
+                              className="text-blue-600 hover:text-blue-800 font-medium"
+                            >
+                              {game.lesson_title}
+                            </Link>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-sm text-orange-600">
+                            <BookOpen className="h-4 w-4" />
+                            <span><em>No lesson assigned</em></span>
+                          </div>
+                        )}
                       </div>
                       
                       {game.tags && game.tags.length > 0 && (
@@ -749,6 +838,7 @@ export default function GamesPage() {
                 onClick={() => {
                   setSearchTerm('');
                   setCategoryFilter('all');
+                  setLessonFilter('all');
                 }}
               >
                 Clear All Filters

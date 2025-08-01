@@ -1,4 +1,4 @@
-import { desc, and, eq, isNull } from 'drizzle-orm';
+import { desc, and, eq, isNull, gte, lte, sql } from 'drizzle-orm';
 import { db } from './drizzle';
 import { activityLogs, teamMembers, teams, users } from './schema';
 import { cookies } from 'next/headers';
@@ -34,6 +34,49 @@ export async function getUser() {
   }
 
   return user[0];
+}
+
+export async function getUserWithTeamData() {
+  const sessionCookie = (await cookies()).get('session');
+  if (!sessionCookie || !sessionCookie.value) {
+    return null;
+  }
+
+  const sessionData = await verifyToken(sessionCookie.value);
+  if (
+    !sessionData ||
+    !sessionData.user ||
+    typeof sessionData.user.id !== 'number'
+  ) {
+    return null;
+  }
+
+  if (new Date(sessionData.expires) < new Date()) {
+    return null;
+  }
+
+  const result = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      role: users.role,
+      institutionId: users.institutionId,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      deletedAt: users.deletedAt,
+      teamId: teamMembers.teamId
+    })
+    .from(users)
+    .leftJoin(teamMembers, eq(users.id, teamMembers.userId))
+    .where(and(eq(users.id, sessionData.user.id), isNull(users.deletedAt)))
+    .limit(1);
+
+  if (result.length === 0) {
+    return null;
+  }
+
+  return result[0];
 }
 
 export async function getTeamByStripeCustomerId(customerId: string) {
@@ -97,6 +140,123 @@ export async function getActivityLogs() {
     .where(eq(activityLogs.userId, user.id))
     .orderBy(desc(activityLogs.timestamp))
     .limit(10);
+}
+
+// Enhanced activity analytics queries
+export async function getActivityAnalytics(dateRange?: { from: Date; to: Date }, userId?: number) {
+  const user = await getUserWithTeamData();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
+  // For teachers/parents, they can view team activities; for students, only their own
+  const targetUserId = userId && user.role !== 'student' ? userId : user.id;
+  
+  let whereConditions = and(
+    eq(activityLogs.teamId, user.teamId!),
+    targetUserId ? eq(activityLogs.userId, targetUserId) : undefined
+  );
+
+  if (dateRange) {
+    whereConditions = and(
+      whereConditions,
+      gte(activityLogs.timestamp, dateRange.from),
+      lte(activityLogs.timestamp, dateRange.to)
+    );
+  }
+
+  return await db
+    .select({
+      id: activityLogs.id,
+      action: activityLogs.action,
+      timestamp: activityLogs.timestamp,
+      userId: activityLogs.userId,
+      userName: users.name,
+      userRole: users.role
+    })
+    .from(activityLogs)
+    .leftJoin(users, eq(activityLogs.userId, users.id))
+    .where(whereConditions)
+    .orderBy(desc(activityLogs.timestamp));
+}
+
+export async function getActivityStatistics(dateRange?: { from: Date; to: Date }, userId?: number) {
+  const user = await getUserWithTeamData();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
+  const targetUserId = userId && user.role !== 'student' ? userId : user.id;
+  
+  let whereConditions = and(
+    eq(activityLogs.teamId, user.teamId!),
+    targetUserId ? eq(activityLogs.userId, targetUserId) : undefined
+  );
+
+  if (dateRange) {
+    whereConditions = and(
+      whereConditions,
+      gte(activityLogs.timestamp, dateRange.from),
+      lte(activityLogs.timestamp, dateRange.to)
+    );
+  }
+
+  // Get activity counts by type
+  const activityCounts = await db
+    .select({
+      action: activityLogs.action,
+      count: sql<number>`count(*)`.as('count')
+    })
+    .from(activityLogs)
+    .where(whereConditions)
+    .groupBy(activityLogs.action);
+
+  // Get daily activity for the last 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const dailyActivity = await db
+    .select({
+      date: sql<string>`DATE(${activityLogs.timestamp})`.as('date'),
+      count: sql<number>`count(*)`.as('count'),
+      action: activityLogs.action
+    })
+    .from(activityLogs)
+    .where(and(
+      whereConditions,
+      gte(activityLogs.timestamp, thirtyDaysAgo)
+    ))
+    .groupBy(sql`DATE(${activityLogs.timestamp})`, activityLogs.action)
+    .orderBy(sql`DATE(${activityLogs.timestamp})`);
+
+  // Get total counts
+  const totalActivities = await db
+    .select({
+      total: sql<number>`count(*)`.as('total')
+    })
+    .from(activityLogs)
+    .where(whereConditions);
+
+  return {
+    activityCounts,
+    dailyActivity,
+    totalActivities: totalActivities[0]?.total || 0
+  };
+}
+
+export async function getTeamMembers(teamId: number) {
+  return await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      createdAt: users.createdAt
+    })
+    .from(users)
+    .innerJoin(teamMembers, eq(users.id, teamMembers.userId))
+    .where(eq(teamMembers.teamId, teamId))
+    .orderBy(users.name);
 }
 
 export async function getTeamForUser() {

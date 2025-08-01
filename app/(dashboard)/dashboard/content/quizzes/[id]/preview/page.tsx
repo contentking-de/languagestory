@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { logQuizActivity } from '@/lib/activity-logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -78,6 +79,11 @@ export default function QuizPreviewPage() {
       if (questionsResponse.ok) {
         const questionsData = await questionsResponse.json();
         setQuestions(questionsData);
+        
+        // Log that user started taking the quiz (only if there are questions)
+        if (questionsData.length > 0) {
+          logQuizActivity('TAKE_QUIZ');
+        }
       }
     } catch (error) {
       console.error('Error fetching quiz data:', error);
@@ -217,6 +223,9 @@ export default function QuizPreviewPage() {
   const submitQuiz = () => {
     setQuizCompleted(true);
     setShowResults(true);
+    
+    // Log that user completed the quiz
+    logQuizActivity('COMPLETE_QUIZ');
   };
 
   const resetQuiz = () => {
@@ -263,7 +272,7 @@ export default function QuizPreviewPage() {
     if (!question || !userAnswer) return false;
     
     // For gap fill questions with answer_options, check if answers match the word bank
-    if (question.answer_options && Array.isArray(question.answer_options) && question.answer_options.length > 0) {
+    if (question.question_type === 'fill_blank' && question.answer_options && Array.isArray(question.answer_options) && question.answer_options.length > 0) {
       const userAnswerArray = userAnswer.split(', ').filter(word => word.trim());
       const correctAnswerArray = question.correct_answer.split(', ').filter(word => word.trim());
       
@@ -518,12 +527,12 @@ export default function QuizPreviewPage() {
                              {question.points} {question.points === 1 ? 'point' : 'points'}
                            </span>
                          </div>
-                         {/* Only show question text for non-gap-fill questions */}
-                         {!(question.answer_options && Array.isArray(question.answer_options) && question.answer_options.length > 0) && (
-                           <h3 className="text-lg font-medium text-gray-900 leading-relaxed">
-                             {question.question_text}
-                           </h3>
-                         )}
+                                                 {/* Only hide question text for gap-fill questions that render the text with gaps */}
+                        {!(question.question_type === 'fill_blank' && question.answer_options && Array.isArray(question.answer_options) && question.answer_options.length > 0) && (
+                          <h3 className="text-lg font-medium text-gray-900 leading-relaxed">
+                            {question.question_text}
+                          </h3>
+                        )}
                        </div>
                      </div>
                 </CardHeader>
@@ -646,8 +655,8 @@ export default function QuizPreviewPage() {
                                      {/* Fill in the Blank / Short Answer */}
                    {(question.question_type === 'fill_blank' || question.question_type === 'short_answer') && (
                      <div className="space-y-3">
-                       {/* Check if this is a gap fill question (has answer_options array) */}
-                       {question.answer_options && Array.isArray(question.answer_options) && question.answer_options.length > 0 ? (
+                                             {/* Check if this is a gap fill question (has answer_options array AND is fill_blank type) */}
+                      {question.question_type === 'fill_blank' && question.answer_options && Array.isArray(question.answer_options) && question.answer_options.length > 0 ? (
                          /* Gap Fill Drag & Drop Interface */
                          <div className="space-y-6">
                            {/* Instructions */}
@@ -750,8 +759,8 @@ export default function QuizPreviewPage() {
                        
                                                 {(showAnswers || showResults) && (
                          <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
-                           {/* Special feedback for gap fill questions */}
-                           {question.answer_options && Array.isArray(question.answer_options) && question.answer_options.length > 0 ? (
+                                                         {/* Special feedback for gap fill questions */}
+                              {question.question_type === 'fill_blank' && question.answer_options && Array.isArray(question.answer_options) && question.answer_options.length > 0 ? (
                              <div>
                                <p className="text-sm text-green-700 mb-2">
                                  <strong>✅ Gap Fill Exercise:</strong> 

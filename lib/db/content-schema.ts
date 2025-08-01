@@ -220,6 +220,7 @@ export const games = pgTable('games', {
   language: varchar('language', { length: 20 }),
   difficulty_level: integer('difficulty_level').default(1), // 1-5 scale
   estimated_duration: integer('estimated_duration'), // in minutes
+  lesson_id: integer('lesson_id'), // Assign game to a specific lesson
   tags: json('tags'), // Array of tag strings
   is_active: boolean('is_active').default(true),
   is_featured: boolean('is_featured').default(false),
@@ -394,6 +395,10 @@ export const gamesRelations = relations(games, ({ one }) => ({
   addedBy: one(users, {
     fields: [games.added_by],
     references: [users.id],
+  }),
+  lesson: one(lessons, {
+    fields: [games.lesson_id],
+    references: [lessons.id],
   }),
 }));
 

@@ -52,6 +52,7 @@ export default function QuizzesPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [languageFilter, setLanguageFilter] = useState('all');
+  const [lessonFilter, setLessonFilter] = useState('all');
 
   useEffect(() => {
     fetchQuizzes();
@@ -80,8 +81,11 @@ export default function QuizzesPage() {
                          (statusFilter === 'published' && quiz.is_published) ||
                          (statusFilter === 'draft' && !quiz.is_published);
     const matchesLanguage = languageFilter === 'all' || quiz.course_language === languageFilter;
+    const matchesLesson = lessonFilter === 'all' || 
+                         (lessonFilter === 'assigned' && quiz.lesson_id) ||
+                         (lessonFilter === 'unassigned' && !quiz.lesson_id);
 
-    return matchesSearch && matchesType && matchesStatus && matchesLanguage;
+    return matchesSearch && matchesType && matchesStatus && matchesLanguage && matchesLesson;
   });
 
   const getLanguageFlag = (language: string) => {
@@ -128,6 +132,7 @@ export default function QuizzesPage() {
 
   const uniqueTypes = [...new Set(quizzes.map(q => q.quiz_type))];
   const averagePassRate = quizzes.length > 0 ? Math.round(quizzes.reduce((sum, q) => sum + q.pass_percentage, 0) / quizzes.length) : 0;
+  const assignedQuizzes = quizzes.filter(q => q.lesson_id).length;
 
   if (loading) {
     return (
@@ -201,10 +206,11 @@ export default function QuizzesPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Quiz Types</p>
-                <p className="text-2xl font-bold text-purple-600">{uniqueTypes.length}</p>
+                <p className="text-sm font-medium text-gray-600">Assigned to Lessons</p>
+                <p className="text-2xl font-bold text-purple-600">{assignedQuizzes}</p>
+                <p className="text-xs text-gray-500">{quizzes.length - assignedQuizzes} unassigned</p>
               </div>
-              <Trophy className="h-8 w-8 text-purple-500" />
+              <BookOpen className="h-8 w-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>
@@ -213,7 +219,7 @@ export default function QuizzesPage() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -264,6 +270,17 @@ export default function QuizzesPage() {
                 <SelectItem value="draft">Draft</SelectItem>
               </SelectContent>
             </Select>
+
+            <Select value={lessonFilter} onValueChange={setLessonFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Lesson Assignment" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Quizzes</SelectItem>
+                <SelectItem value="assigned">📚 Assigned to Lesson</SelectItem>
+                <SelectItem value="unassigned">⚠️ Not Assigned</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -294,11 +311,18 @@ export default function QuizzesPage() {
                 <p className="text-sm text-gray-600 line-clamp-2">{quiz.description}</p>
               )}
 
-              {(quiz.lesson_title || quiz.course_title) && (
+              {quiz.lesson_title ? (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <BookOpen className="h-4 w-4" />
                   <span className="truncate">
-                    {quiz.lesson_title || quiz.course_title}
+                    <strong>Lesson:</strong> {quiz.lesson_title}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-orange-600">
+                  <BookOpen className="h-4 w-4" />
+                  <span className="truncate">
+                    <em>No lesson assigned</em>
                   </span>
                 </div>
               )}
@@ -357,7 +381,7 @@ export default function QuizzesPage() {
             <FileQuestion className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No quizzes found</h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm || typeFilter !== 'all' || statusFilter !== 'all' || languageFilter !== 'all'
+              {searchTerm || typeFilter !== 'all' || statusFilter !== 'all' || languageFilter !== 'all' || lessonFilter !== 'all'
                 ? 'Try adjusting your filters to see more quizzes.'
                 : 'Get started by creating your first quiz.'}
             </p>

@@ -275,6 +275,16 @@ export enum ActivityType {
   COMPLETE_LESSON = 'COMPLETE_LESSON',
   SUBMIT_EXERCISE = 'SUBMIT_EXERCISE',
   VIEW_PROGRESS = 'VIEW_PROGRESS',
+  // Quiz activities
+  CREATE_QUIZ = 'CREATE_QUIZ',
+  TAKE_QUIZ = 'TAKE_QUIZ',
+  COMPLETE_QUIZ = 'COMPLETE_QUIZ',
+  // Vocabulary activities
+  CREATE_VOCABULARY = 'CREATE_VOCABULARY',
+  STUDY_VOCABULARY = 'STUDY_VOCABULARY',
+  // Games activities
+  CREATE_GAME = 'CREATE_GAME',
+  PLAY_GAME = 'PLAY_GAME',
 }
 
 // Role hierarchy and permissions
