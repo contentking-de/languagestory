@@ -32,8 +32,9 @@ import { cookies } from 'next/headers';
 import { validatedAction, validatedActionWithUser } from '@/lib/auth/middleware';
 import { createCheckoutSession } from '@/lib/payments/stripe';
 import { getUser, getUserWithTeam } from '@/lib/db/queries';
-import { UserRole, hasPermission, canManageUser, canInviteRole, getInvitableRoles } from '@/lib/auth/rbac';
+import { UserRole, hasPermission, canManageUser, canInviteRole, getInvitableRoles, getRoleDisplayName } from '@/lib/auth/rbac';
 import { sendWelcomeEmail } from '@/lib/email/welcome-email';
+import { sendInvitationEmail } from '@/lib/email/invitation-email';
 
 async function logActivity(
   teamId: number | null | undefined,
@@ -191,6 +192,15 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
       .limit(1);
 
     if (invitation) {
+      // Check if invitation has expired (7 days)
+      const invitationDate = new Date(invitation.invitedAt);
+      const now = new Date();
+      const daysDiff = (now.getTime() - invitationDate.getTime()) / (1000 * 60 * 60 * 24);
+      
+      if (daysDiff > 7) {
+        return { error: 'This invitation has expired. Please ask for a new invitation.' };
+      }
+
       teamId = invitation.teamId;
       userRole = invitation.role as UserRole;
 
@@ -491,13 +501,40 @@ export const inviteEducationalUser = validatedActionWithUser(
     }
 
     // Create invitation
-    await db.insert(invitations).values({
+    const invitation = await db.insert(invitations).values({
       teamId: userWithTeam.teamId,
       email,
       role,
       language,
       invitedBy: user.id,
-    });
+    }).returning();
+
+    // Get team name for the email
+    const team = await db
+      .select({ name: teams.name })
+      .from(teams)
+      .where(eq(teams.id, userWithTeam.teamId))
+      .limit(1);
+
+    const teamName = team[0]?.name || 'A Language Story Team';
+
+    // Generate invitation URL
+    const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://alanguagestory.dev'}/sign-up?inviteId=${invitation[0].id}`;
+
+    // Send invitation email
+    try {
+      await sendInvitationEmail({
+        email,
+        role,
+        invitedBy: user.name || user.email,
+        teamName,
+        invitationUrl
+      });
+    } catch (emailError) {
+      console.error('Failed to send invitation email:', emailError);
+      // Don't fail the entire invitation if email fails
+      // The invitation is still created in the database
+    }
 
     // If inviting a teacher, create teaching assignment
     if (role === 'teacher' && language !== 'all') {
@@ -523,7 +560,7 @@ export const inviteEducationalUser = validatedActionWithUser(
       undefined
     );
 
-    return { success: 'Educational user invited successfully' };
+    return { success: 'Educational user invited successfully. An invitation email has been sent.' };
   }
 );
 
