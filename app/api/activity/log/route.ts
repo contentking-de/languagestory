@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       const newTeamMember: NewTeamMember = {
         teamId,
         userId: user.id,
-        role: 'owner', // Make them the owner of their default team
+        role: 'super_admin', // Make them the admin of their default team
       };
 
       await db.insert(teamMembers).values(newTeamMember);
