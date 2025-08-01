@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { use, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { CircleIcon, Home, LogOut, Menu, X } from 'lucide-react';
+import { CircleIcon, Home, LogOut, Menu, X, User as UserIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -166,17 +166,19 @@ function UserMenu() {
 
   return (
     <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-      <DropdownMenuTrigger>
-        <Avatar className="cursor-pointer size-9">
-          <AvatarImage alt={user.name || ''} />
-          <AvatarFallback>
-            {user.email
-              .split(' ')
-              .map((n) => n[0])
-              .join('')}
-          </AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-gray-700 hidden sm:block">
+          Welcome {user.name || user.email.split('@')[0]}
+        </span>
+        <DropdownMenuTrigger>
+          <Avatar className="cursor-pointer size-9">
+            <AvatarImage alt={user.name || ''} />
+            <AvatarFallback className="bg-orange-500 text-white">
+              <UserIcon className="h-4 w-4" />
+            </AvatarFallback>
+          </Avatar>
+        </DropdownMenuTrigger>
+      </div>
       <DropdownMenuContent align="end" className="flex flex-col gap-1">
         <DropdownMenuItem className="cursor-pointer">
           <Link href="/dashboard" className="flex w-full items-center">
