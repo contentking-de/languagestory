@@ -36,16 +36,11 @@ export async function POST(request: Request) {
       // Create a default team for this user
       const newTeam: NewTeam = {
         name: `${user.name || user.email}'s Team`,
-        plan: 'free',
-        planLimits: {
-          users: 5,
-          projects: 3,
-          storage: 1024 * 1024 * 1024 // 1GB
-        },
-        billingCycle: 'monthly',
+        subscriptionType: 'individual',
+        planName: 'free',
+        subscriptionStatus: 'trialing',
         stripeCustomerId: null,
-        stripeSubscriptionId: null,
-        subscriptionStatus: 'trialing'
+        stripeSubscriptionId: null
       };
 
       const [createdTeam] = await db.insert(teams).values(newTeam).returning();
