@@ -29,7 +29,8 @@ export const PERMISSIONS: Record<UserRole, PermissionAction[]> = {
     'assign_teacher', 'view_progress', 'invite_users', 'view_analytics'
   ],
   teacher: [
-    'create_class', 'edit_class', 'enroll_student', 'remove_student', 'view_progress'
+    'create_class', 'edit_class', 'enroll_student', 'remove_student', 'view_progress',
+    'invite_users' // Teachers can now invite other teachers and students
   ],
   content_creator: [
     'edit_content', 'view_progress'
@@ -37,7 +38,9 @@ export const PERMISSIONS: Record<UserRole, PermissionAction[]> = {
   parent: [
     'view_progress'
   ],
-  student: [],
+  student: [
+    'invite_users' // Students can now invite parents
+  ],
   member: []
 };
 
@@ -60,6 +63,32 @@ export function canAccessLanguage(userRole: UserRole, language: Language): boole
 // Check if user can manage another user (role hierarchy)
 export function canManageUser(managerRole: UserRole, targetRole: UserRole): boolean {
   return ROLE_HIERARCHY[managerRole] > ROLE_HIERARCHY[targetRole];
+}
+
+// New function: Get available roles that a user can invite
+export function getInvitableRoles(userRole: UserRole): UserRole[] {
+  switch (userRole) {
+    case 'super_admin':
+      return ['institution_admin', 'teacher', 'student', 'parent', 'content_creator', 'member'];
+    case 'institution_admin':
+      return ['teacher', 'student', 'parent'];
+    case 'teacher':
+      return ['teacher', 'student']; // Teachers can invite other teachers and students
+    case 'student':
+      return ['parent']; // Students can only invite parents
+    case 'parent':
+    case 'content_creator':
+    case 'member':
+      return []; // Cannot invite anyone
+    default:
+      return [];
+  }
+}
+
+// New function: Check if a user can invite a specific role
+export function canInviteRole(inviterRole: UserRole, targetRole: UserRole): boolean {
+  const invitableRoles = getInvitableRoles(inviterRole);
+  return invitableRoles.includes(targetRole);
 }
 
 // Educational role checks
@@ -100,7 +129,7 @@ export interface StudentEnrollment {
   language: Language;
 }
 
-// Role-based UI helpers
+// Role display names for UI
 export function getRoleDisplayName(role: UserRole): string {
   const displayNames: Record<UserRole, string> = {
     super_admin: 'Super Administrator',
@@ -111,67 +140,74 @@ export function getRoleDisplayName(role: UserRole): string {
     content_creator: 'Content Creator',
     member: 'Member'
   };
-  return displayNames[role];
+  return displayNames[role] || role;
 }
 
+// Role badge colors for UI
 export function getRoleBadgeColor(role: UserRole): string {
   const colors: Record<UserRole, string> = {
-    super_admin: 'bg-purple-100 text-purple-800',
-    institution_admin: 'bg-blue-100 text-blue-800',
-    teacher: 'bg-green-100 text-green-800',
-    student: 'bg-yellow-100 text-yellow-800',
-    parent: 'bg-pink-100 text-pink-800',
+    super_admin: 'bg-red-100 text-red-800',
+    institution_admin: 'bg-purple-100 text-purple-800',
+    teacher: 'bg-blue-100 text-blue-800',
+    student: 'bg-green-100 text-green-800',
+    parent: 'bg-orange-100 text-orange-800',
     content_creator: 'bg-indigo-100 text-indigo-800',
     member: 'bg-gray-100 text-gray-800'
   };
-  return colors[role];
+  return colors[role] || 'bg-gray-100 text-gray-800';
 }
 
+// Language display names
 export function getLanguageDisplayName(language: Language): string {
   const displayNames: Record<Language, string> = {
     french: 'French',
-    german: 'German', 
+    german: 'German',
     spanish: 'Spanish',
     all: 'All Languages'
   };
-  return displayNames[language];
+  return displayNames[language] || language;
 }
 
+// Language flag emojis
 export function getLanguageFlag(language: Language): string {
   const flags: Record<Language, string> = {
     french: '🇫🇷',
     german: '🇩🇪',
     spanish: '🇪🇸',
-    all: '🌍'
+    all: '🌐'
   };
-  return flags[language];
+  return flags[language] || '🌐';
 }
 
-// Validation helpers
+// Validate role transitions (for role changes)
 export function validateRoleTransition(currentRole: UserRole, newRole: UserRole, actorRole: UserRole): boolean {
-  // Super admin can assign any role
-  if (actorRole === 'super_admin') return true;
+  // Only super admins and institution admins can change roles
+  if (!['super_admin', 'institution_admin'].includes(actorRole)) {
+    return false;
+  }
   
-  // Institution admin can assign roles except super_admin
-  if (actorRole === 'institution_admin' && newRole !== 'super_admin') return true;
+  // Cannot promote to super admin unless you are a super admin
+  if (newRole === 'super_admin' && actorRole !== 'super_admin') {
+    return false;
+  }
   
-  // Teachers can only assign student roles
-  if (actorRole === 'teacher' && newRole === 'student') return true;
+  // Cannot promote to institution admin unless you are a super admin
+  if (newRole === 'institution_admin' && actorRole !== 'super_admin') {
+    return false;
+  }
   
-  return false;
+  return true;
 }
 
+// Validate language access for a user
 export function validateLanguageAccess(userRole: UserRole, requestedLanguages: Language[]): boolean {
   const allowedLanguages = LANGUAGE_PERMISSIONS[userRole] as readonly string[];
-  
-  // If user has 'all' access, they can access any language
-  if (allowedLanguages.includes('all')) return true;
-  
-  // Check if all requested languages are in allowed list
-  return requestedLanguages.every(lang => allowedLanguages.includes(lang));
+  return requestedLanguages.every(lang => 
+    allowedLanguages.includes(lang) || allowedLanguages.includes('all')
+  );
 }
 
-// Context-aware permission checks
+// Context-aware permission checking
 export interface PermissionContext {
   userId: number;
   role: UserRole;
@@ -186,18 +222,11 @@ export function checkContextualPermission(
   context: PermissionContext, 
   action: PermissionAction
 ): boolean {
-  const { role, language, targetRole } = context;
-  
   // Basic permission check
-  if (!hasPermission(role, action)) return false;
-  
-  // Language-specific checks
-  if (language && !canAccessLanguage(role, language)) return false;
-  
-  // Role hierarchy checks for user management actions
-  if (targetRole && ['enroll_student', 'remove_student', 'assign_teacher'].includes(action)) {
-    return canManageUser(role, targetRole);
+  if (!hasPermission(context.role, action)) {
+    return false;
   }
   
+  // Additional context-specific checks can be added here
   return true;
 } 

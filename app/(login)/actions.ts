@@ -32,7 +32,7 @@ import { cookies } from 'next/headers';
 import { validatedAction, validatedActionWithUser } from '@/lib/auth/middleware';
 import { createCheckoutSession } from '@/lib/payments/stripe';
 import { getUser, getUserWithTeam } from '@/lib/db/queries';
-import { UserRole, hasPermission, canManageUser } from '@/lib/auth/rbac';
+import { UserRole, hasPermission, canManageUser, canInviteRole, getInvitableRoles } from '@/lib/auth/rbac';
 import { sendWelcomeEmail } from '@/lib/email/welcome-email';
 
 async function logActivity(
@@ -449,13 +449,14 @@ export const inviteEducationalUser = validatedActionWithUser(
       return { error: 'User is not part of a team' };
     }
 
-    // Check if current user has permission to invite users with this role
+    // Check if current user has permission to invite users
     if (!hasPermission(user.role as UserRole, 'invite_users')) {
       return { error: 'You do not have permission to invite users' };
     }
 
-    if (!canManageUser(user.role as UserRole, role as UserRole)) {
-      return { error: 'You cannot invite users with this role level' };
+    // Check if current user can invite the specific role
+    if (!canInviteRole(user.role as UserRole, role as UserRole)) {
+      return { error: `You cannot invite users with the role "${role}". You can only invite: ${getInvitableRoles(user.role as UserRole).join(', ')}` };
     }
 
     // Check if user already exists and is part of the team

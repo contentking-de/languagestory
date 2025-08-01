@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Loader2, PlusCircle } from 'lucide-react';
+import { getInvitableRoles, getRoleDisplayName, UserRole } from '@/lib/auth/rbac';
 
 type ActionState = {
   error?: string;
@@ -189,11 +190,14 @@ function InviteTeamMemberSkeleton() {
 
 function InviteTeamMember() {
   const { data: user } = useSWR<User>('/api/user', fetcher);
-  const canInvite = user?.role === 'institution_admin' || user?.role === 'super_admin';
+  const canInvite = user?.role === 'institution_admin' || user?.role === 'super_admin' || user?.role === 'teacher' || user?.role === 'student';
   const [inviteState, inviteAction, isInvitePending] = useActionState<
     ActionState,
     FormData
   >(inviteEducationalUser, {});
+
+  // Get available roles that the current user can invite
+  const invitableRoles = user ? getInvitableRoles(user.role as UserRole) : [];
 
   return (
     <Card>
@@ -218,23 +222,17 @@ function InviteTeamMember() {
           <div>
             <Label>Role</Label>
             <RadioGroup
-              defaultValue="student"
+              defaultValue={invitableRoles[0] || "student"}
               name="role"
               className="flex space-x-4"
               disabled={!canInvite}
             >
-              <div className="flex items-center space-x-2 mt-2">
-                <RadioGroupItem value="student" id="student" />
-                <Label htmlFor="student">Student</Label>
-              </div>
-              <div className="flex items-center space-x-2 mt-2">
-                <RadioGroupItem value="teacher" id="teacher" />
-                <Label htmlFor="teacher">Teacher</Label>
-              </div>
-              <div className="flex items-center space-x-2 mt-2">
-                <RadioGroupItem value="parent" id="parent" />
-                <Label htmlFor="parent">Parent</Label>
-              </div>
+              {invitableRoles.map((role) => (
+                <div key={role} className="flex items-center space-x-2 mt-2">
+                  <RadioGroupItem value={role} id={role} />
+                  <Label htmlFor={role}>{getRoleDisplayName(role)}</Label>
+                </div>
+              ))}
             </RadioGroup>
           </div>
           {inviteState?.error && (
@@ -265,7 +263,7 @@ function InviteTeamMember() {
       {!canInvite && (
         <CardFooter>
           <p className="text-sm text-muted-foreground">
-            You must be an institution admin to invite new educational users.
+            You do not have permission to invite new users to this team.
           </p>
         </CardFooter>
       )}
