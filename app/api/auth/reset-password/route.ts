@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db/drizzle';
 import { users, passwordResetTokens } from '@/lib/db/schema';
 import { eq, and, gt } from 'drizzle-orm';
-import { hashPassword } from '@/lib/auth/password';
+import { hashPassword } from '@/lib/auth/session';
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Reset token is required'),
