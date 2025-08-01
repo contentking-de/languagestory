@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
     ppr: true,
     clientSegmentCache: true,
     nodeMiddleware: true
-  }
+  },
+  serverExternalPackages: ['prettier']
 };
 
 export default nextConfig;
