@@ -391,7 +391,7 @@ export function VocabularyDetailClient({ userRole }: VocabularyDetailClientProps
                 {word.course_level && (
                   <div>
                     <label className="text-sm font-medium text-gray-600">Level</label>
-                    <Badge className={getDifficultyColor(parseInt(word.course_level))} className="mt-1">
+                    <Badge className={`${getDifficultyColor(parseInt(word.course_level))} mt-1`}>
                       {word.course_level}
                     </Badge>
                   </div>
