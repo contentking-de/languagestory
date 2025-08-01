@@ -19,14 +19,15 @@ import { ActivityFilters } from './components/ActivityFilters';
 
 
 interface ActivityPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function ActivityPage({ searchParams }: ActivityPageProps) {
   // Parse search parameters for filtering
-  const dateFrom = searchParams.from as string;
-  const dateTo = searchParams.to as string;
-  const selectedUserId = searchParams.userId as string;
+  const params = await searchParams;
+  const dateFrom = params.from as string;
+  const dateTo = params.to as string;
+  const selectedUserId = params.userId as string;
 
   const dateRange = dateFrom && dateTo ? {
     from: new Date(dateFrom),
