@@ -23,6 +23,7 @@ import { getInvitableRoles, getRoleDisplayName, UserRole } from '@/lib/auth/rbac
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import InvitedUsers from './components/InvitedUsers';
 
 type ActionState = {
   error?: string;
@@ -551,6 +552,7 @@ export default function SettingsPage() {
       <Suspense fallback={<TeamMembersSkeleton />}>
         <TeamMembers />
       </Suspense>
+      <InvitedUsers />
       <Suspense fallback={<InviteTeamMemberSkeleton />}>
         <InviteTeamMember />
       </Suspense>
