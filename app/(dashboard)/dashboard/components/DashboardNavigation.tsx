@@ -26,9 +26,6 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>(['/dashboard/content']);
 
-  // Debug: Log the actual role value
-  console.log('DEBUG: userRole received in navigation:', userRole, typeof userRole);
-
   // Full navigation for Super Admin and Content Creator
   const fullNavItems: NavItem[] = [
     { href: '/dashboard/welcome', icon: Heart, label: 'Welcome' },
@@ -59,6 +56,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
       icon: Users, 
       label: 'Team',
       subItems: [
+        { href: '/dashboard', icon: Users, label: 'Team Management' },
         { href: '/dashboard/roles', icon: UserCheck, label: 'Roles' }
       ]
     },
@@ -87,6 +85,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
       icon: Users, 
       label: 'Team',
       subItems: [
+        { href: '/dashboard', icon: Users, label: 'Team Management' },
         { href: '/dashboard/roles', icon: UserCheck, label: 'Roles' }
       ]
     },
