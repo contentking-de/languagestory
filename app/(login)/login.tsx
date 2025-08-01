@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+
 import { Loader2, X } from 'lucide-react';
 import { signIn, signUp } from './actions';
 import { ActionState } from '@/lib/auth/middleware';
@@ -23,6 +24,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
     { error: '' }
   );
   const [gdprAccepted, setGdprAccepted] = useState(false);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState('');
 
@@ -153,6 +155,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
           <input type="hidden" name="redirect" value={redirect || ''} />
           <input type="hidden" name="priceId" value={priceId || ''} />
           <input type="hidden" name="inviteId" value={inviteId || ''} />
+          {mode === 'signup' && <input type="hidden" name="role" value="teacher" />}
           {mode === 'signup' && (
             <div>
               <Label
@@ -222,6 +225,8 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               />
             </div>
           </div>
+
+
 
           {mode === 'signup' && (
             <div className="flex items-start space-x-2">

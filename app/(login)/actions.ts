@@ -113,7 +113,7 @@ const signUpSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email(),
   password: z.string().min(8),
-  role: z.enum(['student', 'teacher', 'parent', 'member']).default('student'),
+  role: z.enum(['student', 'teacher']).default('teacher'),
   institutionId: z.string().optional(),
   parentEmail: z.string().email().optional(), // For linking parent-child accounts
   inviteId: z.string().optional()
@@ -225,7 +225,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
       .returning();
 
     teamId = createdTeam.id;
-    userRole = role === 'member' ? 'member' : role as UserRole;
+    userRole = role as UserRole;
 
     const newTeamMember: NewTeamMember = {
       teamId,
