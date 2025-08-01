@@ -12,18 +12,26 @@ import {
 import { customerPortalAction } from '@/lib/payments/actions';
 import { useActionState } from 'react';
 import { TeamDataWithMembers, User } from '@/lib/db/schema';
-import { removeTeamMember, inviteEducationalUser } from '@/app/(login)/actions';
+import { removeTeamMember, inviteEducationalUser, bulkInviteStudents } from '@/app/(login)/actions';
 import useSWR from 'swr';
-import { Suspense } from 'react';
+import { Suspense, useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Loader2, PlusCircle } from 'lucide-react';
+import { Loader2, PlusCircle, Upload, Users, FileText } from 'lucide-react';
 import { getInvitableRoles, getRoleDisplayName, UserRole } from '@/lib/auth/rbac';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
 type ActionState = {
   error?: string;
   success?: string;
+  details?: {
+    successful: string[];
+    failed: { email: string; reason: string }[];
+    skipped: string[];
+  };
 };
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -195,70 +203,253 @@ function InviteTeamMember() {
     ActionState,
     FormData
   >(inviteEducationalUser, {});
+  
+  const [bulkInviteState, bulkInviteAction, isBulkInvitePending] = useActionState<
+    ActionState,
+    FormData
+  >(bulkInviteStudents, {});
 
   // Get available roles that the current user can invite
   const invitableRoles = user ? getInvitableRoles(user.role as UserRole) : [];
+  const canInviteStudents = invitableRoles.includes('student');
+  const isTeacher = user?.role === 'teacher';
+
+  // State for bulk invitation
+  const [emails, setEmails] = useState('');
+  const [uploadedEmails, setUploadedEmails] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle file upload
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/api/upload-excel', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setUploadedEmails(result.emails);
+        setEmails(result.emails.join(', '));
+      } else {
+        alert(result.error || 'Failed to process file');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Failed to upload file');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Invite Team Member</CardTitle>
+        <CardTitle>Invite Team Members</CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={inviteAction} className="space-y-4">
-          <div>
-            <Label htmlFor="email" className="mb-2">
-              Email
-            </Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Enter email"
-              required
-              disabled={!canInvite}
-            />
-          </div>
-          <div>
-            <Label>Role</Label>
-            <RadioGroup
-              defaultValue={invitableRoles[0] || "student"}
-              name="role"
-              className="flex space-x-4"
-              disabled={!canInvite}
-            >
-              {invitableRoles.map((role) => (
-                <div key={role} className="flex items-center space-x-2 mt-2">
-                  <RadioGroupItem value={role} id={role} />
-                  <Label htmlFor={role}>{getRoleDisplayName(role)}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-          {inviteState?.error && (
-            <p className="text-red-500">{inviteState.error}</p>
-          )}
-          {inviteState?.success && (
-            <p className="text-green-500">{inviteState.success}</p>
-          )}
-          <Button
-            type="submit"
-            className="bg-orange-500 hover:bg-orange-600 text-white"
-            disabled={isInvitePending || !canInvite}
-          >
-            {isInvitePending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Inviting...
-              </>
-            ) : (
-              <>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Invite Educational User
-              </>
+        <Tabs defaultValue="single" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="single" className="flex items-center gap-2">
+              <PlusCircle className="h-4 w-4" />
+              Single Invitation
+            </TabsTrigger>
+            {canInviteStudents && (
+              <TabsTrigger value="bulk" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Bulk Invitation
+              </TabsTrigger>
             )}
-          </Button>
-        </form>
+          </TabsList>
+
+          <TabsContent value="single" className="space-y-4 mt-4">
+            <form action={inviteAction} className="space-y-4">
+              <div>
+                <Label htmlFor="email" className="mb-2">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter email"
+                  required
+                  disabled={!canInvite}
+                />
+              </div>
+              <div>
+                <Label>Role</Label>
+                <RadioGroup
+                  defaultValue={invitableRoles[0] || "student"}
+                  name="role"
+                  className="flex space-x-4"
+                  disabled={!canInvite}
+                >
+                  {invitableRoles.map((role) => (
+                    <div key={role} className="flex items-center space-x-2 mt-2">
+                      <RadioGroupItem value={role} id={role} />
+                      <Label htmlFor={role}>{getRoleDisplayName(role)}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+              {inviteState?.error && (
+                <p className="text-red-500">{inviteState.error}</p>
+              )}
+              {inviteState?.success && (
+                <p className="text-green-500">{inviteState.success}</p>
+              )}
+              <Button
+                type="submit"
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+                disabled={isInvitePending || !canInvite}
+              >
+                {isInvitePending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Inviting...
+                  </>
+                ) : (
+                  <>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Invite User
+                  </>
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+
+          {canInviteStudents && (
+            <TabsContent value="bulk" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                <div>
+                  <Label className="mb-2 block">Upload Excel/CSV File</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="flex items-center gap-2"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      {isUploading ? 'Processing...' : 'Choose File'}
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <span className="text-sm text-gray-500">
+                      Excel/CSV with emails in first column
+                    </span>
+                  </div>
+                  {uploadedEmails.length > 0 && (
+                    <div className="mt-2">
+                      <Badge variant="secondary" className="mb-2">
+                        {uploadedEmails.length} emails loaded
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setUploadedEmails([]);
+                          setEmails('');
+                        }}
+                        className="ml-2"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="bulk-emails" className="mb-2">
+                    Email Addresses
+                  </Label>
+                  <Textarea
+                    id="bulk-emails"
+                    name="emails"
+                    placeholder="Enter email addresses separated by commas, semicolons, or new lines&#10;Example:&#10;student1@school.com&#10;student2@school.com&#10;student3@school.com"
+                    value={emails}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEmails(e.target.value)}
+                    className="min-h-[120px]"
+                    required
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Maximum 50 students per bulk invitation. Separate emails with commas, semicolons, or new lines.
+                  </p>
+                </div>
+
+                {bulkInviteState?.error && (
+                  <p className="text-red-500">{bulkInviteState.error}</p>
+                )}
+                {bulkInviteState?.success && (
+                  <div className="space-y-2">
+                    <p className="text-green-500">{bulkInviteState.success}</p>
+                    {bulkInviteState.details && (
+                      <div className="text-sm space-y-1">
+                        {bulkInviteState.details.successful.length > 0 && (
+                          <p className="text-green-600">
+                            ✅ {bulkInviteState.details.successful.length} sent successfully
+                          </p>
+                        )}
+                        {bulkInviteState.details.skipped.length > 0 && (
+                          <p className="text-yellow-600">
+                            ⚠️ {bulkInviteState.details.skipped.length} skipped (already invited/member)
+                          </p>
+                        )}
+                        {bulkInviteState.details.failed.length > 0 && (
+                          <p className="text-red-600">
+                            ❌ {bulkInviteState.details.failed.length} failed
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <form action={bulkInviteAction} className="space-y-4">
+                  <input type="hidden" name="emails" value={emails} />
+                  <Button
+                    type="submit"
+                    className="bg-orange-500 hover:bg-orange-600 text-white w-full"
+                    disabled={isBulkInvitePending || !emails.trim()}
+                  >
+                    {isBulkInvitePending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending Invitations...
+                      </>
+                    ) : (
+                      <>
+                        <Users className="mr-2 h-4 w-4" />
+                        Invite {emails.split(/[,;\n]/).filter(e => e.trim()).length} Students
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </div>
+            </TabsContent>
+          )}
+        </Tabs>
       </CardContent>
       {!canInvite && (
         <CardFooter>

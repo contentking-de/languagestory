@@ -449,6 +449,166 @@ const inviteEducationalUserSchema = z.object({
   classId: z.string().optional(),
 });
 
+// Bulk invitation schema for multiple students
+const bulkInviteStudentsSchema = z.object({
+  emails: z.string().min(1, 'At least one email is required'),
+  language: z.enum(['french', 'german', 'spanish', 'all']).default('all'),
+  institutionId: z.string().optional(),
+  classId: z.string().optional(),
+});
+
+export const bulkInviteStudents = validatedActionWithUser(
+  bulkInviteStudentsSchema,
+  async (data, _, user) => {
+    const { emails, language, institutionId, classId } = data;
+    const userWithTeam = await getUserWithTeam(user.id);
+
+    if (!userWithTeam?.teamId) {
+      return { error: 'User is not part of a team' };
+    }
+
+    // Check if current user has permission to invite users
+    if (!hasPermission(user.role as UserRole, 'invite_users')) {
+      return { error: 'You do not have permission to invite users' };
+    }
+
+    // Check if current user can invite students
+    if (!canInviteRole(user.role as UserRole, 'student')) {
+      return { error: 'You cannot invite students' };
+    }
+
+    // Parse emails (split by comma, semicolon, or newline)
+    const emailList = emails
+      .split(/[,;\n]/)
+      .map(email => email.trim())
+      .filter(email => email.length > 0);
+
+    if (emailList.length === 0) {
+      return { error: 'No valid email addresses provided' };
+    }
+
+    // Validate all emails
+    const invalidEmails = emailList.filter(email => !z.string().email().safeParse(email).success);
+    if (invalidEmails.length > 0) {
+      return { error: `Invalid email addresses: ${invalidEmails.join(', ')}` };
+    }
+
+    // Limit to 50 emails per bulk invitation
+    if (emailList.length > 50) {
+      return { error: 'Maximum 50 students can be invited at once' };
+    }
+
+    const results = {
+      successful: [] as string[],
+      failed: [] as { email: string; reason: string }[],
+      skipped: [] as string[]
+    };
+
+    // Get team name for the email
+    const team = await db
+      .select({ name: teams.name })
+      .from(teams)
+      .where(eq(teams.id, userWithTeam.teamId))
+      .limit(1);
+
+    const teamName = team[0]?.name || 'A Language Story Team';
+
+    // Process each email
+    for (const email of emailList) {
+      try {
+        // Check if user already exists and is part of the team
+        const existingMember = await db
+          .select()
+          .from(users)
+          .leftJoin(teamMembers, eq(users.id, teamMembers.userId))
+          .where(
+            and(eq(users.email, email), eq(teamMembers.teamId, userWithTeam.teamId))
+          )
+          .limit(1);
+
+        if (existingMember.length > 0) {
+          results.skipped.push(email);
+          continue;
+        }
+
+        // Check for existing pending invitation
+        const existingInvitation = await db
+          .select()
+          .from(invitations)
+          .where(
+            and(
+              eq(invitations.email, email),
+              eq(invitations.teamId, userWithTeam.teamId),
+              eq(invitations.status, 'pending')
+            )
+          )
+          .limit(1);
+
+        if (existingInvitation.length > 0) {
+          results.skipped.push(email);
+          continue;
+        }
+
+        // Create invitation
+        const invitation = await db.insert(invitations).values({
+          teamId: userWithTeam.teamId,
+          email,
+          role: 'student',
+          language,
+          invitedBy: user.id,
+        }).returning();
+
+        // Generate invitation URL
+        const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://alanguagestory.dev'}/sign-up?inviteId=${invitation[0].id}`;
+
+        // Send invitation email
+        try {
+          await sendInvitationEmail({
+            email,
+            role: 'student',
+            invitedBy: user.name || user.email,
+            teamName,
+            invitationUrl
+          });
+          results.successful.push(email);
+        } catch (emailError) {
+          console.error(`Failed to send invitation email to ${email}:`, emailError);
+          results.failed.push({ email, reason: 'Email sending failed' });
+        }
+
+      } catch (error) {
+        console.error(`Failed to process invitation for ${email}:`, error);
+        results.failed.push({ email, reason: 'Processing failed' });
+      }
+    }
+
+    // Log activity
+    await logActivity(
+      userWithTeam.teamId,
+      user.id,
+      ActivityType.INVITE_TEAM_MEMBER,
+      undefined
+    );
+
+    // Generate result message
+    let message = `Bulk invitation completed. `;
+    if (results.successful.length > 0) {
+      message += `${results.successful.length} invitation(s) sent successfully. `;
+    }
+    if (results.skipped.length > 0) {
+      message += `${results.skipped.length} email(s) skipped (already invited or member). `;
+    }
+    if (results.failed.length > 0) {
+      message += `${results.failed.length} invitation(s) failed.`;
+    }
+
+    return { 
+      success: message,
+      details: results
+    };
+  }
+);
+
 export const inviteEducationalUser = validatedActionWithUser(
   inviteEducationalUserSchema,
   async (data, _, user) => {
