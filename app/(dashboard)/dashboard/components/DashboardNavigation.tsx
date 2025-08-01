@@ -26,6 +26,9 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>(['/dashboard/content']);
 
+  // Debug: Log the actual role value
+  console.log('DEBUG: userRole received in navigation:', userRole, typeof userRole);
+
   // Full navigation for Super Admin and Content Creator
   const fullNavItems: NavItem[] = [
     { href: '/dashboard/welcome', icon: Heart, label: 'Welcome' },
@@ -92,9 +95,31 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
     { href: '/dashboard/security', icon: Shield, label: 'Security' }
   ];
 
+  // Minimal navigation for Students (without Team/Roles)
+  const studentNavItems: NavItem[] = [
+    { href: '/dashboard/welcome', icon: Heart, label: 'Welcome' },
+    { 
+      href: '/dashboard/content', 
+      icon: BookOpen, 
+      label: 'Content',
+      subItems: [
+        { href: '/dashboard/content/courses', icon: GraduationCap, label: 'Courses' },
+        { href: '/dashboard/content/lessons', icon: BookOpen, label: 'Lessons' },
+        { href: '/dashboard/content/quizzes', icon: FileQuestion, label: 'Quizzes' },
+        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' },
+        { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
+      ]
+    },
+    { href: '/dashboard/general', icon: Settings, label: 'General' },
+    { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
+    { href: '/dashboard/security', icon: Shield, label: 'Security' }
+  ];
+
   // Determine which navigation to use based on role
   const navItems = (userRole === 'super_admin' || userRole === 'content_creator') 
     ? fullNavItems 
+    : userRole === 'student'
+    ? studentNavItems
     : teacherNavItems;
 
   const toggleExpanded = (href: string) => {

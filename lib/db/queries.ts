@@ -60,7 +60,8 @@ export async function getUserWithTeamData() {
       id: users.id,
       email: users.email,
       name: users.name,
-      role: users.role,
+      userRole: users.role,
+      teamRole: teamMembers.role,
       institutionId: users.institutionId,
       createdAt: users.createdAt,
       updatedAt: users.updatedAt,
@@ -76,7 +77,12 @@ export async function getUserWithTeamData() {
     return null;
   }
 
-  return result[0];
+  const userData = result[0];
+  // Use team role if available, otherwise fall back to user role
+  return {
+    ...userData,
+    role: userData.teamRole || userData.userRole
+  };
 }
 
 export async function getTeamByStripeCustomerId(customerId: string) {
