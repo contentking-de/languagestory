@@ -91,6 +91,7 @@ export const lessons = pgTable('lessons', {
   cover_image: varchar('cover_image', { length: 255 }),
   audio_file: varchar('audio_file', { length: 255 }),
   video_file: varchar('video_file', { length: 255 }),
+  cultural_information: text('cultural_information'), // Cultural context and information
   wp_lesson_id: integer('wp_lesson_id'), // Reference to original WordPress lesson
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),

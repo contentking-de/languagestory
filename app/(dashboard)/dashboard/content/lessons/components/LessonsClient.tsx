@@ -15,7 +15,8 @@ import {
   Trophy,
   Play,
   Users,
-  GraduationCap
+  GraduationCap,
+  ExternalLink
 } from 'lucide-react';
 import {
   Select,
@@ -309,9 +310,12 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
                       <td className="p-3">
                         <div className="flex items-start gap-3">
                           <div className="flex-1">
-                            <h3 className="font-medium text-gray-900 line-clamp-1">
-                              {lesson.title}
-                            </h3>
+                            <Link href={`/dashboard/content/lessons/${lesson.id}`}>
+                              <h3 className="font-medium text-gray-900 line-clamp-1 hover:text-blue-600 hover:underline cursor-pointer transition-colors flex items-center gap-1 group">
+                                {lesson.title}
+                                <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </h3>
+                            </Link>
                             <p className="text-sm text-gray-600 line-clamp-1 mt-1">
                               {lesson.description || 'No description'}
                             </p>

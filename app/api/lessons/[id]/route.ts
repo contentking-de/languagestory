@@ -35,6 +35,10 @@ export async function GET(
         course_title: courses.title,
         course_language: courses.language,
         course_level: courses.level,
+        cover_image: lessons.cover_image,
+        audio_file: lessons.audio_file,
+        video_file: lessons.video_file,
+        cultural_information: lessons.cultural_information,
       })
       .from(lessons)
       .leftJoin(courses, eq(lessons.course_id, courses.id))
@@ -83,7 +87,11 @@ export async function PUT(
       lesson_order, 
       estimated_duration, 
       points_value, 
-      is_published 
+      is_published,
+      cover_image,
+      audio_file,
+      video_file,
+      cultural_information
     } = body;
 
     const [updatedLesson] = await db
@@ -98,6 +106,10 @@ export async function PUT(
         estimated_duration,
         points_value,
         is_published,
+        cover_image,
+        audio_file,
+        video_file,
+        cultural_information,
         updated_at: new Date(),
       })
       .where(eq(lessons.id, lessonId))

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { 
   ArrowLeft,
   Edit,
@@ -16,7 +17,11 @@ import {
   Languages,
   GraduationCap,
   FileQuestion,
-  Plus
+  Plus,
+  Image,
+  Music,
+  Video,
+  Eye
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -36,6 +41,10 @@ interface Lesson {
   course_title: string;
   course_language: string;
   course_level: string;
+  cover_image?: string;
+  audio_file?: string;
+  video_file?: string;
+  cultural_information?: string;
 }
 
 interface Quiz {
@@ -272,6 +281,77 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
         </Card>
       </div>
 
+      {/* Media Files */}
+      {(lesson.cover_image || lesson.audio_file || lesson.video_file) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Image className="h-5 w-5" />
+              Media Files
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Cover Image */}
+              {lesson.cover_image && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">Cover Image</Label>
+                  <div className="relative">
+                    <img
+                      src={lesson.cover_image}
+                      alt="Lesson cover"
+                      className="w-full h-32 object-cover rounded-lg border"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="absolute top-2 right-2"
+                      onClick={() => window.open(lesson.cover_image, '_blank')}
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Audio File */}
+              {lesson.audio_file && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">Audio File</Label>
+                  <div className="p-3 border rounded-lg bg-gray-50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Music className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm text-gray-700">Audio</span>
+                    </div>
+                    <audio controls className="w-full">
+                      <source src={lesson.audio_file} type="audio/mpeg" />
+                      Your browser does not support the audio element.
+                    </audio>
+                  </div>
+                </div>
+              )}
+
+              {/* Video File */}
+              {lesson.video_file && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">Video File</Label>
+                  <div className="p-3 border rounded-lg bg-gray-50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Video className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm text-gray-700">Video</span>
+                    </div>
+                    <video controls className="w-full rounded">
+                      <source src={lesson.video_file} type="video/mp4" />
+                      Your browser does not support the video element.
+                    </video>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Lesson Content & Quizzes */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
@@ -313,6 +393,27 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
               )}
             </CardContent>
           </Card>
+
+          {/* Cultural Information */}
+          {lesson.cultural_information && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Languages className="h-5 w-5" />
+                  Cultural Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="prose max-w-none">
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <div className="whitespace-pre-wrap text-sm text-gray-700">
+                      {lesson.cultural_information}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Quizzes Section */}
           <Card className="mt-6">

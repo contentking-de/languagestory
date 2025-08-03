@@ -1,0 +1,1 @@
+ALTER TABLE "lessons" ADD COLUMN "cultural_information" text;

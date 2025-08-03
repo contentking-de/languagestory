@@ -10,7 +10,12 @@ import {
   ArrowLeft,
   Save,
   Loader2,
-  BookOpen
+  BookOpen,
+  Image,
+  Music,
+  Video,
+  Plus,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -20,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { MediaSelector } from './components/MediaSelector';
 
 interface Lesson {
   id: number;
@@ -34,6 +40,19 @@ interface Lesson {
   is_published: boolean;
   course_id: number;
   course_title: string;
+  cover_image?: string;
+  audio_file?: string;
+  video_file?: string;
+  cultural_information?: string;
+}
+
+interface MediaFile {
+  id: number;
+  name: string;
+  url: string;
+  size: number;
+  type: string;
+  category?: string;
 }
 
 export default function LessonEditPage() {
@@ -54,7 +73,21 @@ export default function LessonEditPage() {
     estimated_duration: 30,
     points_value: 10,
     is_published: false,
+    cover_image: '',
+    audio_file: '',
+    video_file: '',
+    cultural_information: '',
   });
+
+  const [selectedMedia, setSelectedMedia] = useState<{
+    cover_image?: MediaFile;
+    audio_file?: MediaFile;
+    video_file?: MediaFile;
+  }>({});
+
+  const [showMediaSelector, setShowMediaSelector] = useState<{
+    type: 'cover_image' | 'audio_file' | 'video_file' | null;
+  }>({ type: null });
 
   useEffect(() => {
     if (lessonId) {
@@ -78,7 +111,46 @@ export default function LessonEditPage() {
           estimated_duration: lessonData.estimated_duration || 30,
           points_value: lessonData.points_value || 10,
           is_published: lessonData.is_published,
+          cover_image: lessonData.cover_image || '',
+          audio_file: lessonData.audio_file || '',
+          video_file: lessonData.video_file || '',
+          cultural_information: lessonData.cultural_information || '',
         });
+
+        // Fetch media file information for existing files
+        const mediaFiles: any = {};
+        
+        const existingUrls = [
+          lessonData.cover_image,
+          lessonData.audio_file,
+          lessonData.video_file
+        ].filter(url => url);
+        
+        if (existingUrls.length > 0) {
+          try {
+            const mediaResponse = await fetch(`/api/media/by-url?urls=${existingUrls.map(url => encodeURIComponent(url)).join(',')}`);
+            if (mediaResponse.ok) {
+              const mediaData = await mediaResponse.json();
+              
+              // Map files back to their types
+              mediaData.files.forEach((file: any) => {
+                if (file.url === lessonData.cover_image) {
+                  mediaFiles.cover_image = file;
+                }
+                if (file.url === lessonData.audio_file) {
+                  mediaFiles.audio_file = file;
+                }
+                if (file.url === lessonData.video_file) {
+                  mediaFiles.video_file = file;
+                }
+              });
+            }
+          } catch (error) {
+            console.error('Error fetching media file info:', error);
+          }
+        }
+        
+        setSelectedMedia(mediaFiles);
       }
     } catch (error) {
       console.error('Error fetching lesson:', error);
@@ -101,6 +173,17 @@ export default function LessonEditPage() {
       title: newTitle,
       slug: generateSlug(newTitle),
     }));
+  };
+
+  const handleMediaSelect = (file: MediaFile, type: 'cover_image' | 'audio_file' | 'video_file') => {
+    setSelectedMedia(prev => ({ ...prev, [type]: file }));
+    setFormData(prev => ({ ...prev, [type]: file.url }));
+    setShowMediaSelector({ type: null });
+  };
+
+  const handleRemoveMedia = (type: 'cover_image' | 'audio_file' | 'video_file') => {
+    setSelectedMedia(prev => ({ ...prev, [type]: undefined }));
+    setFormData(prev => ({ ...prev, [type]: '' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -237,6 +320,21 @@ export default function LessonEditPage() {
                 </p>
               </div>
 
+              <div>
+                <Label htmlFor="cultural_information">Cultural Information</Label>
+                <textarea
+                  id="cultural_information"
+                  value={formData.cultural_information}
+                  onChange={(e) => setFormData(prev => ({ ...prev, cultural_information: e.target.value }))}
+                  rows={6}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="Add cultural context, background information, or cultural notes related to this lesson..."
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Cultural context, historical background, or cultural notes that enhance the learning experience
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="lesson_type">Lesson Type</Label>
@@ -298,6 +396,106 @@ export default function LessonEditPage() {
                 </p>
               </div>
 
+              {/* Media Selection */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Media Files</h3>
+                  <p className="text-sm text-gray-500">
+                    Select from existing files or upload new ones directly in the media selector
+                  </p>
+                </div>
+                
+                {/* Cover Image */}
+                <div className="space-y-2">
+                  <Label>Cover Image</Label>
+                  <div className="flex items-center gap-2">
+                    {selectedMedia.cover_image ? (
+                      <div className="flex items-center gap-2 p-2 border rounded-lg bg-gray-50">
+                        <Image className="h-4 w-4 text-gray-600" />
+                        <span className="text-sm text-gray-700">{selectedMedia.cover_image.name}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRemoveMedia('cover_image')}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowMediaSelector({ type: 'cover_image' })}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Select Cover Image
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Audio File */}
+                <div className="space-y-2">
+                  <Label>Audio File</Label>
+                  <div className="flex items-center gap-2">
+                    {selectedMedia.audio_file ? (
+                      <div className="flex items-center gap-2 p-2 border rounded-lg bg-gray-50">
+                        <Music className="h-4 w-4 text-gray-600" />
+                        <span className="text-sm text-gray-700">{selectedMedia.audio_file.name}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRemoveMedia('audio_file')}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowMediaSelector({ type: 'audio_file' })}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Select Audio File
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Video File */}
+                <div className="space-y-2">
+                  <Label>Video File</Label>
+                  <div className="flex items-center gap-2">
+                    {selectedMedia.video_file ? (
+                      <div className="flex items-center gap-2 p-2 border rounded-lg bg-gray-50">
+                        <Video className="h-4 w-4 text-gray-600" />
+                        <span className="text-sm text-gray-700">{selectedMedia.video_file.name}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRemoveMedia('video_file')}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowMediaSelector({ type: 'video_file' })}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Select Video File
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -333,6 +531,20 @@ export default function LessonEditPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Media Selector Modal */}
+      {showMediaSelector.type && (
+        <MediaSelector
+          onSelect={(file) => handleMediaSelect(file, showMediaSelector.type!)}
+          onClose={() => setShowMediaSelector({ type: null })}
+          selectedFile={selectedMedia[showMediaSelector.type]}
+          fileType={
+            showMediaSelector.type === 'cover_image' ? 'image' :
+            showMediaSelector.type === 'audio_file' ? 'audio' :
+            showMediaSelector.type === 'video_file' ? 'video' : undefined
+          }
+        />
+      )}
     </div>
   );
 } 
