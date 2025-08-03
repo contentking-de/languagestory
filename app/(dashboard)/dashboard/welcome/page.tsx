@@ -151,7 +151,7 @@ export default function WelcomePage() {
               </Button>
             </Link>
             
-            <Link href="/dashboard/activity" className="group">
+            <Link href="/dashboard/progress" className="group">
               <Button variant="outline" className="w-full h-auto p-4 group-hover:border-green-300 group-hover:bg-green-50 transition-all">
                 <div className="text-center">
                   <Trophy className="h-6 w-6 mx-auto mb-2 text-green-500" />
@@ -230,7 +230,7 @@ export default function WelcomePage() {
               Start Your First Story
             </Button>
           </Link>
-          <Link href="/dashboard/activity">
+          <Link href="/dashboard/progress">
             <Button variant="outline" size="lg">
               <Trophy className="h-5 w-5 mr-2" />
               View My Progress
