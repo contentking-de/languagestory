@@ -25,6 +25,7 @@ import {
   Gamepad2
 } from 'lucide-react';
 import Link from 'next/link';
+import { AudioPlayer } from '@/components/ui/audio-player';
 
 interface Lesson {
   id: number;
@@ -453,8 +454,15 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
               <CardContent>
                 <div className="prose max-w-none">
                   <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                    <div className="whitespace-pre-wrap text-sm text-gray-700">
-                      {lesson.cultural_information}
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
+                        {lesson.cultural_information}
+                      </div>
+                      <AudioPlayer 
+                        text={lesson.cultural_information} 
+                        language={lesson.course_language || 'english'} 
+                        size="md"
+                      />
                     </div>
                   </div>
                 </div>

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Volume2, Loader2 } from 'lucide-react';
+import { Volume2, Loader2, Square } from 'lucide-react';
 
 interface AudioPlayerProps {
   text: string;
@@ -114,40 +114,38 @@ export function AudioPlayer({
     setIsPlaying(false);
   };
 
-  const handleClick = () => {
-    if (isPlaying) {
-      stopAudio();
-    } else {
-      generateAudio();
-    }
-  };
-
   return (
-    <div className={`inline-flex ${className}`}>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleClick}
-        disabled={isLoading}
-        className={`${buttonSize[size]} p-0 rounded-full hover:bg-gray-100 transition-colors`}
-        title={`${isPlaying ? 'Stop' : 'Play'} pronunciation of "${text}"`}
-      >
-        {isLoading ? (
-          <Loader2 className={`${sizeClasses[size]} animate-spin text-blue-600`} />
-        ) : isPlaying ? (
-          <div className={`${sizeClasses[size]} relative`}>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex space-x-1">
-                <div className="w-1 bg-blue-600 rounded-full animate-pulse" style={{ height: '60%' }}></div>
-                <div className="w-1 bg-blue-600 rounded-full animate-pulse" style={{ height: '100%', animationDelay: '0.1s' }}></div>
-                <div className="w-1 bg-blue-600 rounded-full animate-pulse" style={{ height: '60%', animationDelay: '0.2s' }}></div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <Volume2 className={`${sizeClasses[size]} text-gray-600 hover:text-blue-600`} />
-        )}
-      </Button>
+    <div className={`inline-flex gap-1 ${className}`}>
+      {isPlaying ? (
+        <>
+          {/* Stop Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={stopAudio}
+            className={`${buttonSize[size]} p-0 rounded-full hover:bg-red-100 transition-colors`}
+            title={`Stop pronunciation of "${text}"`}
+          >
+            <Square className={`${sizeClasses[size]} text-red-600 hover:text-red-700`} />
+          </Button>
+        </>
+      ) : (
+        /* Play Button */
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={generateAudio}
+          disabled={isLoading}
+          className={`${buttonSize[size]} p-0 rounded-full hover:bg-gray-100 transition-colors`}
+          title={`Play pronunciation of "${text}"`}
+        >
+          {isLoading ? (
+            <Loader2 className={`${sizeClasses[size]} animate-spin text-blue-600`} />
+          ) : (
+            <Volume2 className={`${sizeClasses[size]} text-gray-600 hover:text-blue-600`} />
+          )}
+        </Button>
+      )}
     </div>
   );
 } 
