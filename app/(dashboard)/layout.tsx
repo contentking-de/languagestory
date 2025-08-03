@@ -33,7 +33,7 @@ function UserMenu() {
     return (
       <>
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden xl:flex items-center space-x-4">
           <a
             href="#why-choose-us"
             className="text-sm font-medium text-gray-700 hover:text-gray-900"
@@ -84,9 +84,9 @@ function UserMenu() {
           </Button>
         </div>
 
-        {/* Mobile Burger Menu Button */}
+        {/* Mobile and Tablet Burger Menu Button */}
         <button
-          className="md:hidden p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+          className="xl:hidden p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
           {isMenuOpen ? (
@@ -96,9 +96,9 @@ function UserMenu() {
           )}
         </button>
 
-        {/* Mobile Menu */}
+        {/* Mobile and Tablet Menu */}
         {isMenuOpen && (
-          <div className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg md:hidden z-50">
+          <div className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg xl:hidden z-50">
             <div className="px-4 py-6 space-y-4">
               <a
                 href="#why-choose-us"

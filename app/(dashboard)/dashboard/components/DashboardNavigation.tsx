@@ -188,8 +188,8 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
-      {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4">
+      {/* Mobile and Tablet header */}
+      <div className="xl:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4">
         <div className="flex items-center">
           <span className="font-medium">Settings</span>
         </div>
@@ -204,11 +204,19 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
       </div>
 
       <div className="flex flex-1 overflow-hidden h-full">
+        {/* Overlay for mobile and tablet */}
+        {isSidebarOpen && (
+          <div 
+            className="xl:hidden fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300 ease-in-out"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
         <aside
-          className={`w-64 bg-white lg:bg-gray-50 border-r border-gray-200 lg:block ${
+          className={`w-64 bg-white xl:bg-gray-50 border-r border-gray-200 xl:block ${
             isSidebarOpen ? 'block' : 'hidden'
-          } lg:relative absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          } xl:relative absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out xl:translate-x-0 ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -218,7 +226,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-0 lg:p-4">{children}</main>
+        <main className="flex-1 overflow-y-auto p-0 xl:p-4">{children}</main>
       </div>
     </div>
   );
