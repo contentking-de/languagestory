@@ -21,6 +21,7 @@ import {
   Trash2
 } from 'lucide-react';
 import Link from 'next/link';
+import { AudioPlayer } from '@/components/ui/audio-player';
 
 interface VocabularyWord {
   id: number;
@@ -375,7 +376,14 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-lg line-clamp-2">{word.word_english}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg line-clamp-2">{word.word_english}</CardTitle>
+                      <AudioPlayer 
+                        text={word.word_english} 
+                        language="english" 
+                        size="sm"
+                      />
+                    </div>
                     <div className="flex items-center gap-2 mt-2">
                       <Badge className={getDifficultyColor(word.difficulty_level)}>
                         {getDifficultyStars(word.difficulty_level)}
@@ -403,18 +411,33 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-gray-500">🇫🇷</span>
                       <span className="font-medium">{word.word_french}</span>
+                      <AudioPlayer 
+                        text={word.word_french} 
+                        language="french" 
+                        size="sm"
+                      />
                     </div>
                   )}
                   {word.word_german && (
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-gray-500">🇩🇪</span>
                       <span className="font-medium">{word.word_german}</span>
+                      <AudioPlayer 
+                        text={word.word_german} 
+                        language="german" 
+                        size="sm"
+                      />
                     </div>
                   )}
                   {word.word_spanish && (
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-gray-500">🇪🇸</span>
                       <span className="font-medium">{word.word_spanish}</span>
+                      <AudioPlayer 
+                        text={word.word_spanish} 
+                        language="spanish" 
+                        size="sm"
+                      />
                     </div>
                   )}
                 </div>
@@ -430,7 +453,15 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                 {/* Context Sentence */}
                 {word.context_sentence && (
                   <div className="text-sm text-gray-600 line-clamp-2">
-                    <span className="font-medium">Context:</span> {word.context_sentence}
+                    <div className="flex items-start gap-2">
+                      <span className="font-medium">Context:</span> 
+                      <span className="flex-1">{word.context_sentence}</span>
+                      <AudioPlayer 
+                        text={word.context_sentence} 
+                        language={word.course_language || 'english'} 
+                        size="sm"
+                      />
+                    </div>
                   </div>
                 )}
 

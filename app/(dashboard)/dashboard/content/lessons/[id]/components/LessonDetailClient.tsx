@@ -21,7 +21,8 @@ import {
   Image,
   Music,
   Video,
-  Eye
+  Eye,
+  Gamepad2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -55,6 +56,21 @@ interface Quiz {
   is_published: boolean;
 }
 
+interface Game {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  language: string | null;
+  difficulty_level: number;
+  estimated_duration: number | null;
+  thumbnail_url: string | null;
+  is_active: boolean;
+  is_featured: boolean;
+  usage_count: number;
+  created_at: string;
+}
+
 interface LessonDetailClientProps {
   userRole: string;
 }
@@ -66,6 +82,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
   
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Check if user can create/edit lessons
@@ -79,9 +96,10 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
 
   const fetchLessonDetails = async () => {
     try {
-      const [lessonResponse, quizzesResponse] = await Promise.all([
+      const [lessonResponse, quizzesResponse, gamesResponse] = await Promise.all([
         fetch(`/api/lessons/${lessonId}`),
-        fetch(`/api/lessons/${lessonId}/quizzes`)
+        fetch(`/api/lessons/${lessonId}/quizzes`),
+        fetch(`/api/lessons/${lessonId}/games`)
       ]);
 
       if (lessonResponse.ok) {
@@ -92,6 +110,11 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
       if (quizzesResponse.ok) {
         const quizzesData = await quizzesResponse.json();
         setQuizzes(quizzesData);
+      }
+
+      if (gamesResponse.ok) {
+        const gamesData = await gamesResponse.json();
+        setGames(gamesData);
       }
     } catch (error) {
       console.error('Error fetching lesson details:', error);
@@ -149,6 +172,30 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+  };
+
+  const getGameCategoryColor = (category: string) => {
+    const colors = {
+      vocabulary: 'bg-blue-100 text-blue-800',
+      grammar: 'bg-green-100 text-green-800',
+      listening: 'bg-purple-100 text-purple-800',
+      speaking: 'bg-orange-100 text-orange-800',
+      reading: 'bg-red-100 text-red-800',
+      writing: 'bg-teal-100 text-teal-800',
+      general: 'bg-gray-100 text-gray-800'
+    };
+    return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getDifficultyColor = (level: number) => {
+    const colors = {
+      1: 'bg-green-100 text-green-800',
+      2: 'bg-blue-100 text-blue-800',
+      3: 'bg-yellow-100 text-yellow-800',
+      4: 'bg-orange-100 text-orange-800',
+      5: 'bg-red-100 text-red-800'
+    };
+    return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
   if (loading) {
@@ -489,6 +536,100 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
                       <Button>
                         <Plus className="h-4 w-4 mr-2" />
                         Add First Quiz
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Games Section */}
+          <Card className="mt-6">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Gamepad2 className="h-5 w-5" />
+                Lesson Games ({games.length})
+              </CardTitle>
+              {canCreateEdit && (
+                <Link href={`/dashboard/games?lessonId=${lesson.id}`}>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Game
+                  </Button>
+                </Link>
+              )}
+            </CardHeader>
+            <CardContent>
+              {games.length > 0 ? (
+                <div className="space-y-3">
+                  {games.map((game) => (
+                    <div key={game.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-lg">
+                          <Gamepad2 className="h-4 w-4 text-gray-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">{game.title}</h3>
+                          <p className="text-sm text-gray-600 line-clamp-1 mt-1">
+                            {game.description || 'No description'}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
+                            <Badge className={getGameCategoryColor(game.category)} variant="outline">
+                              {game.category}
+                            </Badge>
+                            <Badge className={getDifficultyColor(game.difficulty_level)} variant="outline">
+                              Level {game.difficulty_level}
+                            </Badge>
+                            {game.estimated_duration && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {formatDuration(game.estimated_duration)}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              {game.usage_count} plays
+                            </span>
+                            <div className={`w-2 h-2 rounded-full ${game.is_active ? 'bg-green-500' : 'bg-gray-400'}`} />
+                            <span className={game.is_active ? 'text-green-600' : 'text-gray-500'}>
+                              {game.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <Link href={`/dashboard/games/${game.id}`}>
+                          <Button variant="outline" size="sm">
+                            <Play className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        {canCreateEdit && (
+                          <Link href={`/dashboard/games/${game.id}/edit`}>
+                            <Button size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Gamepad2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No games yet</h3>
+                  <p className="text-gray-600 mb-4">
+                    {canCreateEdit 
+                      ? 'Add interactive games to make learning more engaging.'
+                      : 'This lesson doesn\'t have any games yet.'
+                    }
+                  </p>
+                  {canCreateEdit && (
+                    <Link href={`/dashboard/games?lessonId=${lesson.id}`}>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add First Game
                       </Button>
                     </Link>
                   )}

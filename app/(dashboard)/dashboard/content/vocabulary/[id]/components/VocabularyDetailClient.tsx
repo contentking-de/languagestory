@@ -19,6 +19,7 @@ import {
   Trash2
 } from 'lucide-react';
 import Link from 'next/link';
+import { AudioPlayer } from '@/components/ui/audio-player';
 
 interface VocabularyWord {
   id: number;
@@ -149,10 +150,10 @@ export function VocabularyDetailClient({ userRole }: VocabularyDetailClientProps
 
   const getAvailableLanguages = (word: VocabularyWord) => {
     const languages = [];
-    if (word.word_french) languages.push({ flag: '🇫🇷', name: 'French', word: word.word_french });
-    if (word.word_german) languages.push({ flag: '🇩🇪', name: 'German', word: word.word_german });
-    if (word.word_spanish) languages.push({ flag: '🇪🇸', name: 'Spanish', word: word.word_spanish });
-    languages.push({ flag: '🇬🇧', name: 'English', word: word.word_english });
+    if (word.word_french) languages.push({ flag: '🇫🇷', name: 'French', word: word.word_french, language: 'french' });
+    if (word.word_german) languages.push({ flag: '🇩🇪', name: 'German', word: word.word_german, language: 'german' });
+    if (word.word_spanish) languages.push({ flag: '🇪🇸', name: 'Spanish', word: word.word_spanish, language: 'spanish' });
+    languages.push({ flag: '🇬🇧', name: 'English', word: word.word_english, language: 'english' });
     return languages;
   };
 
@@ -238,7 +239,14 @@ export function VocabularyDetailClient({ userRole }: VocabularyDetailClientProps
                       <span className="text-2xl">{lang.flag}</span>
                       <span className="font-medium text-gray-700">{lang.name}</span>
                     </div>
-                    <p className="text-xl font-semibold">{lang.word}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xl font-semibold">{lang.word}</p>
+                      <AudioPlayer 
+                        text={lang.word} 
+                        language={lang.language} 
+                        size="md"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -258,9 +266,16 @@ export function VocabularyDetailClient({ userRole }: VocabularyDetailClientProps
                 {word.context_sentence && (
                   <div>
                     <h4 className="font-medium text-gray-700 mb-2">Example Sentence:</h4>
-                    <p className="text-gray-900 italic bg-gray-50 p-3 rounded-lg">
-                      "{word.context_sentence}"
-                    </p>
+                    <div className="flex items-start gap-2">
+                      <p className="text-gray-900 italic bg-gray-50 p-3 rounded-lg flex-1">
+                        "{word.context_sentence}"
+                      </p>
+                      <AudioPlayer 
+                        text={word.context_sentence} 
+                        language={word.course_language || 'english'} 
+                        size="md"
+                      />
+                    </div>
                   </div>
                 )}
                 

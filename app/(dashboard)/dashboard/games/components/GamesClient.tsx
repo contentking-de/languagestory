@@ -76,12 +76,21 @@ interface WordwallGame {
   error?: string;
 }
 
+interface Lesson {
+  id: number;
+  title: string;
+  course_title: string;
+  course_language: string;
+  course_level: string;
+}
+
 interface GamesClientProps {
   userRole: string;
 }
 
 export function GamesClient({ userRole }: GamesClientProps) {
   const [games, setGames] = useState<DatabaseGame[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [newGameUrl, setNewGameUrl] = useState('');
@@ -90,6 +99,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
   const [expandedGame, setExpandedGame] = useState<number | null>(null);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [lessonFilter, setLessonFilter] = useState('all');
+  const [assigningLesson, setAssigningLesson] = useState<number | null>(null);
 
   // Check if user can create/edit games
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
@@ -105,6 +115,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
   // Load games from database on component mount
   useEffect(() => {
     loadGamesFromDatabase();
+    loadLessons();
   }, []);
 
   const loadGamesFromDatabase = async () => {
@@ -121,6 +132,44 @@ export function GamesClient({ userRole }: GamesClientProps) {
       console.error('Error loading games:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadLessons = async () => {
+    try {
+      const response = await fetch('/api/lessons');
+      if (response.ok) {
+        const data = await response.json();
+        setLessons(data);
+      } else {
+        console.error('Failed to load lessons');
+      }
+    } catch (error) {
+      console.error('Error loading lessons:', error);
+    }
+  };
+
+  const assignLessonToGame = async (gameId: number, lessonId: number | null) => {
+    try {
+      setAssigningLesson(gameId);
+      const response = await fetch(`/api/games/wordwall/${gameId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ lesson_id: lessonId }),
+      });
+      
+      if (response.ok) {
+        // Reload games to get updated data
+        loadGamesFromDatabase();
+      } else {
+        console.error('Failed to assign lesson to game');
+      }
+    } catch (error) {
+      console.error('Error assigning lesson to game:', error);
+    } finally {
+      setAssigningLesson(null);
     }
   };
 
@@ -268,6 +317,15 @@ export function GamesClient({ userRole }: GamesClientProps) {
       'General': 'bg-gray-100 text-gray-800'
     };
     return colors[category] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getLanguageFlag = (language: string) => {
+    const flags = {
+      french: '🇫🇷',
+      german: '🇩🇪',
+      spanish: '🇪🇸'
+    };
+    return flags[language as keyof typeof flags] || '🌐';
   };
 
   // Filter games based on search term and filters
@@ -629,6 +687,51 @@ export function GamesClient({ userRole }: GamesClientProps) {
                         </>
                       )}
                     </div>
+
+                    {/* Lesson Assignment */}
+                    {canCreateEdit && (
+                      <div className="border-t pt-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-gray-700">Assign to Lesson</label>
+                          {game.lesson_title && (
+                            <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                              ✓ Assigned
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Select
+                            value={game.lesson_id?.toString() || 'none'}
+                            onValueChange={(value) => {
+                              const lessonId = value === 'none' ? null : parseInt(value);
+                              assignLessonToGame(game.id, lessonId);
+                            }}
+                            disabled={assigningLesson === game.id}
+                          >
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Select a lesson..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">No lesson assigned</SelectItem>
+                              {lessons.map((lesson) => (
+                                <SelectItem key={lesson.id} value={lesson.id.toString()}>
+                                  {getLanguageFlag(lesson.course_language)} {lesson.title} ({lesson.course_title})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {assigningLesson === game.id && (
+                            <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                          )}
+                        </div>
+                        {game.lesson_title && (
+                          <p className="text-xs text-gray-600 mt-1">
+                            Currently assigned to: <strong>{game.lesson_title}</strong>
+                            {game.course_title && ` (${game.course_title})`}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     {/* Embedded Game */}
                     {isExpanded && (
