@@ -191,19 +191,38 @@ export function QuizDetailClient({ userRole }: QuizDetailClientProps) {
   let actualDescription = '';
   
   try {
-    if (quiz.description && quiz.description.includes('"quiz_config"')) {
-      const configMatch = quiz.description.match(/"quiz_config":\s*({[^}]+})/);
-      if (configMatch) {
-        quizConfig = JSON.parse(configMatch[1]);
-        actualDescription = quiz.description.replace(/.*"quiz_config":\s*{[^}]+}.*/s, '').trim();
+    if (quiz.description) {
+      // Try to parse new JSON structure: {"description": "...", "config": {...}}
+      if (quiz.description.startsWith('{') && quiz.description.includes('"config"')) {
+        const parsedData = JSON.parse(quiz.description);
+        if (parsedData.description !== undefined) {
+          actualDescription = parsedData.description;
+        }
+        if (parsedData.config) {
+          quizConfig = parsedData.config;
+        }
+      }
+      // Try to parse old structure with "quiz_config"
+      else if (quiz.description.includes('"quiz_config"')) {
+        const configMatch = quiz.description.match(/"quiz_config":\s*({[^}]+})/);
+        if (configMatch) {
+          quizConfig = JSON.parse(configMatch[1]);
+          actualDescription = quiz.description.replace(/.*"quiz_config":\s*{[^}]+}.*/s, '').trim();
+        }
+      }
+      // Plain text description (no JSON structure)
+      else {
+        actualDescription = quiz.description;
       }
     }
   } catch (error) {
     console.error('Error parsing quiz config:', error);
+    // Fallback to showing the raw description if parsing fails
+    actualDescription = quiz.description || '';
   }
 
   if (!actualDescription) {
-    actualDescription = quiz.description || '';
+    actualDescription = 'No description provided';
   }
 
   return (

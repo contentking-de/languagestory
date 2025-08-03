@@ -62,6 +62,14 @@ export default function QuizEditPage() {
     max_attempts: 0,
     points_value: 10,
     is_published: false,
+    // Gap Fill specific
+    gf_original_text: '', // Original complete text (source of truth)
+    gf_text_content: '', // Text with gaps (auto-generated, read-only)
+    gf_num_gaps: 5,
+    gf_word_bank: '',
+    gf_correct_order: '',
+    gf_difficulty: 'medium',
+    gf_allow_hints: true,
   });
 
   useEffect(() => {
@@ -78,14 +86,21 @@ export default function QuizEditPage() {
         const quizData = await response.json();
         setQuiz(quizData);
 
-        // Parse description to extract actual description
+        // Parse description to extract actual description and configuration
         let actualDescription = '';
+        let gapFillConfig = {};
+        
         try {
           const parsed = JSON.parse(quizData.description || '{}');
           if (parsed.description !== undefined) {
             actualDescription = parsed.description;
           } else {
             actualDescription = quizData.description || '';
+          }
+          
+          // Extract Gap Fill configuration if it exists
+          if (parsed.config && parsed.config.gap_fill) {
+            gapFillConfig = parsed.config.gap_fill;
           }
         } catch (error) {
           actualDescription = quizData.description || '';
@@ -101,6 +116,14 @@ export default function QuizEditPage() {
           max_attempts: quizData.max_attempts || 0,
           points_value: quizData.points_value || 10,
           is_published: quizData.is_published,
+          // Gap Fill specific - populate from configuration
+          gf_original_text: (gapFillConfig as any)?.original_text || '',
+          gf_text_content: (gapFillConfig as any)?.text_content || '',
+          gf_num_gaps: (gapFillConfig as any)?.num_gaps || 5,
+          gf_word_bank: (gapFillConfig as any)?.word_bank || '',
+          gf_correct_order: (gapFillConfig as any)?.correct_order || '',
+          gf_difficulty: (gapFillConfig as any)?.difficulty || 'medium',
+          gf_allow_hints: (gapFillConfig as any)?.allow_hints ?? true,
         });
       }
     } catch (error) {
@@ -120,6 +143,81 @@ export default function QuizEditPage() {
     } catch (error) {
       console.error('Error fetching lessons:', error);
     }
+  };
+
+  // Auto-replace words in text with [BLANK] when they appear in word bank
+  const autoReplaceWithBlanks = (text: string, wordBank: string) => {
+    if (!text || !wordBank.trim()) return { updatedText: text, correctOrder: [] };
+    
+    // Extract words from word bank (comma-separated, trimmed)
+    const words = wordBank.split(',')
+      .map(word => word.trim())
+      .filter(word => word.length > 0)
+      .sort((a, b) => b.length - a.length); // Sort by length (longest first) to avoid partial replacements
+    
+    let updatedText = text;
+    const correctOrder: string[] = []; // Track the order of replacements
+    
+    // Track replaced words to maintain order
+    const replacements: { position: number; word: string; originalWord: string }[] = [];
+    
+    words.forEach(word => {
+      if (word.length > 0) {
+        // Create a case-insensitive regex that matches whole words only
+        const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+        
+        // Find all matches and their positions
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+          replacements.push({
+            position: match.index,
+            word: word,
+            originalWord: match[0] // Keep the original case
+          });
+          // Reset regex to avoid infinite loop
+          regex.lastIndex = 0;
+          break; // Only replace first occurrence of each word
+        }
+      }
+    });
+    
+    // Sort replacements by position to maintain order
+    replacements.sort((a, b) => a.position - b.position);
+    
+    // Apply replacements and build correct order
+    replacements.forEach(replacement => {
+      const wordRegex = new RegExp(`\\b${replacement.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      updatedText = updatedText.replace(wordRegex, '[BLANK]');
+      correctOrder.push(replacement.originalWord);
+    });
+    
+    return { updatedText, correctOrder };
+  };
+
+  // Handle word bank changes with auto-replacement
+  const handleWordBankChange = (newWordBank: string) => {
+    setFormData(prev => {
+      const { updatedText, correctOrder } = autoReplaceWithBlanks(prev.gf_original_text, newWordBank);
+      return {
+        ...prev,
+        gf_word_bank: newWordBank,
+        gf_text_content: updatedText, // Auto-generated from original text
+        gf_correct_order: correctOrder.join('|') // Store the correct order for the API
+      };
+    });
+  };
+
+  // Handle original text changes and update gaps
+  const handleOriginalTextChange = (newOriginalText: string) => {
+    setFormData(prev => {
+      const { updatedText, correctOrder } = autoReplaceWithBlanks(newOriginalText, prev.gf_word_bank);
+      return {
+        ...prev,
+        gf_original_text: newOriginalText,
+        gf_text_content: updatedText, // Auto-generated from original text
+        gf_correct_order: correctOrder.join('|')
+      };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -252,6 +350,119 @@ export default function QuizEditPage() {
                   Assign this quiz to a specific lesson for better organization
                 </p>
               </div>
+
+              {/* Gap Fill Configuration */}
+              {formData.quiz_type === 'gap_fill' && (
+                <div className="space-y-4 bg-green-50 p-4 rounded-lg">
+                  <div>
+                    <Label htmlFor="gf_original_text">Original Complete Text</Label>
+                    <textarea
+                      id="gf_original_text"
+                      value={formData.gf_original_text}
+                      onChange={(e) => handleOriginalTextChange(e.target.value)}
+                      rows={4}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Enter your complete text here. Example: The cat sat on the mat and meowed loudly."
+                    />
+                    <p className="text-sm text-gray-600 mt-1">✍️ Enter the complete text exactly as it should read. Gaps will be created automatically based on the Word Bank below.</p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="gf_text_content">Preview with Gaps (Auto-Generated)</Label>
+                    <textarea
+                      id="gf_text_content"
+                      value={formData.gf_text_content}
+                      readOnly
+                      rows={4}
+                      className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm bg-gray-50 text-gray-700"
+                      placeholder="Gaps will appear here automatically when you add words to the Word Bank..."
+                    />
+                    <p className="text-sm text-gray-500 mt-1">🔍 This preview shows how the text will look with gaps. It updates automatically when you change the Word Bank.</p>
+                    
+                    {/* Enhanced Preview */}
+                    {formData.gf_text_content && (
+                      <div className="mt-2 p-3 bg-blue-50 rounded border border-blue-200">
+                        <p className="text-xs font-medium text-blue-700 mb-2">Student Preview:</p>
+                        <p className="text-sm text-gray-800 leading-relaxed">
+                          {formData.gf_text_content.split('[BLANK]').map((part, index, array) => (
+                            <span key={index}>
+                              {part}
+                              {index < array.length - 1 && <span className="inline-block min-w-[80px] px-2 py-1 mx-1 bg-yellow-200 border-b-2 border-yellow-400 text-center rounded">_____</span>}
+                            </span>
+                          ))}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="gf_num_gaps">Number of Gaps</Label>
+                      <Input
+                        id="gf_num_gaps"
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={formData.gf_num_gaps}
+                        onChange={(e) => setFormData(prev => ({ ...prev, gf_num_gaps: parseInt(e.target.value) || 1 }))}
+                        className="mt-1"
+                      />
+                      <p className="text-sm text-gray-600 mt-1">How many [BLANK] spaces to create</p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="gf_difficulty">Difficulty Level</Label>
+                      <Select
+                        value={formData.gf_difficulty}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, gf_difficulty: value }))}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="easy">Easy - Clear context clues</SelectItem>
+                          <SelectItem value="medium">Medium - Some context clues</SelectItem>
+                          <SelectItem value="hard">Hard - Minimal context clues</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="gf_word_bank">Word Bank (comma-separated)</Label>
+                    <textarea
+                      id="gf_word_bank"
+                      value={formData.gf_word_bank}
+                      onChange={(e) => handleWordBankChange(e.target.value)}
+                      rows={2}
+                      className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="sat, meowed, quickly, beautiful, house"
+                    />
+                    <p className="text-sm text-gray-600 mt-1">⚡ Words will automatically be replaced with [BLANK] in the text above. Include extra words for challenge!</p>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="gf_allow_hints"
+                      checked={formData.gf_allow_hints}
+                      onChange={(e) => setFormData(prev => ({ ...prev, gf_allow_hints: e.target.checked }))}
+                      className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    />
+                    <Label htmlFor="gf_allow_hints">Allow hints for difficult gaps</Label>
+                  </div>
+
+                  <div className="bg-green-100 p-3 rounded-md">
+                    <p className="text-sm text-green-800">
+                      <strong>✨ Automated Gap Fill Setup:</strong> 
+                      <br />1. Enter your complete text in the field above
+                      <br />2. Add the words you want to be gaps in the Word Bank (they'll automatically be replaced with [BLANK])
+                      <br />3. Include extra words in the Word Bank to make it more challenging!
+                      <br />Students will drag words from the bank to fill the gaps.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>

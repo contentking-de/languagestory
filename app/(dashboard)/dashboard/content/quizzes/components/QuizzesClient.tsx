@@ -15,7 +15,8 @@ import {
   Trophy,
   Target,
   BookOpen,
-  Users
+  Users,
+  Play
 } from 'lucide-react';
 import {
   Select,
@@ -371,12 +372,21 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Link href={`/dashboard/content/quizzes/${quiz.id}`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full">
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                  </Link>
+                  {userRole === 'teacher' || userRole === 'student' ? (
+                    <Link href={`/dashboard/content/quizzes/${quiz.id}/preview`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Play className="h-4 w-4 mr-1" />
+                        Take Quiz
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link href={`/dashboard/content/quizzes/${quiz.id}`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </Link>
+                  )}
                   {canCreateEdit && (
                     <Link href={`/dashboard/content/quizzes/${quiz.id}/edit`} className="flex-1">
                       <Button size="sm" className="w-full">

@@ -27,7 +27,7 @@ export default function WelcomePage() {
           </div>
         </div>
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Welcome to LanguageStory
+          Welcome to Lingoletics.com
         </h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
           Your journey to language mastery begins here. Discover engaging stories, practice with AI, and connect with a community of learners from around the world.

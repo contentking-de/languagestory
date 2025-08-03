@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 
 // Helper function to automatically generate gap fill questions
 async function generateGapFillQuestions(quizId: number, gapFillConfig: any) {
-  const { text_content, word_bank } = gapFillConfig;
+  const { original_text, text_content, word_bank, correct_order } = gapFillConfig;
   
   if (!text_content || !text_content.includes('[BLANK]')) {
     return;
@@ -24,17 +24,28 @@ async function generateGapFillQuestions(quizId: number, gapFillConfig: any) {
     word_bank.split(/[,\n]/).map((word: string) => word.trim()).filter((word: string) => word.length > 0) : 
     [];
 
-  // Generate one main question with the full text for gap fill interaction
-  const fullTextWithGaps = text_content.replace(/\[BLANK\]/g, '_____');
+  // Use the correct order from the frontend auto-replacement
+  let correctAnswersArray = [];
+  
+  if (correct_order && correct_order.trim()) {
+    // Use the correct order provided by the frontend
+    correctAnswersArray = correct_order.split('|').filter(word => word.trim());
+  } else {
+    // Fallback: use the first words from word bank (for backward compatibility)
+    const words = wordBankArray.slice();
+    for (let i = 0; i < numGaps && i < words.length; i++) {
+      correctAnswersArray.push(words[i]);
+    }
+  }
   
   const questions = [{
     quiz_id: quizId,
-    question_text: `Complete the text by filling in the gaps:\n\n${fullTextWithGaps}`,
-    question_type: 'fill_blank' as const,
-    correct_answer: wordBankArray.join(', '), // Store all correct answers
-    answer_options: wordBankArray, // Store word bank for drag & drop
+    question_text: text_content, // Store the original text with [BLANK] placeholders
+    question_type: 'fill_blank' as const, // Use the database enum value
+    correct_answer: correctAnswersArray.join('|'), // Store correct answers separated by |
+    answer_options: wordBankArray, // Store full word bank for drag & drop
     explanation: `This gap-fill exercise has ${numGaps} gaps to complete using the provided word bank.`,
-    points: numGaps, // Points equal to number of gaps
+    points: Math.max(1, numGaps), // At least 1 point
     question_order: 1,
   }];
 
@@ -98,9 +109,11 @@ export async function POST(request: Request) {
       mc_num_options,
       mc_randomize_options,
       mc_multiple_correct,
+      gf_original_text,
       gf_text_content,
       gf_num_gaps,
       gf_word_bank,
+      gf_correct_order,
       gf_difficulty,
       gf_allow_hints,
       tf_num_questions,
@@ -121,9 +134,11 @@ export async function POST(request: Request) {
       };
     } else if (quiz_type === 'gap_fill') {
       config.gap_fill = {
+        original_text: gf_original_text || '',
         text_content: gf_text_content || '',
         num_gaps: gf_num_gaps || 5,
         word_bank: gf_word_bank || '',
+        correct_order: gf_correct_order || '',
         difficulty: gf_difficulty || 'medium',
         allow_hints: gf_allow_hints || true,
       };
