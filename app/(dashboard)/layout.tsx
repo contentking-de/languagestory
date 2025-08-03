@@ -82,7 +82,7 @@ function UserMenu() {
           <Button asChild className="rounded-lg bg-orange-500 hover:bg-orange-600">
             <Link href="/sign-in">Login</Link>
           </Button>
-          <Button asChild className="rounded-lg hover:opacity-90" style={{backgroundColor: '#3bbbd0'}}>
+          <Button asChild className="rounded-lg btn-signup">
             <Link href="/sign-up">Sign Up</Link>
           </Button>
         </div>
@@ -165,7 +165,7 @@ function UserMenu() {
                 <Button asChild className="w-full rounded-lg bg-orange-500 hover:bg-orange-600">
                   <Link href="/sign-in" onClick={() => setIsMenuOpen(false)}>Login</Link>
                 </Button>
-                <Button asChild className="w-full rounded-lg hover:opacity-90" style={{backgroundColor: '#3bbbd0'}}>
+                <Button asChild className="w-full rounded-lg btn-signup">
                   <Link href="/sign-up" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
                 </Button>
               </div>

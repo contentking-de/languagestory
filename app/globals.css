@@ -79,6 +79,18 @@
   body {
     font-family: "Manrope", Arial, Helvetica, sans-serif;
   }
+  
+  .btn-signup {
+    background-color: #3bbbd0;
+  }
+  
+  .btn-signup:hover {
+    opacity: 0.9;
+  }
+  
+  .icon-bg-blue {
+    background-color: #3bbbd0 !important;
+  }
 }
 
 @layer base {

@@ -322,7 +322,7 @@ const modalContent = {
         <button class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 text-sm">Choose Your Course</button>
       </div>
       
-      <div class="bg-orange-50 border-2 border-orange-300 p-4 rounded-lg mb-4 relative">
+      <div class="bg-orange-50 border-2 border-orange-300 p-4 rounded-lg mb-4 relative pt-8">
         <div class="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 rounded text-xs font-bold">BEST VALUE</div>
         <h4 class="font-semibold mb-2">Quarterly Plan - £19.99/3 months</h4>
         <ul class="list-disc list-inside mb-3 text-sm">
@@ -345,7 +345,7 @@ const modalContent = {
       
       <h3 class="text-lg font-semibold mb-4 text-orange-600">School Plans</h3>
       
-      <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-lg mb-3 relative">
+      <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-lg mb-3 relative pt-8">
         <div class="absolute top-2 right-2 bg-yellow-400 text-orange-900 px-2 py-1 rounded text-xs font-bold">POPULAR</div>
         <h4 class="font-semibold mb-2">All Access Pass - £199.99/year</h4>
         <ul class="list-disc list-inside mb-3 text-sm text-orange-100">
@@ -1281,48 +1281,48 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             <div>
-              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white">
-                <BookOpen className="h-6 w-6" />
-              </div>
-              <div className="mt-5">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center h-12 w-12 rounded-md text-white icon-bg-blue">
+                  <BookOpen className="h-6 w-6" />
+                </div>
                 <h2 className="text-lg font-medium text-gray-900">
                   Story-Based Learning
                 </h2>
-                <p className="mt-2 text-base text-gray-500">
-                  Learn through captivating short stories featuring memorable characters 
-                  and authentic cultural contexts from France, Germany, and Spain.
-                </p>
               </div>
+              <p className="mt-4 text-base text-gray-500 sm:text-xl lg:text-lg xl:text-xl">
+                Learn through captivating short stories featuring memorable characters 
+                and authentic cultural contexts from France, Germany, and Spain.
+              </p>
             </div>
 
             <div className="mt-10 lg:mt-0">
-              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white">
-                <Users className="h-6 w-6" />
-              </div>
-              <div className="mt-5">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center h-12 w-12 rounded-md text-white icon-bg-blue">
+                  <Users className="h-6 w-6" />
+                </div>
                 <h2 className="text-lg font-medium text-gray-900">
                   Four Skills Development
                 </h2>
-                <p className="mt-2 text-base text-gray-500">
-                  Practice reading, listening, writing, and speaking skills through 
-                  comprehensive exercises that build on each story's content.
-                </p>
               </div>
+              <p className="mt-4 text-base text-gray-500 sm:text-xl lg:text-lg xl:text-xl">
+                Practice reading, listening, writing, and speaking skills through 
+                comprehensive exercises that build on each story's content.
+              </p>
             </div>
 
             <div className="mt-10 lg:mt-0">
-              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white">
-                <Headphones className="h-6 w-6" />
-              </div>
-              <div className="mt-5">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center h-12 w-12 rounded-md text-white icon-bg-blue">
+                  <Headphones className="h-6 w-6" />
+                </div>
                 <h2 className="text-lg font-medium text-gray-900">
                   Audio & Comprehension
                 </h2>
-                <p className="mt-2 text-base text-gray-500">
-                  Listen to native speaker audio recordings and complete interactive 
-                  comprehension exercises to reinforce your learning.
-                </p>
               </div>
+              <p className="mt-4 text-base text-gray-500 sm:text-xl lg:text-lg xl:text-xl">
+                Listen to native speaker audio recordings and complete interactive 
+                comprehension exercises to reinforce your learning.
+              </p>
             </div>
           </div>
         </div>
@@ -1346,7 +1346,7 @@ export default function HomePage() {
                 <Flag className="h-8 w-8 text-blue-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">French</h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">
                 Discover French culture through engaging stories set in Paris, Provence, and beyond. 
                 Learn authentic expressions and cultural nuances.
               </p>
@@ -1356,7 +1356,7 @@ export default function HomePage() {
                 <Flag className="h-8 w-8 text-red-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">German</h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">
                 Explore German traditions and landmarks through captivating narratives. 
                 Master complex grammar in context with memorable characters.
               </p>
@@ -1366,7 +1366,7 @@ export default function HomePage() {
                 <Flag className="h-8 w-8 text-yellow-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Spanish</h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">
                 Journey through Spanish-speaking countries and their rich cultures. 
                 Build vocabulary naturally through immersive storytelling.
               </p>
@@ -1522,7 +1522,7 @@ export default function HomePage() {
                     </svg>
                   </div>
                   <h4 className="text-xl font-semibold text-gray-900 mb-4 text-center">Native Audio Integration</h4>
-                  <p className="text-gray-600 text-center">Professional native speaker recordings for perfect pronunciation practice and listening comprehension development.</p>
+                  <p className="text-gray-600 text-center text-base sm:text-xl lg:text-lg xl:text-xl">Professional native speaker recordings for perfect pronunciation practice and listening comprehension development.</p>
                 </div>
 
                 <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
@@ -1532,7 +1532,7 @@ export default function HomePage() {
                     </svg>
                   </div>
                   <h4 className="text-xl font-semibold text-gray-900 mb-4 text-center">Interactive Quizzes & Games</h4>
-                  <p className="text-gray-600 text-center">Engaging Wordwall games and interactive activities to reinforce learning through play and gamification.</p>
+                  <p className="text-gray-600 text-center text-base sm:text-xl lg:text-lg xl:text-xl">Engaging Wordwall games and interactive activities to reinforce learning through play and gamification.</p>
                 </div>
 
                 <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
@@ -1542,7 +1542,7 @@ export default function HomePage() {
                     </svg>
                   </div>
                   <h4 className="text-xl font-semibold text-gray-900 mb-4 text-center">Progress Analytics</h4>
-                  <p className="text-gray-600 text-center">Comprehensive tracking and analytics to monitor student progress, engagement, and learning outcomes.</p>
+                  <p className="text-gray-600 text-center text-base sm:text-xl lg:text-lg xl:text-xl">Comprehensive tracking and analytics to monitor student progress, engagement, and learning outcomes.</p>
                 </div>
               </div>
             </div>
@@ -1552,64 +1552,76 @@ export default function HomePage() {
               <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Administrative & Management Tools</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900">Institution Management</h4>
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Institution Management</h4>
-                  <p className="text-gray-600 text-sm">Manage schools, universities, and educational institutions with comprehensive administrative tools.</p>
+                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Manage schools, universities, and educational institutions with comprehensive administrative tools.</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900">Team & Role Management</h4>
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Team & Role Management</h4>
-                  <p className="text-gray-600 text-sm">Organize teams, assign roles, and manage permissions for teachers, administrators, and students.</p>
+                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Organize teams, assign roles, and manage permissions for teachers, administrators, and students.</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900">Activity Monitoring</h4>
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Activity Monitoring</h4>
-                  <p className="text-gray-600 text-sm">Real-time activity tracking and comprehensive logs for platform usage and student engagement.</p>
+                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Real-time activity tracking and comprehensive logs for platform usage and student engagement.</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900">Security & Privacy</h4>
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Security & Privacy</h4>
-                  <p className="text-gray-600 text-sm">Advanced security features, data protection, and privacy controls to keep educational data safe.</p>
+                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Advanced security features, data protection, and privacy controls to keep educational data safe.</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900">General Settings</h4>
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">General Settings</h4>
-                  <p className="text-gray-600 text-sm">Customize platform settings, account preferences, and personal configurations for optimal learning experience.</p>
+                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Customize platform settings, account preferences, and personal configurations for optimal learning experience.</p>
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-semibold text-gray-900">Advanced Analytics</h4>
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Advanced Analytics</h4>
-                  <p className="text-gray-600 text-sm">Detailed analytics dashboard with insights into learning patterns, content performance, and institutional metrics.</p>
+                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Detailed analytics dashboard with insights into learning patterns, content performance, and institutional metrics.</p>
                 </div>
               </div>
             </div>
@@ -2001,42 +2013,42 @@ export default function HomePage() {
                 <BookOpen className="h-6 w-6 text-orange-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Original Stories</h3>
-              <p className="text-gray-600">Over 10 engaging stories for each language with memorable characters and authentic cultural contexts.</p>
+              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Over 10 engaging stories for each language with memorable characters and authentic cultural contexts.</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
                 <Volume2 className="h-6 w-6 text-orange-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Audio Content</h3>
-              <p className="text-gray-600">Professional native speaker recordings for pronunciation practice and listening comprehension.</p>
+              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Professional native speaker recordings for pronunciation practice and listening comprehension.</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
                 <Languages className="h-6 w-6 text-orange-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Cultural Insights</h3>
-              <p className="text-gray-600">Discover traditions, landmarks, and cultural facts about France, Germany, and Spain.</p>
+              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Discover traditions, landmarks, and cultural facts about France, Germany, and Spain.</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
                 <GamepadIcon className="h-6 w-6 text-orange-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Interactive Games</h3>
-              <p className="text-gray-600">Fun vocabulary games and comprehension exercises to reinforce learning and track progress.</p>
+              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Fun vocabulary games and comprehension exercises to reinforce learning and track progress.</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
                 <BarChart3 className="h-6 w-6 text-orange-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Progress Tracking</h3>
-              <p className="text-gray-600">Monitor learning progress with detailed reports and achievements for students and teachers.</p>
+              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Monitor learning progress with detailed reports and achievements for students and teachers.</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
                 <Download className="h-6 w-6 text-orange-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Resources</h3>
-              <p className="text-gray-600">Access teaching materials, vocabulary lists, and sample stories to enhance your learning experience.</p>
+              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Access teaching materials, vocabulary lists, and sample stories to enhance your learning experience.</p>
             </div>
           </div>
         </div>
@@ -2206,7 +2218,7 @@ export default function HomePage() {
               </div>
 
               {/* Quarterly Plan */}
-              <div className="bg-white border-2 border-orange-300 rounded-lg p-6 relative">
+              <div className="bg-white border-2 border-orange-300 rounded-lg p-6 relative pt-8">
                 <div className="absolute top-0 right-0 bg-orange-500 text-white px-3 py-1 rounded-bl-lg rounded-tr-lg text-sm font-bold">
                   BEST VALUE
                 </div>
