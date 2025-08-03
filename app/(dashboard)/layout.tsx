@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { use, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { CircleIcon, Home, LogOut, Menu, X, User as UserIcon, ChevronDown, TrendingUp } from 'lucide-react';
+import { CircleIcon, Home, LogOut, Menu, X, User as UserIcon, ChevronDown, TrendingUp, Settings, Activity, Shield } from 'lucide-react';
+
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -204,6 +206,24 @@ function UserMenu() {
             <span>My Progress</span>
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer">
+          <Link href="/dashboard/general" className="flex w-full items-center">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>General</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer">
+          <Link href="/dashboard/activity" className="flex w-full items-center">
+            <Activity className="mr-2 h-4 w-4" />
+            <span>Activity</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer">
+          <Link href="/dashboard/security" className="flex w-full items-center">
+            <Shield className="mr-2 h-4 w-4" />
+            <span>Security</span>
+          </Link>
+        </DropdownMenuItem>
         <form action={handleSignOut} className="w-full">
           <button type="submit" className="flex w-full">
             <DropdownMenuItem className="w-full flex-1 cursor-pointer">
@@ -242,7 +262,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <section className="flex flex-col min-h-screen">
       <Header />
-      {children}
+      <main className="flex-1">
+        {children}
+      </main>
     </section>
   );
 }

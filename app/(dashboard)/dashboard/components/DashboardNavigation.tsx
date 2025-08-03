@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { UserProgressSummary } from '@/components/user-progress-summary';
 import { 
   Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight,
-  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart
+  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp
 } from 'lucide-react';
 
 interface NavItem {
@@ -59,10 +60,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
         { href: '/dashboard', icon: Users, label: 'Team Management' },
         { href: '/dashboard/roles', icon: UserCheck, label: 'Roles' }
       ]
-    },
-    { href: '/dashboard/general', icon: Settings, label: 'General' },
-    { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
-    { href: '/dashboard/security', icon: Shield, label: 'Security' }
+    }
   ];
 
   // Stripped navigation for Teachers
@@ -88,10 +86,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
         { href: '/dashboard', icon: Users, label: 'Team Management' },
         { href: '/dashboard/roles', icon: UserCheck, label: 'Roles' }
       ]
-    },
-    { href: '/dashboard/general', icon: Settings, label: 'General' },
-    { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
-    { href: '/dashboard/security', icon: Shield, label: 'Security' }
+    }
   ];
 
   // Minimal navigation for Students (without Team/Roles)
@@ -108,10 +103,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
         { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
       ]
-    },
-    { href: '/dashboard/general', icon: Settings, label: 'General' },
-    { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
-    { href: '/dashboard/security', icon: Shield, label: 'Security' }
+    }
   ];
 
   // Determine which navigation to use based on role
@@ -221,7 +213,17 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
           }`}
         >
           <nav className="h-full overflow-y-auto p-4">
+            {/* Navigation Items */}
             {navItems.map(item => renderNavItem(item))}
+            
+            {/* Progress Summary - Only show for students */}
+            {userRole === 'student' && (
+              <div className="mt-4">
+                <Suspense fallback={<div className="h-32 bg-gray-100 rounded animate-pulse" />}>
+                  <UserProgressSummary compact={true} />
+                </Suspense>
+              </div>
+            )}
           </nav>
         </aside>
 
