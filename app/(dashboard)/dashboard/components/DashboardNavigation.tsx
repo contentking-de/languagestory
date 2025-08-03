@@ -114,23 +114,12 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
     { href: '/dashboard/security', icon: Shield, label: 'Security' }
   ];
 
-  // Debug: Log the actual role value
-  console.log('🔍 DEBUG Navigation - userRole:', userRole, 'type:', typeof userRole);
-  console.log('🔍 DEBUG Navigation - Is super_admin?', userRole === 'super_admin');
-  console.log('🔍 DEBUG Navigation - Is content_creator?', userRole === 'content_creator');
-
   // Determine which navigation to use based on role
   const navItems = (userRole === 'super_admin' || userRole === 'content_creator') 
     ? fullNavItems 
     : userRole === 'student'
     ? studentNavItems
     : teacherNavItems;
-    
-  console.log('🔍 DEBUG Navigation - Selected nav type:', 
-    userRole === 'super_admin' || userRole === 'content_creator' ? 'FULL (Admin)' :
-    userRole === 'student' ? 'STUDENT' : 'TEACHER'
-  );
-  console.log('🔍 DEBUG Navigation - Nav items count:', navItems.length);
 
   const toggleExpanded = (href: string) => {
     setExpandedItems(prev => 
