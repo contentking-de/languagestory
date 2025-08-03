@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { use, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { CircleIcon, Home, LogOut, Menu, X, User as UserIcon } from 'lucide-react';
+import { CircleIcon, Home, LogOut, Menu, X, User as UserIcon, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 function UserMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLearningResourcesOpen, setIsLearningResourcesOpen] = useState(false);
   const { data: user } = useSWR<User>('/api/user', fetcher);
   const router = useRouter();
 
@@ -46,30 +47,32 @@ function UserMenu() {
           >
             Features
           </a>
-          <a
-            href="#short-stories"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900"
-          >
-            Short Stories
-          </a>
-          <a
-            href="#vocabulary-games"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900"
-          >
-            Vocabulary Games
-          </a>
-          <a
-            href="#quizzes"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900"
-          >
-            Quizzes
-          </a>
-          <a
-            href="#learning-resources"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900"
-          >
-            Learning Resources
-          </a>
+          
+          {/* Learning Resources Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none">
+              Learning Resources
+              <ChevronDown className="ml-1 h-3 w-3" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem asChild>
+                <a href="#short-stories" className="w-full">
+                  Short Stories
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href="#vocabulary-games" className="w-full">
+                  Vocabulary Games
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href="#quizzes" className="w-full">
+                  Quizzes
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <a
             href="#pricing"
             className="text-sm font-medium text-gray-700 hover:text-gray-900"
@@ -114,34 +117,43 @@ function UserMenu() {
               >
                 Features
               </a>
-              <a
-                href="#short-stories"
-                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Short Stories
-              </a>
-              <a
-                href="#vocabulary-games"
-                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Vocabulary Games
-              </a>
-              <a
-                href="#quizzes"
-                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Quizzes
-              </a>
-              <a
-                href="#learning-resources"
-                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Learning Resources
-              </a>
+              
+              {/* Learning Resources Expandable Section */}
+              <div>
+                <button
+                  className="flex items-center justify-between w-full text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                  onClick={() => setIsLearningResourcesOpen(!isLearningResourcesOpen)}
+                >
+                  Learning Resources
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isLearningResourcesOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isLearningResourcesOpen && (
+                  <div className="ml-4 mt-2 space-y-2">
+                    <a
+                      href="#short-stories"
+                      className="block text-sm text-gray-600 hover:text-gray-900 py-1"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Short Stories
+                    </a>
+                    <a
+                      href="#vocabulary-games"
+                      className="block text-sm text-gray-600 hover:text-gray-900 py-1"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Vocabulary Games
+                    </a>
+                    <a
+                      href="#quizzes"
+                      className="block text-sm text-gray-600 hover:text-gray-900 py-1"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Quizzes
+                    </a>
+                  </div>
+                )}
+              </div>
+              
               <a
                 href="#pricing"
                 className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
