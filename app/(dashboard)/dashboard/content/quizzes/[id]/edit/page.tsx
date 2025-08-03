@@ -10,7 +10,13 @@ import {
   ArrowLeft,
   Save,
   Loader2,
-  FileQuestion
+  FileQuestion,
+  Edit,
+  Plus,
+  Trophy,
+  CheckCircle,
+  Play,
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -20,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 interface Quiz {
   id: number;
@@ -43,12 +50,22 @@ interface Lesson {
   course_level: string;
 }
 
+interface Question {
+  id: number;
+  question_text: string;
+  question_type: string;
+  points: number;
+  correct_answer: string;
+  answer_options: any;
+}
+
 export default function QuizEditPage() {
   const params = useParams();
   const router = useRouter();
   const quizId = params.id as string;
   
   const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -75,6 +92,7 @@ export default function QuizEditPage() {
   useEffect(() => {
     if (quizId) {
       fetchQuiz();
+      fetchQuestions();
       fetchLessons();
     }
   }, [quizId]);
@@ -133,6 +151,18 @@ export default function QuizEditPage() {
     }
   };
 
+  const fetchQuestions = async () => {
+    try {
+      const response = await fetch(`/api/quizzes/${quizId}/questions`);
+      if (response.ok) {
+        const questionsData = await response.json();
+        setQuestions(questionsData);
+      }
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+    }
+  };
+
   const fetchLessons = async () => {
     try {
       const response = await fetch('/api/lessons/simple');
@@ -143,6 +173,25 @@ export default function QuizEditPage() {
     } catch (error) {
       console.error('Error fetching lessons:', error);
     }
+  };
+
+  // Helper functions for question display
+  const getQuestionTypeIcon = (type: string) => {
+    const icons = {
+      multiple_choice: FileQuestion,
+      true_false: CheckCircle,
+      fill_blank: Edit
+    };
+    return icons[type as keyof typeof icons] || FileQuestion;
+  };
+
+  const getQuestionTypeColor = (type: string) => {
+    const colors = {
+      multiple_choice: 'bg-blue-100 text-blue-800',
+      true_false: 'bg-green-100 text-green-800',
+      fill_blank: 'bg-purple-100 text-purple-800'
+    };
+    return colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
   // Auto-replace words in text with [BLANK] when they appear in word bank
@@ -569,6 +618,104 @@ export default function QuizEditPage() {
                   <li>• <strong>Points Value:</strong> Total points awarded for completing the quiz</li>
                 </ul>
               </div>
+
+              {/* Questions Section for Multiple Choice and True/False Quizzes */}
+              {formData.quiz_type && formData.quiz_type !== 'gap_fill' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-gray-900">Quiz Questions</h3>
+                    <Link href={`/dashboard/content/quizzes/${quizId}/questions/create`}>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Question
+                      </Button>
+                    </Link>
+                  </div>
+
+                  {questions.length > 0 ? (
+                    <div className="space-y-3">
+                      {questions.map((question, index) => {
+                        const TypeIcon = getQuestionTypeIcon(question.question_type);
+                        return (
+                          <div key={question.id} className="border rounded-lg p-4 bg-gray-50">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center w-8 h-8 bg-white rounded-lg">
+                                  <span className="text-sm font-medium text-gray-600">{index + 1}</span>
+                                </div>
+                                <div>
+                                  <Badge className={getQuestionTypeColor(question.question_type)} variant="outline">
+                                    <TypeIcon className="h-3 w-3 mr-1" />
+                                    {question.question_type.replace('_', ' ')}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <Trophy className="h-4 w-4" />
+                                <span>{question.points} pts</span>
+                              </div>
+                            </div>
+                            
+                            <div className="mb-3">
+                              <p className="text-gray-900 font-medium">{question.question_text}</p>
+                            </div>
+
+                            {question.answer_options && question.question_type === 'multiple_choice' && (
+                              <div className="space-y-2 mb-3">
+                                {question.answer_options.map((option: string, optionIndex: number) => (
+                                  <div key={optionIndex} className="flex items-center gap-2 text-sm">
+                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                      option === question.correct_answer 
+                                        ? 'border-green-500 bg-green-100' 
+                                        : 'border-gray-300'
+                                    }`}>
+                                      {option === question.correct_answer && (
+                                        <CheckCircle className="h-3 w-3 text-green-600" />
+                                      )}
+                                    </div>
+                                    <span className={option === question.correct_answer ? 'text-green-700 font-medium' : 'text-gray-600'}>
+                                      {option}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {question.question_type === 'true_false' && (
+                              <div className="text-sm text-gray-600 mb-3">
+                                Correct answer: <span className="font-medium text-green-700">{question.correct_answer}</span>
+                              </div>
+                            )}
+
+                            <div className="flex gap-2">
+                              <Link href={`/dashboard/content/quizzes/${quizId}/questions/${question.id}/edit`}>
+                                <Button variant="outline" size="sm">
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Edit
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <FileQuestion className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No questions yet</h3>
+                      <p className="text-gray-600 mb-4">
+                        Add questions to make this quiz interactive.
+                      </p>
+                      <Link href={`/dashboard/content/quizzes/${quizId}/questions/create`}>
+                        <Button>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add First Question
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex gap-3 pt-6">
                 <Button type="submit" disabled={saving}>

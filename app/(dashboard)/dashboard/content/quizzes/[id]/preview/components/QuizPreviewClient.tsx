@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { logQuizActivity } from '@/lib/activity-logger';
+import { awardPoints } from '@/lib/gamification';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +17,8 @@ import {
   CheckCircle,
   Eye,
   BookOpen,
-  FileQuestion
+  FileQuestion,
+  Users
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -196,6 +198,37 @@ export function QuizPreviewClient({ userRole }: QuizPreviewClientProps) {
       setShowResults(true);
       setQuizCompleted(true);
 
+      // Calculate final score for points awarding
+      const finalScore = calculateScore();
+      
+      // Award points for quiz completion
+      try {
+        await fetch('/api/student/award-points', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            activity_type: 'COMPLETE_QUIZ',
+            reference_id: parseInt(quizId),
+            reference_type: 'quiz',
+            language: quiz?.course_language,
+            metadata: {
+              score: finalScore.percentage,
+              points_earned: finalScore.earnedPoints,
+              total_points: finalScore.totalPoints,
+              questions_answered: Object.keys(allAnswers).length,
+              total_questions: questions.length,
+              quiz_title: quiz?.title,
+              is_perfect_score: finalScore.percentage >= 100,
+              passed: finalScore.percentage >= (quiz?.pass_percentage || 70)
+            }
+          }),
+        });
+      } catch (error) {
+        console.error('Error awarding points:', error);
+      }
+
       // Log quiz completion activity
       await logQuizActivity({
         action: 'quiz_completed',
@@ -204,7 +237,8 @@ export function QuizPreviewClient({ userRole }: QuizPreviewClientProps) {
           quiz_id: parseInt(quizId),
           quiz_title: quiz?.title,
           total_questions: questions.length,
-          answers_provided: Object.keys(allAnswers).length
+          answers_provided: Object.keys(allAnswers).length,
+          score: finalScore.percentage
         }
       });
 
@@ -663,7 +697,7 @@ export function QuizPreviewClient({ userRole }: QuizPreviewClientProps) {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-blue-200">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-4 border-t border-blue-200">
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="h-4 w-4 text-blue-600" />
                 <div>
@@ -685,6 +719,16 @@ export function QuizPreviewClient({ userRole }: QuizPreviewClientProps) {
                 <div>
                   <div className="font-medium text-gray-900">{quiz.points_value}</div>
                   <div className="text-gray-500">Total Points</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="h-4 w-4 text-blue-600" />
+                <div>
+                  <div className="font-medium text-gray-900">
+                    {quiz.max_attempts === 0 ? 'Unlimited' : quiz.max_attempts}
+                  </div>
+                  <div className="text-gray-500">Max Attempts</div>
                 </div>
               </div>
               

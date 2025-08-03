@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { quizzes, lessons, courses } from '@/lib/db/schema';
+import { quizzes, lessons, courses, quiz_questions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function GET(
@@ -140,6 +140,58 @@ export async function PUT(
     console.error('Error updating quiz:', error);
     return NextResponse.json(
       { error: 'Failed to update quiz' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const quizId = parseInt(id);
+
+    if (isNaN(quizId)) {
+      return NextResponse.json(
+        { error: 'Invalid quiz ID' },
+        { status: 400 }
+      );
+    }
+
+    // Check if quiz exists
+    const [existingQuiz] = await db
+      .select()
+      .from(quizzes)
+      .where(eq(quizzes.id, quizId))
+      .limit(1);
+
+    if (!existingQuiz) {
+      return NextResponse.json(
+        { error: 'Quiz not found' },
+        { status: 404 }
+      );
+    }
+
+    // Delete all questions associated with this quiz first
+    await db
+      .delete(quiz_questions)
+      .where(eq(quiz_questions.quiz_id, quizId));
+
+    // Delete the quiz
+    await db
+      .delete(quizzes)
+      .where(eq(quizzes.id, quizId));
+
+    return NextResponse.json(
+      { message: 'Quiz deleted successfully' },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error deleting quiz:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete quiz' },
       { status: 500 }
     );
   }

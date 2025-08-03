@@ -20,6 +20,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import { FlagIcon } from '@/components/ui/flag-icon';
 
 interface Quiz {
   id: number;
@@ -94,14 +95,7 @@ export function QuizDetailClient({ userRole }: QuizDetailClientProps) {
     }
   };
 
-  const getLanguageFlag = (language: string) => {
-    const flags = {
-      french: '🇫🇷',
-      german: '🇩🇪',
-      spanish: '🇪🇸'
-    };
-    return flags[language as keyof typeof flags] || '🌐';
-  };
+  // Removed getLanguageFlag function - now using FlagIcon component
 
   const getLevelColor = (level: string) => {
     const colors = {
@@ -241,7 +235,7 @@ export function QuizDetailClient({ userRole }: QuizDetailClientProps) {
             <div className="flex items-center gap-2 mt-1">
               {quiz.course_language && (
                 <>
-                  <span className="text-lg">{getLanguageFlag(quiz.course_language)}</span>
+                  <FlagIcon language={quiz.course_language} size="lg" />
                   {quiz.lesson_title && (
                     <Link href={`/dashboard/content/lessons/${quiz.lesson_id}`} className="text-gray-600 hover:text-gray-900">
                       {quiz.lesson_title}
@@ -338,9 +332,9 @@ export function QuizDetailClient({ userRole }: QuizDetailClientProps) {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <FileQuestion className="h-5 w-5" />
-                Quiz Questions ({questions.length})
+                {quiz.quiz_type === 'gap_fill' ? 'Gap Fill Quiz' : `Quiz Questions (${questions.length})`}
               </CardTitle>
-              {canCreateEdit && (
+              {canCreateEdit && quiz.quiz_type !== 'gap_fill' && (
                 <Link href={`/dashboard/content/quizzes/${quiz.id}/questions/create`}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
@@ -454,20 +448,40 @@ export function QuizDetailClient({ userRole }: QuizDetailClientProps) {
                     </div>
                   ) : (
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No questions yet</h3>
-                      <p className="text-gray-600 mb-4">
-                        {canCreateEdit 
-                          ? 'Add questions to make this quiz interactive.'
-                          : 'This quiz doesn\'t have any questions yet.'
-                        }
-                      </p>
-                      {canCreateEdit && (
-                        <Link href={`/dashboard/content/quizzes/${quiz.id}/questions/create`}>
-                          <Button>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add First Question
-                          </Button>
-                        </Link>
+                      {quiz.quiz_type === 'gap_fill' ? (
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">Questions Auto-Generated</h3>
+                          <p className="text-gray-600 mb-4">
+                            Gap Fill quiz questions are automatically created based on the text content and word bank. 
+                            Edit this quiz to configure the text and gaps.
+                          </p>
+                          {canCreateEdit && (
+                            <Link href={`/dashboard/content/quizzes/${quiz.id}/edit`}>
+                              <Button>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Configure Gap Fill
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">No questions yet</h3>
+                          <p className="text-gray-600 mb-4">
+                            {canCreateEdit 
+                              ? 'Add questions to make this quiz interactive.'
+                              : 'This quiz doesn\'t have any questions yet.'
+                            }
+                          </p>
+                          {canCreateEdit && (
+                            <Link href={`/dashboard/content/quizzes/${quiz.id}/questions/create`}>
+                              <Button>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add First Question
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}

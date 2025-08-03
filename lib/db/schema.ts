@@ -284,9 +284,15 @@ export enum ActivityType {
   // Vocabulary activities
   CREATE_VOCABULARY = 'CREATE_VOCABULARY',
   STUDY_VOCABULARY = 'STUDY_VOCABULARY',
+  COMPLETE_VOCABULARY = 'COMPLETE_VOCABULARY',
   // Games activities
   CREATE_GAME = 'CREATE_GAME',
   PLAY_GAME = 'PLAY_GAME',
+  COMPLETE_GAME = 'COMPLETE_GAME',
+  // Achievement activities
+  EARN_ACHIEVEMENT = 'EARN_ACHIEVEMENT',
+  REACH_STREAK = 'REACH_STREAK',
+  EARN_POINTS = 'EARN_POINTS',
 }
 
 // Password reset tokens table

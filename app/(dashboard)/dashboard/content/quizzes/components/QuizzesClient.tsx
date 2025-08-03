@@ -16,8 +16,10 @@ import {
   Target,
   BookOpen,
   Users,
-  Play
+  Play,
+  Trash2
 } from 'lucide-react';
+import { FlagIcon, getLanguageDisplayName, LanguageSelectOption } from '@/components/ui/flag-icon';
 import {
   Select,
   SelectContent,
@@ -58,9 +60,12 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [languageFilter, setLanguageFilter] = useState('all');
   const [lessonFilter, setLessonFilter] = useState('all');
+  const [deletingQuizId, setDeletingQuizId] = useState<number | null>(null);
 
   // Check if user can create/edit quizzes
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
+  // Check if user can delete quizzes (only super_admin)
+  const canDelete = userRole === 'super_admin';
 
   useEffect(() => {
     fetchQuizzes();
@@ -80,9 +85,71 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
     }
   };
 
+  const handleDeleteQuiz = async (quizId: number, quizTitle: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the quiz "${quizTitle}"?\n\nThis action cannot be undone and will permanently remove the quiz and all its questions.`
+    );
+    
+    if (!confirmed) return;
+
+    setDeletingQuizId(quizId);
+    
+    try {
+      const response = await fetch(`/api/quizzes/${quizId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove the quiz from the local state
+        setQuizzes(prevQuizzes => prevQuizzes.filter(quiz => quiz.id !== quizId));
+        alert('Quiz deleted successfully!');
+      } else {
+        const error = await response.text();
+        alert(`Failed to delete quiz: ${error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting quiz:', error);
+      alert('An error occurred while deleting the quiz. Please try again.');
+    } finally {
+      setDeletingQuizId(null);
+    }
+  };
+
+  // Helper function to parse quiz description from JSON format
+  const parseQuizDescription = (rawDescription: string): string => {
+    if (!rawDescription) return '';
+    
+    try {
+      // Try to parse new JSON structure: {"description": "...", "config": {...}}
+      if (rawDescription.startsWith('{') && rawDescription.includes('"config"')) {
+        const parsedData = JSON.parse(rawDescription);
+        if (parsedData.description !== undefined) {
+          return parsedData.description;
+        }
+      }
+      // Try to parse old structure with "quiz_config"
+      else if (rawDescription.includes('"quiz_config"')) {
+        const configMatch = rawDescription.match(/"quiz_config":\s*({[^}]+})/);
+        if (configMatch) {
+          return rawDescription.replace(/.*"quiz_config":\s*{[^}]+}.*/s, '').trim();
+        }
+      }
+      // Plain text description (no JSON structure)
+      else {
+        return rawDescription;
+      }
+    } catch (error) {
+      // Fallback to showing the raw description if parsing fails
+      return rawDescription;
+    }
+    
+    return rawDescription || '';
+  };
+
   const filteredQuizzes = quizzes.filter((quiz: Quiz) => {
+    const parsedDescription = parseQuizDescription(quiz.description);
     const matchesSearch = quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         quiz.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         parsedDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (quiz.lesson_title && quiz.lesson_title.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesType = typeFilter === 'all' || quiz.quiz_type === typeFilter;
     const matchesStatus = statusFilter === 'all' || 
@@ -96,14 +163,7 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
     return matchesSearch && matchesType && matchesStatus && matchesLanguage && matchesLesson;
   });
 
-  const getLanguageFlag = (language: string) => {
-    const flags = {
-      french: '🇫🇷',
-      german: '🇩🇪',
-      spanish: '🇪🇸'
-    };
-    return flags[language as keyof typeof flags] || '🌐';
-  };
+  // Removed getLanguageFlag function - now using FlagIcon component
 
   const getTypeColor = (type: string) => {
     const colors = {
@@ -275,9 +335,15 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Languages</SelectItem>
-                <SelectItem value="french">🇫🇷 French</SelectItem>
-                <SelectItem value="german">🇩🇪 German</SelectItem>
-                <SelectItem value="spanish">🇪🇸 Spanish</SelectItem>
+                <SelectItem value="french">
+                  <LanguageSelectOption language="french" />
+                </SelectItem>
+                <SelectItem value="german">
+                  <LanguageSelectOption language="german" />
+                </SelectItem>
+                <SelectItem value="spanish">
+                  <LanguageSelectOption language="spanish" />
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -314,7 +380,7 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
                   </div>
                   <div className="flex items-center gap-2">
                     {quiz.course_language && (
-                      <span className="text-lg">{getLanguageFlag(quiz.course_language)}</span>
+                      <FlagIcon language={quiz.course_language} size="lg" />
                     )}
                   </div>
                 </div>
@@ -322,9 +388,12 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
               </CardHeader>
               
               <CardContent className="space-y-4">
-                {quiz.description && (
-                  <p className="text-sm text-gray-600 line-clamp-2">{quiz.description}</p>
-                )}
+                {(() => {
+                  const parsedDescription = parseQuizDescription(quiz.description);
+                  return parsedDescription && (
+                    <p className="text-sm text-gray-600 line-clamp-2">{parsedDescription}</p>
+                  );
+                })()}
 
                 {quiz.lesson_title ? (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -371,29 +440,50 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
                   </span>
                 </div>
 
-                <div className="flex gap-2 pt-2">
-                  {userRole === 'teacher' || userRole === 'student' ? (
-                    <Link href={`/dashboard/content/quizzes/${quiz.id}/preview`} className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full">
-                        <Play className="h-4 w-4 mr-1" />
-                        Take Quiz
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Link href={`/dashboard/content/quizzes/${quiz.id}`} className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full">
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                    </Link>
-                  )}
-                  {canCreateEdit && (
-                    <Link href={`/dashboard/content/quizzes/${quiz.id}/edit`} className="flex-1">
-                      <Button size="sm" className="w-full">
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    </Link>
+                <div className="space-y-2 pt-2">
+                  {/* Primary action - Take Quiz (always visible) */}
+                  <Link href={`/dashboard/content/quizzes/${quiz.id}/preview`} className="block pb-[10px]">
+                    <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white">
+                      <Play className="h-4 w-4 mr-1" />
+                      Take Quiz
+                    </Button>
+                  </Link>
+                  
+                  {/* Secondary actions - only show if user has management permissions */}
+                  {(canCreateEdit || canDelete || (userRole === 'super_admin' || userRole === 'content_creator')) && (
+                    <div className="flex gap-2">
+                      {/* View Details button - for admins and content creators */}
+                      {(userRole === 'super_admin' || userRole === 'content_creator') && (
+                        <Link href={`/dashboard/content/quizzes/${quiz.id}`} className="flex-1">
+                          <Button variant="outline" size="sm" className="w-full">
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        </Link>
+                      )}
+                      
+                      {canCreateEdit && (
+                        <Link href={`/dashboard/content/quizzes/${quiz.id}/edit`} className="flex-1">
+                          <Button size="sm" className="w-full">
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </Link>
+                      )}
+                      
+                      {canDelete && (
+                        <Button 
+                          size="sm" 
+                          variant="destructive" 
+                          className="flex-1"
+                          onClick={() => handleDeleteQuiz(quiz.id, quiz.title)}
+                          disabled={deletingQuizId === quiz.id}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          {deletingQuizId === quiz.id ? 'Deleting...' : 'Delete'}
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               </CardContent>

@@ -36,6 +36,7 @@
     "postgres": "^3.4.5",
     "radix-ui": "^1.4.2",
     "react": "19.1.0",
+    "react-country-flag": "^3.1.0",
     "react-dom": "19.1.0",
     "recharts": "^3.1.0",
     "resend": "^4.7.0",

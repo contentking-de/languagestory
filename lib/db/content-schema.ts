@@ -10,6 +10,7 @@ import {
   json,
   date,
   pgEnum,
+  unique,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users, institutions, classes } from './schema';
@@ -38,8 +39,12 @@ export const quizTypeEnum = pgEnum('quiz_type', [
 export const questionTypeEnum = pgEnum('question_type', ['multiple_choice', 'true_false', 'fill_blank', 'matching', 'ordering', 'short_answer']);
 export const progressStatusEnum = pgEnum('progress_status', ['not_started', 'in_progress', 'completed', 'mastered']);
 export const achievementTypeEnum = pgEnum('achievement_type', [
-  'story_completed', 'quiz_master', 'streak_7_days', 'streak_30_days', 
-  'perfect_score', 'fast_learner', 'culture_expert', 'vocabulary_champion'
+  'story_completed', 'quiz_master', 'streak_7_days', 'streak_30_days', 'streak_100_days',
+  'perfect_score', 'fast_learner', 'culture_expert', 'vocabulary_champion',
+  'first_quiz', 'quiz_perfectionist', 'lesson_completed', 'course_completed',
+  'points_milestone_100', 'points_milestone_500', 'points_milestone_1000', 'points_milestone_5000',
+  'daily_learner', 'weekly_warrior', 'monthly_master', 'vocabulary_collector',
+  'game_champion', 'pronunciation_pro', 'grammar_guru', 'speaking_star'
 ]);
 export const cultureTypeEnum = pgEnum('culture_type', ['food', 'festival', 'tradition', 'geography', 'history', 'art', 'music']);
 export const gameCategoryEnum = pgEnum('game_category', [
@@ -258,6 +263,38 @@ export const learning_streaks = pgTable('learning_streaks', {
   updated_at: timestamp('updated_at').defaultNow(),
 });
 
+// Points Transactions - Detailed tracking of points earned/spent
+export const point_transactions = pgTable('point_transactions', {
+  id: serial('id').primaryKey(),
+  student_id: integer('student_id').notNull(),
+  activity_type: varchar('activity_type', { length: 50 }).notNull(), // COMPLETE_QUIZ, COMPLETE_LESSON, etc.
+  points_change: integer('points_change').notNull(), // Can be positive (earned) or negative (spent)
+  description: varchar('description', { length: 255 }).notNull(),
+  reference_id: integer('reference_id'), // ID of quiz, lesson, etc.
+  reference_type: varchar('reference_type', { length: 50 }), // 'quiz', 'lesson', 'vocabulary', etc.
+  language: varchar('language', { length: 20 }),
+  metadata: json('metadata'), // Additional context (score, time taken, etc.)
+  created_at: timestamp('created_at').defaultNow(),
+});
+
+// Daily Activity - Track daily engagement for streak calculations
+export const daily_activity = pgTable('daily_activity', {
+  id: serial('id').primaryKey(),
+  student_id: integer('student_id').notNull(),
+  activity_date: date('activity_date').notNull(),
+  points_earned: integer('points_earned').default(0),
+  lessons_completed: integer('lessons_completed').default(0),
+  quizzes_completed: integer('quizzes_completed').default(0),
+  vocabulary_practiced: integer('vocabulary_practiced').default(0),
+  games_played: integer('games_played').default(0),
+  time_spent_minutes: integer('time_spent_minutes').default(0),
+  languages_practiced: json('languages_practiced'), // Array of languages used
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  unique_student_date: unique().on(table.student_id, table.activity_date),
+}));
+
 // Class Analytics
 export const class_analytics = pgTable('class_analytics', {
   id: serial('id').primaryKey(),
@@ -464,4 +501,8 @@ export type NewGame = typeof games.$inferInsert;
 export type Achievement = typeof achievements.$inferSelect;
 export type NewAchievement = typeof achievements.$inferInsert;
 export type LearningStreak = typeof learning_streaks.$inferSelect;
-export type NewLearningStreak = typeof learning_streaks.$inferInsert; 
+export type NewLearningStreak = typeof learning_streaks.$inferInsert;
+export type PointTransaction = typeof point_transactions.$inferSelect;
+export type NewPointTransaction = typeof point_transactions.$inferInsert;
+export type DailyActivity = typeof daily_activity.$inferSelect;
+export type NewDailyActivity = typeof daily_activity.$inferInsert; 
