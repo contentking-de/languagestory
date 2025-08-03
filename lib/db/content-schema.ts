@@ -295,6 +295,22 @@ export const daily_activity = pgTable('daily_activity', {
   unique_student_date: unique().on(table.student_id, table.activity_date),
 }));
 
+// Completed Activities - Track to prevent duplicate point awarding
+export const completed_activities = pgTable('completed_activities', {
+  id: serial('id').primaryKey(),
+  student_id: integer('student_id').notNull(),
+  activity_type: varchar('activity_type', { length: 50 }).notNull(), // 'quiz', 'lesson', 'vocabulary', 'game'
+  reference_id: integer('reference_id').notNull(), // ID of the specific quiz/lesson/etc
+  first_completed_at: timestamp('first_completed_at').defaultNow(),
+  completion_count: integer('completion_count').default(1),
+  best_score: decimal('best_score', { precision: 5, scale: 2 }), // For tracking improvements
+  latest_score: decimal('latest_score', { precision: 5, scale: 2 }),
+  points_awarded: integer('points_awarded').default(0), // Total points awarded for this activity
+  metadata: json('metadata'), // Store completion details
+}, (table) => ({
+  unique_student_activity: unique().on(table.student_id, table.activity_type, table.reference_id),
+}));
+
 // Class Analytics
 export const class_analytics = pgTable('class_analytics', {
   id: serial('id').primaryKey(),
@@ -505,4 +521,6 @@ export type NewLearningStreak = typeof learning_streaks.$inferInsert;
 export type PointTransaction = typeof point_transactions.$inferSelect;
 export type NewPointTransaction = typeof point_transactions.$inferInsert;
 export type DailyActivity = typeof daily_activity.$inferSelect;
-export type NewDailyActivity = typeof daily_activity.$inferInsert; 
+export type NewDailyActivity = typeof daily_activity.$inferInsert;
+export type CompletedActivity = typeof completed_activities.$inferSelect;
+export type NewCompletedActivity = typeof completed_activities.$inferInsert; 

@@ -4,10 +4,12 @@ import {
   point_transactions, 
   daily_activity, 
   achievements,
+  completed_activities,
   type NewLearningStreak,
   type NewPointTransaction,
   type NewDailyActivity,
-  type NewAchievement
+  type NewAchievement,
+  type NewCompletedActivity
 } from '@/lib/db/content-schema';
 import { ActivityType } from '@/lib/db/schema';
 import { eq, desc, and, gte, sql } from 'drizzle-orm';
@@ -99,6 +101,84 @@ export const ACHIEVEMENT_DEFINITIONS = {
 };
 
 /**
+ * Check if student has already completed this specific activity
+ */
+async function hasCompletedActivity(
+  studentId: number,
+  activityType: string,
+  referenceId: number
+): Promise<{ completed: boolean; existingRecord?: any }> {
+  try {
+    const [existingCompletion] = await db
+      .select()
+      .from(completed_activities)
+      .where(and(
+        eq(completed_activities.student_id, studentId),
+        eq(completed_activities.activity_type, activityType),
+        eq(completed_activities.reference_id, referenceId)
+      ))
+      .limit(1);
+
+    return {
+      completed: !!existingCompletion,
+      existingRecord: existingCompletion
+    };
+  } catch (error) {
+    console.error('Error checking completed activity:', error);
+    return { completed: false };
+  }
+}
+
+/**
+ * Record or update completed activity
+ */
+async function recordCompletedActivity(
+  studentId: number,
+  activityType: string,
+  referenceId: number,
+  pointsAwarded: number,
+  metadata?: any,
+  existingRecord?: any
+) {
+  try {
+    const currentScore = metadata?.score ? parseFloat(metadata.score.toString()) : null;
+    
+    if (existingRecord) {
+      // Update existing record
+      const newCompletionCount = (existingRecord.completion_count || 0) + 1;
+      const bestScore = currentScore ? 
+        Math.max(parseFloat(existingRecord.best_score || '0'), currentScore) : 
+        existingRecord.best_score;
+
+      await db
+        .update(completed_activities)
+        .set({
+          completion_count: newCompletionCount,
+          latest_score: currentScore ? currentScore.toString() : existingRecord.latest_score,
+          best_score: bestScore ? bestScore.toString() : existingRecord.best_score,
+          points_awarded: (existingRecord.points_awarded || 0) + pointsAwarded,
+          metadata: metadata ? JSON.stringify(metadata) : existingRecord.metadata,
+        })
+        .where(eq(completed_activities.id, existingRecord.id));
+    } else {
+      // Create new record
+      await db.insert(completed_activities).values({
+        student_id: studentId,
+        activity_type: activityType,
+        reference_id: referenceId,
+        completion_count: 1,
+        best_score: currentScore ? currentScore.toString() : null,
+        latest_score: currentScore ? currentScore.toString() : null,
+        points_awarded: pointsAwarded,
+        metadata: metadata ? JSON.stringify(metadata) : null,
+      });
+    }
+  } catch (error) {
+    console.error('Error recording completed activity:', error);
+  }
+}
+
+/**
  * Award points to a student for completing an activity
  */
 export async function awardPoints(
@@ -110,6 +190,74 @@ export async function awardPoints(
   metadata?: any
 ): Promise<number> {
   try {
+    // Check if this is a trackable activity with a reference ID
+    if (referenceId && referenceType) {
+      const { completed, existingRecord } = await hasCompletedActivity(
+        studentId, 
+        referenceType, 
+        referenceId
+      );
+
+      if (completed) {
+        // Student has already completed this activity
+        console.log(`Student ${studentId} has already completed ${referenceType} ${referenceId}`);
+        
+        // For quiz retakes, check if they improved their score
+        if (referenceType === 'quiz' && metadata?.score) {
+          const previousBestScore = parseFloat(existingRecord?.best_score || '0');
+          const currentScore = parseFloat(metadata.score.toString());
+          
+          if (currentScore > previousBestScore) {
+            // Award improvement bonus (25% of original points)
+            const config = POINTS_CONFIG[activityType];
+            const improvementPoints = Math.round(((config && 'base' in config) ? config.base : 0) * 0.25);
+            
+            if (improvementPoints > 0) {
+              await db.insert(point_transactions).values({
+                student_id: studentId,
+                activity_type: 'IMPROVEMENT_BONUS',
+                points_change: improvementPoints,
+                description: `Score improvement: ${previousBestScore}% → ${currentScore}%`,
+                reference_id: referenceId,
+                reference_type: referenceType,
+                language,
+                metadata: metadata ? JSON.stringify(metadata) : null,
+              });
+
+              // Update streak and daily activity with improvement points
+              await updateLearningStreaks(studentId, improvementPoints);
+              await updateDailyActivity(studentId, 'IMPROVEMENT_BONUS', improvementPoints, language);
+              
+              // Record the completion with improvement
+              await recordCompletedActivity(
+                studentId, 
+                referenceType, 
+                referenceId, 
+                improvementPoints, 
+                metadata, 
+                existingRecord
+              );
+
+              console.log(`✅ Awarded ${improvementPoints} improvement points to student ${studentId}`);
+              return improvementPoints;
+            }
+          }
+        }
+
+        // Just update the completion record without awarding points
+        await recordCompletedActivity(
+          studentId, 
+          referenceType, 
+          referenceId, 
+          0, 
+          metadata, 
+          existingRecord
+        );
+        
+        return 0; // No points awarded for repeat completion
+      }
+    }
+
     // Calculate points based on activity type and metadata
     const config = POINTS_CONFIG[activityType];
     let pointsToAward = (config && 'base' in config) ? config.base : 0;
@@ -144,6 +292,17 @@ export async function awardPoints(
 
     // Update daily activity
     await updateDailyActivity(studentId, activityType, pointsToAward, language);
+
+    // Record this as a completed activity (first time)
+    if (referenceId && referenceType) {
+      await recordCompletedActivity(
+        studentId, 
+        referenceType, 
+        referenceId, 
+        pointsToAward, 
+        metadata
+      );
+    }
 
     // Check for achievements
     await checkAchievements(studentId, activityType, metadata);
@@ -527,11 +686,33 @@ export async function getStudentProgress(studentId: number) {
       ))
       .orderBy(desc(daily_activity.activity_date));
 
+    // Get completed activities summary
+    const completedActivities = await db
+      .select()
+      .from(completed_activities)
+      .where(eq(completed_activities.student_id, studentId))
+      .orderBy(desc(completed_activities.first_completed_at));
+
+    // Calculate completion statistics
+    const completionStats = {
+      total_completions: completedActivities.length,
+      quizzes_completed: completedActivities.filter(a => a.activity_type === 'quiz').length,
+      lessons_completed: completedActivities.filter(a => a.activity_type === 'lesson').length,
+      vocabulary_completed: completedActivities.filter(a => a.activity_type === 'vocabulary').length,
+      games_completed: completedActivities.filter(a => a.activity_type === 'game').length,
+      average_score: completedActivities
+        .filter(a => a.best_score)
+        .reduce((sum, a) => sum + parseFloat(a.best_score!), 0) / 
+        (completedActivities.filter(a => a.best_score).length || 1),
+    };
+
     return {
       streak: streakData || null,
       achievements: studentAchievements,
       recentTransactions,
       recentActivity,
+      completedActivities,
+      completionStats,
     };
   } catch (error) {
     console.error('Error getting student progress:', error);
