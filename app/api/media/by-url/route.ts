@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserWithTeamData } from '@/lib/db/queries';
 import { db } from '@/lib/db/drizzle';
 import { media_files } from '@/lib/db/content-schema';
-import { eq } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const files = await db
       .select()
       .from(media_files)
-      .where(urlList.map(url => eq(media_files.url, url)).reduce((acc, condition) => acc || condition));
+      .where(inArray(media_files.url, urlList));
 
     return NextResponse.json({ files });
 

@@ -100,6 +100,7 @@ export default function LessonEditPage() {
       const response = await fetch(`/api/lessons/${lessonId}`);
       if (response.ok) {
         const lessonData = await response.json();
+        console.log('Lesson data received:', lessonData);
         setLesson(lessonData);
         setFormData({
           title: lessonData.title,
@@ -126,30 +127,43 @@ export default function LessonEditPage() {
           lessonData.video_file
         ].filter(url => url);
         
+        console.log('Existing URLs:', existingUrls);
+        
         if (existingUrls.length > 0) {
           try {
             const mediaResponse = await fetch(`/api/media/by-url?urls=${existingUrls.map(url => encodeURIComponent(url)).join(',')}`);
+            console.log('Media response status:', mediaResponse.status);
+            
             if (mediaResponse.ok) {
               const mediaData = await mediaResponse.json();
+              console.log('Media data received:', mediaData);
               
               // Map files back to their types
               mediaData.files.forEach((file: any) => {
+                console.log('Processing file:', file.url);
                 if (file.url === lessonData.cover_image) {
+                  console.log('Found cover image:', file);
                   mediaFiles.cover_image = file;
                 }
                 if (file.url === lessonData.audio_file) {
+                  console.log('Found audio file:', file);
                   mediaFiles.audio_file = file;
                 }
                 if (file.url === lessonData.video_file) {
+                  console.log('Found video file:', file);
                   mediaFiles.video_file = file;
                 }
               });
+            } else {
+              const errorData = await mediaResponse.json();
+              console.error('Media API error:', errorData);
             }
           } catch (error) {
             console.error('Error fetching media file info:', error);
           }
         }
         
+        console.log('Final media files object:', mediaFiles);
         setSelectedMedia(mediaFiles);
       }
     } catch (error) {
