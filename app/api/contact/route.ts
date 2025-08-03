@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
     
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: 'A Language Story Contact Form <info@alanguagestory.dev>',
-      to: ['info@alanguagestory.dev'],
+      from: 'Lingoletics.com Contact Form <info@lingoletics.com>',
+      to: ['info@lingoletics.com'],
       subject: `New Contact Form Submission from ${name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
           <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
           
           <p style="font-size: 12px; color: #6b7280; text-align: center;">
-            This email was sent from the A Language Story contact form.<br>
+            This email was sent from the Lingoletics.com contact form.<br>
             Reply directly to this email to respond to ${name}.
           </p>
         </div>
@@ -73,7 +73,7 @@ ${message}
 Note: The user has provided consent for data storage and communication purposes.
 
 ---
-This email was sent from the A Language Story contact form.
+This email was sent from the Lingoletics.com contact form.
 Reply directly to this email to respond to ${name}.
       `,
       replyTo: email, // This allows you to reply directly to the user
@@ -94,7 +94,7 @@ Reply directly to this email to respond to ${name}.
     
     return NextResponse.json({
       success: true,
-      message: 'We have received your message and will respond within 24 hours. Thank you for contacting A Language Story!'
+              message: 'We have received your message and will respond within 24 hours. Thank you for contacting Lingoletics.com!'
     });
 
   } catch (error) {

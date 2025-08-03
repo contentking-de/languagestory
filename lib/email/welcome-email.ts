@@ -12,14 +12,14 @@ interface WelcomeEmailData {
 export async function sendWelcomeEmail({ name, email, role }: WelcomeEmailData) {
   try {
     const { data, error } = await resend.emails.send({
-      from: 'A Language Story <info@alanguagestory.dev>',
+      from: 'Lingoletics.com <info@lingoletics.com>',
       to: [email],
-      subject: 'Welcome to A Language Story! 🎉',
+      subject: 'Welcome to Lingoletics.com! 🎉',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #ea580c 0%, #f97316 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Welcome to A Language Story!</h1>
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Welcome to Lingoletics.com!</h1>
             <p style="color: rgba(255, 255, 255, 0.9); margin: 10px 0 0 0; font-size: 16px;">Your language learning journey begins now</p>
           </div>
           
@@ -28,7 +28,7 @@ export async function sendWelcomeEmail({ name, email, role }: WelcomeEmailData) 
             <h2 style="color: #1f2937; margin-top: 0; font-size: 24px;">Hello ${name}! 👋</h2>
             
             <p style="color: #4b5563; line-height: 1.6; font-size: 16px; margin-bottom: 20px;">
-              Thank you for joining A Language Story! We're excited to have you on board and can't wait to help you on your language learning journey.
+              Thank you for joining Lingoletics.com! We're excited to have you on board and can't wait to help you on your language learning journey.
             </p>
             
             <div style="background-color: #f9fafb; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #ea580c;">
@@ -72,14 +72,14 @@ export async function sendWelcomeEmail({ name, email, role }: WelcomeEmailData) 
           <div style="background-color: #f9fafb; padding: 25px 30px; border-radius: 0 0 8px 8px; text-align: center;">
             <p style="color: #6b7280; margin: 0 0 15px 0; font-size: 14px;">
               <strong>Need help?</strong> Contact us at 
-              <a href="mailto:info@alanguagestory.dev" style="color: #ea580c; text-decoration: none;">info@alanguagestory.dev</a>
+              <a href="mailto:info@lingoletics.com" style="color: #ea580c; text-decoration: none;">info@lingoletics.com</a>
             </p>
             
             <div style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
               <p style="color: #9ca3af; margin: 0; font-size: 12px;">
-                A Language Story<br>
+                Lingoletics.com<br>
                 30 Tithe Barn Road, Stafford, England, ST16 3PH, GB<br><br>
-                You're receiving this email because you signed up for A Language Story.<br>
+                You're receiving this email because you signed up for Lingoletics.com.<br>
                 If you didn't create an account, please ignore this email.
               </p>
             </div>
@@ -87,11 +87,11 @@ export async function sendWelcomeEmail({ name, email, role }: WelcomeEmailData) 
         </div>
       `,
       text: `
-Welcome to A Language Story! 🎉
+Welcome to Lingoletics.com! 🎉
 
 Hello ${name}! 👋
 
-Thank you for joining A Language Story! We're excited to have you on board and can't wait to help you on your language learning journey.
+Thank you for joining Lingoletics.com! We're excited to have you on board and can't wait to help you on your language learning journey.
 
 🎯 Your 14-Day Free Trial
 You now have access to all our premium features for the next 14 days, completely free! Explore our extensive collection of:
@@ -113,13 +113,13 @@ Visit your dashboard: ${process.env.NEXT_PUBLIC_APP_URL || 'https://alanguagesto
 
 If you have any questions or need help getting started, don't hesitate to reach out to our support team. We're here to help you succeed!
 
-Need help? Contact us at info@alanguagestory.dev
+Need help? Contact us at info@lingoletics.com
 
 ---
-A Language Story
+Lingoletics.com
 30 Tithe Barn Road, Stafford, England, ST16 3PH, GB
 
-You're receiving this email because you signed up for A Language Story.
+You're receiving this email because you signed up for Lingoletics.com.
 If you didn't create an account, please ignore this email.
       `,
     });

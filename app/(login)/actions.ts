@@ -520,7 +520,7 @@ export const bulkInviteStudents = validatedActionWithUser(
       .where(eq(teams.id, userWithTeam.teamId))
       .limit(1);
 
-    const teamName = team[0]?.name || 'A Language Story Team';
+    const teamName = team[0]?.name || 'Lingoletics.com Team';
 
     // Process each email
     for (let i = 0; i < emailList.length; i++) {
@@ -690,7 +690,7 @@ export const inviteEducationalUser = validatedActionWithUser(
       .where(eq(teams.id, userWithTeam.teamId))
       .limit(1);
 
-    const teamName = team[0]?.name || 'A Language Story Team';
+    const teamName = team[0]?.name || 'Lingoletics.com Team';
 
     // Generate invitation URL
     const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://alanguagestory.dev'}/sign-up?inviteId=${invitation[0].id}`;

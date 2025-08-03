@@ -12,13 +12,13 @@ interface PasswordResetEmailData {
 export async function sendPasswordResetEmail({ email, name, resetUrl }: PasswordResetEmailData) {
   try {
     const { data, error } = await resend.emails.send({
-      from: 'A Language Story <info@alanguagestory.dev>',
+      from: 'Lingoletics.com <info@lingoletics.com>',
       to: [email],
-      subject: 'Reset Your Password - A Language Story',
+      subject: 'Reset Your Password - Lingoletics.com',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #ea580c; font-size: 28px; margin: 0;">A Language Story</h1>
+            <h1 style="color: #ea580c; font-size: 28px; margin: 0;">Lingoletics.com</h1>
             <p style="color: #6b7280; margin: 5px 0 0 0;">Learn languages through engaging stories</p>
           </div>
           
@@ -32,7 +32,7 @@ export async function sendPasswordResetEmail({ email, name, resetUrl }: Password
             </p>
             
             <p style="color: #374151; line-height: 1.6; margin-bottom: 20px;">
-              We received a request to reset your password for your A Language Story account. If you didn't make this request, you can safely ignore this email.
+              We received a request to reset your password for your Lingoletics.com account. If you didn't make this request, you can safely ignore this email.
             </p>
             
             <p style="color: #374151; line-height: 1.6; margin-bottom: 30px;">
@@ -63,33 +63,33 @@ export async function sendPasswordResetEmail({ email, name, resetUrl }: Password
           <div style="margin-top: 30px; text-align: center;">
             <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0;">
               If you have any questions or need help, please contact us at 
-              <a href="mailto:info@alanguagestory.dev" style="color: #ea580c;">info@alanguagestory.dev</a>
+              <a href="mailto:info@lingoletics.com" style="color: #ea580c;">info@lingoletics.com</a>
             </p>
           </div>
           
           <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
           
           <p style="font-size: 12px; color: #6b7280; text-align: center; margin: 0;">
-            This email was sent from A Language Story. If you didn't request a password reset, please ignore this email.
+            This email was sent from Lingoletics.com. If you didn't request a password reset, please ignore this email.
           </p>
         </div>
       `,
       text: `
-A Language Story - Reset Your Password
+Lingoletics.com - Reset Your Password
 
 Hi ${name},
 
-We received a request to reset your password for your A Language Story account. If you didn't make this request, you can safely ignore this email.
+We received a request to reset your password for your Lingoletics.com account. If you didn't make this request, you can safely ignore this email.
 
 To reset your password, click the link below or copy and paste it into your browser:
 ${resetUrl}
 
 Security Notice: This password reset link will expire in 1 hour for your security.
 
-If you have any questions or need help, please contact us at info@alanguagestory.dev
+If you have any questions or need help, please contact us at info@lingoletics.com
 
 ---
-This email was sent from A Language Story. If you didn't request a password reset, please ignore this email.
+This email was sent from Lingoletics.com. If you didn't request a password reset, please ignore this email.
       `
     });
 

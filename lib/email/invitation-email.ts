@@ -15,22 +15,22 @@ export async function sendInvitationEmail({
   email, 
   role, 
   invitedBy, 
-  teamName = 'A Language Story Team',
+  teamName = 'Lingoletics.com Team',
   invitationUrl 
 }: InvitationEmailData) {
   try {
     const roleDisplayName = getRoleDisplayName(role);
     
     const { data, error } = await resend.emails.send({
-      from: 'A Language Story <info@alanguagestory.dev>',
+      from: 'Lingoletics.com <info@lingoletics.com>',
       to: [email],
-      subject: `You've been invited to join A Language Story as a ${roleDisplayName}! 🎉`,
+      subject: `You've been invited to join Lingoletics.com as a ${roleDisplayName}! 🎉`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #ea580c 0%, #f97316 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
             <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">You're Invited!</h1>
-            <p style="color: rgba(255, 255, 255, 0.9); margin: 10px 0 0 0; font-size: 16px;">Join A Language Story and start your language learning journey</p>
+            <p style="color: rgba(255, 255, 255, 0.9); margin: 10px 0 0 0; font-size: 16px;">Join Lingoletics.com and start your language learning journey</p>
           </div>
           
           <!-- Main Content -->
@@ -38,7 +38,7 @@ export async function sendInvitationEmail({
             <h2 style="color: #1f2937; margin-top: 0; font-size: 24px;">Hello! 👋</h2>
             
             <p style="color: #4b5563; line-height: 1.6; font-size: 16px; margin-bottom: 20px;">
-              <strong>${invitedBy}</strong> has invited you to join <strong>A Language Story</strong> as a <strong>${roleDisplayName}</strong>!
+              <strong>${invitedBy}</strong> has invited you to join <strong>Lingoletics.com</strong> as a <strong>${roleDisplayName}</strong>!
             </p>
             
             <div style="background-color: #f9fafb; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #ea580c;">
@@ -77,14 +77,14 @@ export async function sendInvitationEmail({
           <div style="background-color: #f9fafb; padding: 25px 30px; border-radius: 0 0 8px 8px; text-align: center;">
             <p style="color: #6b7280; margin: 0 0 15px 0; font-size: 14px;">
               <strong>Need help?</strong> Contact us at 
-              <a href="mailto:info@alanguagestory.dev" style="color: #ea580c; text-decoration: none;">info@alanguagestory.dev</a>
+              <a href="mailto:info@lingoletics.com" style="color: #ea580c; text-decoration: none;">info@lingoletics.com</a>
             </p>
             
             <div style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
               <p style="color: #9ca3af; margin: 0; font-size: 12px;">
-                A Language Story<br>
+                Lingoletics.com<br>
                 30 Tithe Barn Road, Stafford, England, ST16 3PH, GB<br><br>
-                You're receiving this email because ${invitedBy} invited you to join A Language Story.<br>
+                You're receiving this email because ${invitedBy} invited you to join Lingoletics.com.<br>
                 If you didn't expect this invitation, please ignore this email.
               </p>
             </div>
@@ -92,11 +92,11 @@ export async function sendInvitationEmail({
         </div>
       `,
       text: `
-You're Invited to A Language Story! 🎉
+You're Invited to Lingoletics.com! 🎉
 
 Hello! 👋
 
-${invitedBy} has invited you to join A Language Story as a ${roleDisplayName}!
+${invitedBy} has invited you to join Lingoletics.com as a ${roleDisplayName}!
 
 🎯 What You'll Get
 As a ${roleDisplayName}, you'll have access to:
@@ -111,13 +111,13 @@ Click here to accept: ${invitationUrl}
 3. Complete your profile and preferences
 4. Start exploring our language learning platform!
 
-This invitation is valid for 7 days. If you have any questions, contact us at info@alanguagestory.dev
+This invitation is valid for 7 days. If you have any questions, contact us at info@lingoletics.com
 
 ---
-A Language Story
+Lingoletics.com
 30 Tithe Barn Road, Stafford, England, ST16 3PH, GB
 
-You're receiving this email because ${invitedBy} invited you to join A Language Story.
+You're receiving this email because ${invitedBy} invited you to join Lingoletics.com.
 If you didn't expect this invitation, please ignore this email.
       `,
     });

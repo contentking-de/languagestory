@@ -82,7 +82,7 @@ export async function PATCH(request: NextRequest) {
         .where(eq(teams.id, user.teamId))
         .limit(1);
 
-      const teamName = team?.name || 'A Language Story Team';
+      const teamName = team?.name || 'Lingoletics.com Team';
 
       // Update invitation timestamp and status
       await db
