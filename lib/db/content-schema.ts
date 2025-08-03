@@ -11,6 +11,7 @@ import {
   date,
   pgEnum,
   unique,
+  index,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users, institutions, classes } from './schema';
@@ -311,6 +312,24 @@ export const completed_activities = pgTable('completed_activities', {
   unique_student_activity: unique().on(table.student_id, table.activity_type, table.reference_id),
 }));
 
+// Media Files
+export const media_files = pgTable('media_files', {
+  id: serial('id').primaryKey(),
+  blob_id: varchar('blob_id', { length: 255 }).notNull().unique(),
+  name: varchar('name', { length: 255 }).notNull(),
+  url: text('url').notNull(),
+  size: integer('size').notNull(),
+  type: varchar('type', { length: 100 }).notNull(),
+  category: varchar('category', { length: 50 }),
+  tags: json('tags'),
+  uploaded_by: integer('uploaded_by').notNull().references(() => users.id),
+  uploaded_at: timestamp('uploaded_at').defaultNow(),
+  metadata: json('metadata'), // Store additional file info
+}, (table) => ({
+  uploaded_by_idx: index('media_files_uploaded_by_idx').on(table.uploaded_by),
+  category_idx: index('media_files_category_idx').on(table.category),
+}));
+
 // Class Analytics
 export const class_analytics = pgTable('class_analytics', {
   id: serial('id').primaryKey(),
@@ -495,6 +514,13 @@ export const parent_reportsRelations = relations(parent_reports, ({ one }) => ({
   }),
 }));
 
+export const media_filesRelations = relations(media_files, ({ one }) => ({
+  uploadedBy: one(users, {
+    fields: [media_files.uploaded_by],
+    references: [users.id],
+  }),
+}));
+
 // Type exports for content management
 export type Course = typeof courses.$inferSelect;
 export type NewCourse = typeof courses.$inferInsert;
@@ -523,4 +549,6 @@ export type NewPointTransaction = typeof point_transactions.$inferInsert;
 export type DailyActivity = typeof daily_activity.$inferSelect;
 export type NewDailyActivity = typeof daily_activity.$inferInsert;
 export type CompletedActivity = typeof completed_activities.$inferSelect;
-export type NewCompletedActivity = typeof completed_activities.$inferInsert; 
+export type NewCompletedActivity = typeof completed_activities.$inferInsert;
+export type MediaFile = typeof media_files.$inferSelect;
+export type NewMediaFile = typeof media_files.$inferInsert; 

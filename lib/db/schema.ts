@@ -9,6 +9,7 @@ import {
   pgEnum,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { media_files } from './content-schema';
 
 // Enums for the new role system
 export const institutionTypeEnum = pgEnum('institution_type', ['school', 'university', 'language_center', 'private_tutor', 'corporate']);
@@ -151,6 +152,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   classEnrollments: many(classEnrollments),
   teamMembers: many(teamMembers),
   invitationsSent: many(invitations),
+  mediaFiles: many(media_files),
 }));
 
 export const teachingAssignmentsRelations = relations(teachingAssignments, ({ one }) => ({
