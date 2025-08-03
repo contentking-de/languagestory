@@ -230,17 +230,7 @@ export function QuizPreviewClient({ userRole }: QuizPreviewClientProps) {
       }
 
       // Log quiz completion activity
-      await logQuizActivity({
-        action: 'quiz_completed',
-        details: `Completed quiz: ${quiz?.title}`,
-        metadata: {
-          quiz_id: parseInt(quizId),
-          quiz_title: quiz?.title,
-          total_questions: questions.length,
-          answers_provided: Object.keys(allAnswers).length,
-          score: finalScore.percentage
-        }
-      });
+      await logQuizActivity('COMPLETE_QUIZ');
 
     } catch (error) {
       console.error('Error submitting quiz:', error);

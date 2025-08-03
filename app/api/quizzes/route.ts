@@ -29,7 +29,7 @@ async function generateGapFillQuestions(quizId: number, gapFillConfig: any) {
   
   if (correct_order && correct_order.trim()) {
     // Use the correct order provided by the frontend
-    correctAnswersArray = correct_order.split('|').filter(word => word.trim());
+    correctAnswersArray = correct_order.split('|').filter((word: string) => word.trim());
   } else {
     // Fallback: use the first words from word bank (for backward compatibility)
     const words = wordBankArray.slice();

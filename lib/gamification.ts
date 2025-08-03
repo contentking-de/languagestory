@@ -111,7 +111,8 @@ export async function awardPoints(
 ): Promise<number> {
   try {
     // Calculate points based on activity type and metadata
-    let pointsToAward = POINTS_CONFIG[activityType]?.base || 0;
+    const config = POINTS_CONFIG[activityType];
+    let pointsToAward = (config && 'base' in config) ? config.base : 0;
     let description = `Completed ${activityType.toLowerCase().replace('_', ' ')}`;
 
     // Add bonuses based on metadata
@@ -179,7 +180,7 @@ async function updateLearningStreaks(studentId: number, pointsEarned: number) {
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-      let newCurrentStreak = existingStreak.current_streak;
+      let newCurrentStreak = existingStreak.current_streak || 0;
       
       if (lastActivityDate === today) {
         // Already counted today, just update points
@@ -191,7 +192,7 @@ async function updateLearningStreaks(studentId: number, pointsEarned: number) {
         newCurrentStreak = 1;
       }
 
-      const newLongestStreak = Math.max(existingStreak.longest_streak, newCurrentStreak);
+      const newLongestStreak = Math.max(existingStreak.longest_streak || 0, newCurrentStreak);
 
       await db
         .update(learning_streaks)
@@ -199,13 +200,13 @@ async function updateLearningStreaks(studentId: number, pointsEarned: number) {
           current_streak: newCurrentStreak,
           longest_streak: newLongestStreak,
           last_activity_date: today,
-          total_points: existingStreak.total_points + pointsEarned,
+          total_points: (existingStreak.total_points || 0) + pointsEarned,
           updated_at: new Date(),
         })
         .where(eq(learning_streaks.student_id, studentId));
 
       // Check for streak achievements
-      if (newCurrentStreak > existingStreak.current_streak) {
+      if (newCurrentStreak > (existingStreak.current_streak || 0)) {
         await checkStreakAchievements(studentId, newCurrentStreak);
       }
     } else {
@@ -266,7 +267,8 @@ async function updateDailyActivity(
 
     if (existingActivity) {
       // Update existing record
-      const updatedLanguages = existingActivity.languages_practiced || [];
+      const currentLanguages = existingActivity.languages_practiced;
+      const updatedLanguages = Array.isArray(currentLanguages) ? currentLanguages : [];
       if (language && !updatedLanguages.includes(language)) {
         updatedLanguages.push(language);
       }
@@ -274,11 +276,11 @@ async function updateDailyActivity(
       await db
         .update(daily_activity)
         .set({
-          points_earned: existingActivity.points_earned + pointsEarned,
-          lessons_completed: existingActivity.lessons_completed + (activityIncrements.lessons_completed || 0),
-          quizzes_completed: existingActivity.quizzes_completed + (activityIncrements.quizzes_completed || 0),
-          vocabulary_practiced: existingActivity.vocabulary_practiced + (activityIncrements.vocabulary_practiced || 0),
-          games_played: existingActivity.games_played + (activityIncrements.games_played || 0),
+          points_earned: (existingActivity.points_earned || 0) + pointsEarned,
+          lessons_completed: (existingActivity.lessons_completed || 0) + (activityIncrements.lessons_completed || 0),
+          quizzes_completed: (existingActivity.quizzes_completed || 0) + (activityIncrements.quizzes_completed || 0),
+          vocabulary_practiced: (existingActivity.vocabulary_practiced || 0) + (activityIncrements.vocabulary_practiced || 0),
+          games_played: (existingActivity.games_played || 0) + (activityIncrements.games_played || 0),
           languages_practiced: JSON.stringify(updatedLanguages),
           updated_at: new Date(),
         })
@@ -368,7 +370,7 @@ async function checkAchievements(studentId: number, activityType: string, metada
       .limit(1);
 
     if (streakData) {
-      const totalPoints = streakData.total_points;
+      const totalPoints = streakData.total_points || 0;
       const milestones = [
         { points: 100, type: 'points_milestone_100' },
         { points: 500, type: 'points_milestone_500' },
@@ -472,7 +474,7 @@ async function awardAchievement(studentId: number, achievementType: keyof typeof
       await db
         .update(learning_streaks)
         .set({
-          total_points: streakData.total_points + achievement.points,
+          total_points: (streakData.total_points || 0) + achievement.points,
           updated_at: new Date(),
         })
         .where(eq(learning_streaks.student_id, studentId));

@@ -21,6 +21,9 @@ import {
   Languages,
   Gamepad2,
   Trophy,
+  Award,
+  Flame,
+  Star,
   type LucideIcon
 } from 'lucide-react';
 import { ActivityType } from '@/lib/db/schema';
@@ -65,9 +68,15 @@ const iconMap: Record<ActivityType, LucideIcon> = {
   // Vocabulary activities
   [ActivityType.CREATE_VOCABULARY]: Languages,
   [ActivityType.STUDY_VOCABULARY]: BookOpen,
+  [ActivityType.COMPLETE_VOCABULARY]: CheckCircle,
   // Games activities
   [ActivityType.CREATE_GAME]: Gamepad2,
   [ActivityType.PLAY_GAME]: Play,
+  [ActivityType.COMPLETE_GAME]: Trophy,
+  // Achievement activities
+  [ActivityType.EARN_ACHIEVEMENT]: Award,
+  [ActivityType.REACH_STREAK]: Flame,
+  [ActivityType.EARN_POINTS]: Star,
 };
 
 function formatAction(action: ActivityType): string {
@@ -121,11 +130,22 @@ function formatAction(action: ActivityType): string {
       return 'You created vocabulary';
     case ActivityType.STUDY_VOCABULARY:
       return 'You studied vocabulary';
+    case ActivityType.COMPLETE_VOCABULARY:
+      return 'You completed vocabulary practice';
     // Games activities
     case ActivityType.CREATE_GAME:
       return 'You created a game';
     case ActivityType.PLAY_GAME:
       return 'You played a game';
+    case ActivityType.COMPLETE_GAME:
+      return 'You completed a game';
+    // Achievement activities
+    case ActivityType.EARN_ACHIEVEMENT:
+      return 'You earned an achievement';
+    case ActivityType.REACH_STREAK:
+      return 'You reached a learning streak';
+    case ActivityType.EARN_POINTS:
+      return 'You earned points';
     default:
       return 'Unknown action occurred';
   }
