@@ -250,7 +250,7 @@ export default function RolesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Role Management</h1>
           <p className="text-gray-600">
-            Comprehensive educational role system for A Language Story
+            Comprehensive educational role system for Lingoletics.com
           </p>
         </div>
         

@@ -79,7 +79,7 @@ function UserMenu() {
           <Button asChild className="rounded-lg bg-orange-500 hover:bg-orange-600">
             <Link href="/sign-in">Login</Link>
           </Button>
-          <Button asChild className="rounded-lg bg-slate-600 hover:bg-slate-700">
+          <Button asChild className="rounded-lg hover:opacity-90" style={{backgroundColor: '#3bbbd0'}}>
             <Link href="/sign-up">Sign Up</Link>
           </Button>
         </div>
@@ -153,7 +153,7 @@ function UserMenu() {
                 <Button asChild className="w-full rounded-lg bg-orange-500 hover:bg-orange-600">
                   <Link href="/sign-in" onClick={() => setIsMenuOpen(false)}>Login</Link>
                 </Button>
-                <Button asChild className="w-full rounded-lg bg-slate-600 hover:bg-slate-700">
+                <Button asChild className="w-full rounded-lg hover:opacity-90" style={{backgroundColor: '#3bbbd0'}}>
                   <Link href="/sign-up" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
                 </Button>
               </div>
@@ -205,14 +205,10 @@ function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center">
           <img 
-            src="/favicon.webp" 
-            alt="A Language Story Logo" 
-            className="h-10 w-10 object-contain"
+            src="/logo.png" 
+            alt="Lingoletics.com Logo" 
+            className="h-7 object-contain"
           />
-          <div className="ml-2">
-            <div className="text-xl font-bold text-gray-900">A Language Story</div>
-            <div className="text-xs font-bold text-orange-500">boost your language skills</div>
-          </div>
         </Link>
         <div className="flex items-center space-x-4">
           <Suspense fallback={<div className="h-9" />}>

@@ -116,11 +116,11 @@ const modalContent = {
     content: `
       <h2 class="text-xl font-bold mb-4">Terms and Conditions</h2>
       
-      <h3 class="text-lg font-semibold mb-2">Using the materials on A Language Story</h3>
+      <h3 class="text-lg font-semibold mb-2">Using the materials on Lingoletics.com</h3>
       <ul class="list-disc list-inside mb-4 space-y-2">
-        <li>Material from A Language Story may not be copied, reproduced, republished, downloaded, posted, broadcast, or transmitted in any way, except for your own use as a teacher and that of your pupils within your own educational establishment.</li>
-        <li>Any other use requires the prior written permission of A Language Story</li>
-        <li>The illustrations on the site are the legal property of A Language Story and cannot be copied or reproduced in any way.</li>
+        <li>Material from Lingoletics.com may not be copied, reproduced, republished, downloaded, posted, broadcast, or transmitted in any way, except for your own use as a teacher and that of your pupils within your own educational establishment.</li>
+        <li>Any other use requires the prior written permission of Lingoletics.com</li>
+        <li>The illustrations on the site are the legal property of Lingoletics.com and cannot be copied or reproduced in any way.</li>
         <li>You agree not to adapt or alter any of the material contained in this site or use it for any purpose other than your personal, non-commercial use.</li>
         <li>Copies of this site should not be used for any promotional, administrative, or commercial purposes of the educational establishment.</li>
         <li>If you register as an individual tutor, you will only be permitted to access and use the site with your own private pupils. Failure to comply will lead to your login details to become invalid.</li>
@@ -140,16 +140,16 @@ const modalContent = {
         <p class="mb-2"><strong>7 day cooling off period:</strong> In accordance with the above law, you have a 7 day 'cooling off period' in which you have the right to cancel your purchase and receive a refund. You do not need to give a reason for cancelling your purchase. Should you choose to cancel, we will refund your payment within 30 days of your cancellation.</p>
         <p class="mb-2">Should you wish to cancel your purchase within the 7 days' cooling off' period, please email us at <a href="mailto:info@alanguagestory.com" class="text-orange-600 hover:underline">info@alanguagestory.com</a> or write to us at the following address:</p>
         <div class="ml-4 mb-2">
-          <p>A Language Story</p>
+          <p>Lingoletics.com</p>
           <p>30 Tithe Barn Road, Stafford, ST163PH</p>
         </div>
         <p class="mb-2">Should you cancel your purchase within this 7 day 'cooling off' period, we will refund your payment. If you paid by credit or with debit card from this website, your refund will be made directly to your credit or debit card within 30 days of your cancellation.</p>
-        <p class="mb-2"><strong>Conditions of the refund:</strong> In the case of the request for a refund, A Language Story reserves the right to track usage by an individual (through his/her own unique code) of specific pages visited, frequency of use, and time of use. No refund will be granted if A Language Story has cause to believe that an individual has undertaken significant usage of the resource OR has printed off selected material.</p>
+        <p class="mb-2"><strong>Conditions of the refund:</strong> In the case of the request for a refund, Lingoletics.com reserves the right to track usage by an individual (through his/her own unique code) of specific pages visited, frequency of use, and time of use. No refund will be granted if Lingoletics.com has cause to believe that an individual has undertaken significant usage of the resource OR has printed off selected material.</p>
       </div>
       
       <h3 class="text-lg font-semibold mb-2">Payments</h3>
       <ul class="list-disc list-inside mb-4 space-y-2">
-        <li>Buying a school licence will entitle you to use A Language Story with a limit on the number of teachers or pupils accessing it, depending on the subscription. Usage must remain only within your educational establishment. Failure to comply will lead to the educational establishment login to become invalid.</li>
+        <li>Buying a school licence will entitle you to use Lingoletics.com with a limit on the number of teachers or pupils accessing it, depending on the subscription. Usage must remain only within your educational establishment. Failure to comply will lead to the educational establishment login to become invalid.</li>
         <li>The fee is valid for a year. You will be sent a reminder a month before your registration expires.</li>
         <li>You will be sent a confirmation of your received payment.</li>
         <li>Due to the nature of our product(s) and service(s), our refund policy is such that each individual refund request will be considered on a case-by-case basis.</li>
@@ -162,8 +162,8 @@ const modalContent = {
     content: `
       <h2 class="text-xl font-bold mb-4">About Us</h2>
       
-      <h3 class="text-lg font-semibold mb-2">The roots of A Language Story</h3>
-      <p class="mb-4">Let me tell you about us and where the roots of A Language Story began.</p>
+      <h3 class="text-lg font-semibold mb-2">The roots of Lingoletics.com</h3>
+      <p class="mb-4">Let me tell you about us and where the roots of Lingoletics.com began.</p>
       
       <p class="mb-4">About 20 years ago, I left London on a train with a rucksack full of jeans samples and headed to Europe. The plan was to start up a European clothing wholesale business for a friend of mine. The first stop was Amsterdam, and then I travelled on to Hamburg. Within a year I had visited most major cities in Germany, The Netherlands, Denmark, Sweden, and Switzerland.</p>
       
@@ -171,13 +171,13 @@ const modalContent = {
       
       <p class="mb-4">Following the business years, I decided I needed a big change and became a secondary school teacher. I have been teaching German and French for over 10 years now and of course my time abroad is reflected in my teaching constantly. Stories from Berlin and Hamburg, of friends at Lake Konstanz and of travelling experiences all around Europe, I hope to inspire and enthuse pupils about the joy of language learning.</p>
       
-      <p class="mb-4">A Language Story has been a long journey, with the initial idea coming to me whilst on holiday in Brazil. The concept has changed a lot over the years, was cast aside a few times, stored in jar for a while, until now. Finally, it has all come together and is ready to blossom and grow.</p>
+      <p class="mb-4">Lingoletics.com has been a long journey, with the initial idea coming to me whilst on holiday in Brazil. The concept has changed a lot over the years, was cast aside a few times, stored in jar for a while, until now. Finally, it has all come together and is ready to blossom and grow.</p>
       
       <p class="mb-4">The collection of stories is a personal collection in many ways, drawing on real events and experiences, but moulded to give it a purpose, which is ultimately to help people develop their language skills and their confidence in understanding and using a foreign language.</p>
       
       <p class="mb-4">Proven by much educational research, reading is essential to language acquisition, but the problem for foreign language learners is that authentic literature is nearly always too difficult for a beginner, which can be time consuming, off putting and just plain too difficult. My stories are linked to the UK curriculum and cover typical topics which are used in schools. This means pupils can recognise a lot of vocabulary and quickly gain confidence that they understand the language.</p>
       
-      <p class="mb-4">Unveiling the essence of A Language Story, these narratives draw inspiration from my extensive travels across Germany, France, Spain, and beyond, weaving tales of the friends I encountered and the adventures that unfolded.</p>
+      <p class="mb-4">Unveiling the essence of Lingoletics.com, these narratives draw inspiration from my extensive travels across Germany, France, Spain, and beyond, weaving tales of the friends I encountered and the adventures that unfolded.</p>
       
       <p class="mb-4">Each story incorporates essential vocabulary taught in language classrooms across the world, serving as a powerful resource for both educators and learners.</p>
       
@@ -185,7 +185,7 @@ const modalContent = {
       
       <p class="mb-4">Immerse yourself in our stories, which are invaluable for activities such as engaging read-outs, comprehensive listening exercises, dynamic grammar drills, and much more.</p>
       
-      <p class="mb-4"><strong>Elevate language education with A Language Story—a fusion of adventure, culture, and linguistic enrichment!</strong></p>
+      <p class="mb-4"><strong>Elevate language education with Lingoletics.com—a fusion of adventure, culture, and linguistic enrichment!</strong></p>
       
       <h3 class="text-lg font-semibold mb-2">Language Learning Hub for Everyone</h3>
       <p class="mb-4">Whether you want to learn a language as an individual or want to enroll bulk number of students to our courses, we have the solution.</p>
@@ -194,13 +194,13 @@ const modalContent = {
       
       <p class="mb-4"><strong>Individual Subscriptions:</strong> Individual subscriptions allow one user access to courses they have subscribed. If you want access for more than one user, you have to add required number of copies of subscription.</p>
       
-      <p class="mb-4">A Language Story focusses on developing language skills in all four disciplines – Writing, Reading, Listening and Speaking. Each story is accompanied with a set of resources, which can be accessed in the classroom or at home.</p>
+      <p class="mb-4">Lingoletics.com focusses on developing language skills in all four disciplines – Writing, Reading, Listening and Speaking. Each story is accompanied with a set of resources, which can be accessed in the classroom or at home.</p>
     `
   },
   'contact': {
     title: 'Contact Us',
     content: `
-      <h2 class="text-xl font-bold mb-4">Contact A Language Story</h2>
+      <h2 class="text-xl font-bold mb-4">Contact Lingoletics.com</h2>
       
       <p class="mb-4">We'd love to hear from you! Get in touch with us for support, feedback, or any questions about our language learning platform.</p>
       
@@ -276,7 +276,7 @@ const modalContent = {
     content: `
       <h2 class="text-xl font-bold mb-4">Redeem Your Enrollment Key</h2>
       
-      <p class="mb-4">Have an enrollment key from your school or organization? Redeem it here to access A Language Story.</p>
+      <p class="mb-4">Have an enrollment key from your school or organization? Redeem it here to access Lingoletics.com.</p>
       
       <h3 class="text-lg font-semibold mb-2">How to Redeem</h3>
       <ol class="list-decimal list-inside mb-4">
@@ -1383,7 +1383,7 @@ export default function HomePage() {
               Why Choose Us?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Discover how A Language Story transforms language learning for everyone in the educational community
+              Discover how Lingoletics.com transforms language learning for everyone in the educational community
             </p>
           </div>
           
@@ -1490,7 +1490,7 @@ export default function HomePage() {
           {/* Bottom CTA */}
           <div className="text-center mt-16">
             <p className="text-lg text-gray-600 mb-6">
-              Join thousands of educators, students, and families who trust A Language Story
+              Join thousands of educators, students, and families who trust Lingoletics.com
             </p>
             <a href="#pricing">
               <button className="bg-orange-500 text-white font-bold text-lg px-8 py-3 rounded-lg hover:bg-orange-600 transition-colors">
@@ -1507,7 +1507,7 @@ export default function HomePage() {
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">Platform Features</h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Discover the comprehensive tools and features that make A Language Story the complete solution for language learning and teaching
+                Discover the comprehensive tools and features that make Lingoletics.com the complete solution for language learning and teaching
               </p>
             </div>
 
@@ -1619,7 +1619,7 @@ export default function HomePage() {
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Complete Language Learning Ecosystem</h3>
               <p className="text-lg text-gray-700 mb-6 max-w-4xl mx-auto">
                 From content creation to student assessment, from institutional management to detailed analytics - 
-                A Language Story provides everything you need for successful language education in one integrated platform.
+                Lingoletics.com provides everything you need for successful language education in one integrated platform.
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-sm font-medium">
                 <span className="bg-white text-orange-600 px-4 py-2 rounded-full">Multi-Language Support</span>
@@ -1643,7 +1643,7 @@ export default function HomePage() {
               Learn languages with short stories!
             </h3>
             <p className="text-lg text-gray-600 max-w-4xl mx-auto">
-              Welcome to A Language Story! Consolidate language skills and vocabulary with our short stories, 
+              Welcome to Lingoletics.com! Consolidate language skills and vocabulary with our short stories, 
               in-line with topics you recognise from the classroom. Each page has references to culture, 
               audio from a native speaker, games and activities to support learning.
             </p>
@@ -2277,7 +2277,7 @@ export default function HomePage() {
               </h2>
               <p className="mt-3 max-w-3xl text-lg text-gray-500">
                 Join thousands of learners who are already mastering new languages 
-                with A Language Story. Start with a free trial and discover how 
+                with Lingoletics.com. Start with a free trial and discover how 
                 personalized learning can transform your fluency.
               </p>
               <p className="mt-4 max-w-3xl text-lg text-gray-500">
@@ -2340,7 +2340,7 @@ export default function HomePage() {
             <div className="lg:col-span-1">
               <h3 className="text-xl font-bold mb-4">About Us</h3>
               <p className="text-gray-600 leading-relaxed">
-                A Language Story focusses on developing language skills in all four 
+                Lingoletics.com focusses on developing language skills in all four 
                 disciplines – Writing, Reading, Listening and Speaking. Each story 
                 is accompanied with a set of resources, which can be accessed in 
                 the classroom or at home.

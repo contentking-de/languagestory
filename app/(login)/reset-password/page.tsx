@@ -77,7 +77,7 @@ function ResetPasswordForm() {
           <div className="flex justify-center">
             <Image
               src="/favicon.webp"
-              alt="A Language Story"
+              alt="Lingoletics.com"
               width={64}
               height={64}
               className="rounded-lg"
@@ -121,7 +121,7 @@ function ResetPasswordForm() {
         <div className="flex justify-center">
           <Image
             src="/favicon.webp"
-            alt="A Language Story"
+            alt="Lingoletics.com"
             width={64}
             height={64}
             className="rounded-lg"

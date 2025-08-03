@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
           <div className="flex justify-center">
             <Image
               src="/favicon.webp"
-              alt="A Language Story"
+              alt="Lingoletics.com"
               width={64}
               height={64}
               className="rounded-lg"
@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
         <div className="flex justify-center">
           <Image
             src="/favicon.webp"
-            alt="A Language Story"
+            alt="Lingoletics.com"
             width={64}
             height={64}
             className="rounded-lg"

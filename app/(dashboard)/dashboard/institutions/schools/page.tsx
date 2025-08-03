@@ -132,7 +132,7 @@ export default function SchoolsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Schools & Institutions</h1>
           <p className="text-gray-600 mt-1">
-            Manage educational institutions and organizations using A Language Story
+            Manage educational institutions and organizations using Lingoletics.com
           </p>
         </div>
         <Button className="flex items-center gap-2">

@@ -74,11 +74,11 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
       content: `
         <h2 class="text-xl font-bold mb-4">Terms and Conditions</h2>
         
-        <h3 class="text-lg font-semibold mb-2">Using the materials on A Language Story</h3>
+        <h3 class="text-lg font-semibold mb-2">Using the materials on Lingoletics.com</h3>
         <ul class="list-disc list-inside mb-4 space-y-2">
-          <li>Material from A Language Story may not be copied, reproduced, republished, downloaded, posted, broadcast, or transmitted in any way, except for your own use as a teacher and that of your pupils within your own educational establishment.</li>
-          <li>Any other use requires the prior written permission of A Language Story</li>
-          <li>The illustrations on the site are the legal property of A Language Story and cannot be copied or reproduced in any way.</li>
+          <li>Material from Lingoletics.com may not be copied, reproduced, republished, downloaded, posted, broadcast, or transmitted in any way, except for your own use as a teacher and that of your pupils within your own educational establishment.</li>
+          <li>Any other use requires the prior written permission of Lingoletics.com</li>
+          <li>The illustrations on the site are the legal property of Lingoletics.com and cannot be copied or reproduced in any way.</li>
           <li>You agree not to adapt or alter any of the material contained in this site or use it for any purpose other than your personal, non-commercial use.</li>
           <li>Copies of this site should not be used for any promotional, administrative, or commercial purposes of the educational establishment.</li>
           <li>If you register as an individual tutor, you will only be permitted to access and use the site with your own private pupils. Failure to comply will lead to your login details to become invalid.</li>
@@ -98,16 +98,16 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
           <p class="mb-2"><strong>7 day cooling off period:</strong> In accordance with the above law, you have a 7 day 'cooling off period' in which you have the right to cancel your purchase and receive a refund. You do not need to give a reason for cancelling your purchase. Should you choose to cancel, we will refund your payment within 30 days of your cancellation.</p>
           <p class="mb-2">Should you wish to cancel your purchase within the 7 days' cooling off' period, please email us at <a href="mailto:info@alanguagestory.com" class="text-orange-600 hover:underline">info@alanguagestory.com</a> or write to us at the following address:</p>
           <div class="ml-4 mb-2">
-            <p>A Language Story</p>
+            <p>Lingoletics.com</p>
             <p>30 Tithe Barn Road, Stafford, ST163PH</p>
           </div>
           <p class="mb-2">Should you cancel your purchase within this 7 day 'cooling off' period, we will refund your payment. If you paid by credit or with debit card from this website, your refund will be made directly to your credit or debit card within 30 days of your cancellation.</p>
-          <p class="mb-2"><strong>Conditions of the refund:</strong> In the case of the request for a refund, A Language Story reserves the right to track usage by an individual (through his/her own unique code) of specific pages visited, frequency of use, and time of use. No refund will be granted if A Language Story has cause to believe that an individual has undertaken significant usage of the resource OR has printed off selected material.</p>
+          <p class="mb-2"><strong>Conditions of the refund:</strong> In the case of the request for a refund, Lingoletics.com reserves the right to track usage by an individual (through his/her own unique code) of specific pages visited, frequency of use, and time of use. No refund will be granted if Lingoletics.com has cause to believe that an individual has undertaken significant usage of the resource OR has printed off selected material.</p>
         </div>
         
         <h3 class="text-lg font-semibold mb-2">Payments</h3>
         <ul class="list-disc list-inside mb-4 space-y-2">
-          <li>Buying a school licence will entitle you to use A Language Story with a limit on the number of teachers or pupils accessing it, depending on the subscription. Usage must remain only within your educational establishment. Failure to comply will lead to the educational establishment login to become invalid.</li>
+          <li>Buying a school licence will entitle you to use Lingoletics.com with a limit on the number of teachers or pupils accessing it, depending on the subscription. Usage must remain only within your educational establishment. Failure to comply will lead to the educational establishment login to become invalid.</li>
           <li>The fee is valid for a year. You will be sent a reminder a month before your registration expires.</li>
           <li>You will be sent a confirmation of your received payment.</li>
           <li>Due to the nature of our product(s) and service(s), our refund policy is such that each individual refund request will be considered on a case-by-case basis.</li>
@@ -133,7 +133,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
         <div className="flex justify-center">
           <Image 
             src="/favicon.webp" 
-            alt="A Language Story" 
+            alt="Lingoletics.com" 
             width={48} 
             height={48} 
             className="h-12 w-12"
