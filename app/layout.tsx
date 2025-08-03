@@ -12,9 +12,9 @@ export const metadata: Metadata = {
     follow: false,
   },
   icons: {
-    icon: '/favicon.webp',
-    shortcut: '/favicon.webp',
-    apple: '/favicon.webp',
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
   },
   openGraph: {
     title: 'Lingoletics.com - Learn French, German & Spanish Through Stories',

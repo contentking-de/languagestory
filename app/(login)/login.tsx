@@ -132,7 +132,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <Image 
-            src="/favicon.webp" 
+            src="/favicon.png" 
             alt="Lingoletics.com" 
             width={48} 
             height={48} 
