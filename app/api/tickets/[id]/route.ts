@@ -77,10 +77,18 @@ export async function GET(
       assignedToEmail = assignedUser?.email;
     }
 
-    const ticketWithAssignedUser = {
+    const ticketWithUsers = {
       ...ticket,
-      assignedToName,
-      assignedToEmail,
+      createdBy: {
+        id: ticket.createdBy,
+        name: ticket.createdByName,
+        email: ticket.createdByEmail,
+      },
+      assignedTo: ticket.assignedTo ? {
+        id: ticket.assignedTo,
+        name: assignedToName,
+        email: assignedToEmail,
+      } : null,
     };
 
     // Fetch comments
@@ -103,11 +111,10 @@ export async function GET(
     const history = await db
       .select({
         id: ticketHistory.id,
-        action: ticketHistory.action,
-        fieldName: ticketHistory.fieldName,
+        field: ticketHistory.fieldName,
         oldValue: ticketHistory.oldValue,
         newValue: ticketHistory.newValue,
-        createdAt: ticketHistory.createdAt,
+        updatedAt: ticketHistory.createdAt,
         userId: ticketHistory.userId,
         userName: users.name,
         userEmail: users.email,
@@ -118,7 +125,7 @@ export async function GET(
       .orderBy(desc(ticketHistory.createdAt));
 
     return NextResponse.json({
-      ticket: ticketWithAssignedUser,
+      ticket: ticketWithUsers,
       comments,
       history,
     });
@@ -195,7 +202,7 @@ export async function PUT(
     if (assignedTo !== undefined) updateData.assignedTo = assignedTo ? parseInt(assignedTo) : null;
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
     if (resolutionNotes !== undefined) updateData.resolutionNotes = resolutionNotes;
-    if (tags !== undefined) updateData.tags = tags ? tags.join(',') : null;
+    if (tags !== undefined) updateData.tags = tags || null;
     if (attachments !== undefined) updateData.attachments = attachments ? JSON.stringify(attachments) : null;
 
     // Set resolvedAt if status is resolved
