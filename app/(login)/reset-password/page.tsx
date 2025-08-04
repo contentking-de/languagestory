@@ -7,7 +7,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, Eye, EyeOff, CheckCircle, Check, X as XIcon } from 'lucide-react';
+import { validatePassword } from '@/lib/utils';
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -20,6 +21,10 @@ function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [passwordValidation, setPasswordValidation] = useState<{
+    isValid: boolean;
+    error?: string;
+  }>({ isValid: false });
 
   useEffect(() => {
     const tokenParam = searchParams.get('token');
@@ -29,6 +34,18 @@ function ResetPasswordForm() {
       setError('Invalid reset link. Please request a new password reset.');
     }
   }, [searchParams]);
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    
+    if (newPassword.length > 0) {
+      const validation = validatePassword(newPassword);
+      setPasswordValidation(validation);
+    } else {
+      setPasswordValidation({ isValid: false });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +58,9 @@ function ResetPasswordForm() {
       return;
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      setError(validation.error || 'Password does not meet security requirements.');
       setIsLoading(false);
       return;
     }
@@ -152,8 +170,14 @@ function ResetPasswordForm() {
                   minLength={8}
                   maxLength={100}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none rounded-lg relative block w-full px-3 py-2 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
+                  onChange={handlePasswordChange}
+                  className={`appearance-none rounded-lg relative block w-full px-3 py-2 pr-12 border placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm ${
+                    password.length > 0
+                      ? passwordValidation.isValid
+                        ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
+                        : 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                      : 'border-gray-300'
+                  }`}
                   placeholder="Enter your new password"
                 />
                 <button
@@ -168,9 +192,43 @@ function ResetPasswordForm() {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Password must be at least 8 characters long
-              </p>
+              
+              {password.length > 0 && (
+                <div className="mt-2">
+                  {passwordValidation.isValid ? (
+                    <div className="flex items-center text-sm text-green-600">
+                      <Check className="h-4 w-4 mr-1" />
+                      Password meets security requirements
+                    </div>
+                  ) : (
+                    <div className="text-sm text-red-600">
+                      {passwordValidation.error}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div className="mt-2">
+                <div className="text-xs text-gray-500 mb-2">Password requirements:</div>
+                <div className="space-y-1">
+                  <div className={`flex items-center text-xs ${password.length >= 8 ? 'text-green-600' : 'text-gray-400'}`}>
+                    {password.length >= 8 ? <Check className="h-3 w-3 mr-1" /> : <XIcon className="h-3 w-3 mr-1" />}
+                    At least 8 characters
+                  </div>
+                  <div className={`flex items-center text-xs ${/[A-Z]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+                    {/[A-Z]/.test(password) ? <Check className="h-3 w-3 mr-1" /> : <XIcon className="h-3 w-3 mr-1" />}
+                    One uppercase letter
+                  </div>
+                  <div className={`flex items-center text-xs ${/[0-9]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+                    {/[0-9]/.test(password) ? <Check className="h-3 w-3 mr-1" /> : <XIcon className="h-3 w-3 mr-1" />}
+                    One number
+                  </div>
+                  <div className={`flex items-center text-xs ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+                    {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? <Check className="h-3 w-3 mr-1" /> : <XIcon className="h-3 w-3 mr-1" />}
+                    One special character
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -212,7 +270,7 @@ function ResetPasswordForm() {
             <div>
               <Button
                 type="submit"
-                disabled={isLoading || !token}
+                disabled={isLoading || !token || !passwordValidation.isValid}
                 className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (

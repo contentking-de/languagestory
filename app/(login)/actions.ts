@@ -35,6 +35,7 @@ import { getUser, getUserWithTeam } from '@/lib/db/queries';
 import { UserRole, hasPermission, canManageUser, canInviteRole, getInvitableRoles, getRoleDisplayName } from '@/lib/auth/rbac';
 import { sendWelcomeEmail } from '@/lib/email/welcome-email';
 import { sendInvitationEmail } from '@/lib/email/invitation-email';
+import { validatePassword } from '@/lib/utils';
 
 async function logActivity(
   teamId: number | null | undefined,
@@ -113,7 +114,13 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
 const signUpSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(8).refine((password) => {
+    const validation = validatePassword(password);
+    return validation.isValid;
+  }, (password) => {
+    const validation = validatePassword(password);
+    return { message: validation.error || 'Password does not meet security requirements' };
+  }),
   role: z.enum(['student', 'teacher']).default('teacher'),
   institutionId: z.string().optional(),
   parentEmail: z.string().email().optional(), // For linking parent-child accounts
@@ -279,7 +286,13 @@ export async function signOut() {
 
 const updatePasswordSchema = z.object({
   currentPassword: z.string().min(8).max(100),
-  newPassword: z.string().min(8).max(100),
+  newPassword: z.string().min(8).max(100).refine((password) => {
+    const validation = validatePassword(password);
+    return validation.isValid;
+  }, (password) => {
+    const validation = validatePassword(password);
+    return { message: validation.error || 'Password does not meet security requirements' };
+  }),
   confirmPassword: z.string().min(8).max(100)
 });
 

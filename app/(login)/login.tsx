@@ -10,9 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
-import { Loader2, X, Eye, EyeOff } from 'lucide-react';
+import { Loader2, X, Eye, EyeOff, Check, X as XIcon } from 'lucide-react';
 import { signIn, signUp } from './actions';
 import { ActionState } from '@/lib/auth/middleware';
+import { validatePassword } from '@/lib/utils';
 
 export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
   const searchParams = useSearchParams();
@@ -25,6 +26,11 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
   );
   const [gdprAccepted, setGdprAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordValidation, setPasswordValidation] = useState<{
+    isValid: boolean;
+    error?: string;
+  }>({ isValid: false });
 
   const [modalOpen, setModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState('');
@@ -127,6 +133,18 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
     setActiveModal('');
   };
 
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    
+    if (mode === 'signup' && newPassword.length > 0) {
+      const validation = validatePassword(newPassword);
+      setPasswordValidation(validation);
+    } else {
+      setPasswordValidation({ isValid: false });
+    }
+  };
+
   return (
     <div className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -217,11 +235,18 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                 autoComplete={
                   mode === 'signin' ? 'current-password' : 'new-password'
                 }
-                defaultValue={state.password}
+                value={password}
+                onChange={handlePasswordChange}
                 required
                 minLength={8}
                 maxLength={100}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
+                className={`appearance-none rounded-lg relative block w-full px-3 py-2 pr-12 border placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm ${
+                  mode === 'signup' && password.length > 0
+                    ? passwordValidation.isValid
+                      ? 'border-green-300 focus:border-green-500 focus:ring-green-500'
+                      : 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                    : 'border-gray-300'
+                }`}
                 placeholder="Enter your password"
               />
               <button
@@ -236,6 +261,45 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                 )}
               </button>
             </div>
+            
+            {mode === 'signup' && password.length > 0 && (
+              <div className="mt-2">
+                {passwordValidation.isValid ? (
+                  <div className="flex items-center text-sm text-green-600">
+                    <Check className="h-4 w-4 mr-1" />
+                    Password meets security requirements
+                  </div>
+                ) : (
+                  <div className="text-sm text-red-600">
+                    {passwordValidation.error}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {mode === 'signup' && (
+              <div className="mt-2">
+                <div className="text-xs text-gray-500 mb-2">Password requirements:</div>
+                <div className="space-y-1">
+                  <div className={`flex items-center text-xs ${password.length >= 8 ? 'text-green-600' : 'text-gray-400'}`}>
+                    {password.length >= 8 ? <Check className="h-3 w-3 mr-1" /> : <XIcon className="h-3 w-3 mr-1" />}
+                    At least 8 characters
+                  </div>
+                  <div className={`flex items-center text-xs ${/[A-Z]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+                    {/[A-Z]/.test(password) ? <Check className="h-3 w-3 mr-1" /> : <XIcon className="h-3 w-3 mr-1" />}
+                    One uppercase letter
+                  </div>
+                  <div className={`flex items-center text-xs ${/[0-9]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+                    {/[0-9]/.test(password) ? <Check className="h-3 w-3 mr-1" /> : <XIcon className="h-3 w-3 mr-1" />}
+                    One number
+                  </div>
+                  <div className={`flex items-center text-xs ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? 'text-green-600' : 'text-gray-400'}`}>
+                    {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? <Check className="h-3 w-3 mr-1" /> : <XIcon className="h-3 w-3 mr-1" />}
+                    One special character
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {mode === 'signup' && (
@@ -283,7 +347,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
             <Button
               type="submit"
               className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={pending || (mode === 'signup' && !gdprAccepted)}
+              disabled={pending || (mode === 'signup' && (!gdprAccepted || !passwordValidation.isValid))}
             >
               {pending ? (
                 <>

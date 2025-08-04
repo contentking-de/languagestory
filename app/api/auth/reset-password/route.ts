@@ -4,10 +4,17 @@ import { db } from '@/lib/db/drizzle';
 import { users, passwordResetTokens } from '@/lib/db/schema';
 import { eq, and, gt } from 'drizzle-orm';
 import { hashPassword } from '@/lib/auth/session';
+import { validatePassword } from '@/lib/utils';
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Reset token is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters').max(100, 'Password must be less than 100 characters')
+  password: z.string().min(8).max(100).refine((password) => {
+    const validation = validatePassword(password);
+    return validation.isValid;
+  }, (password) => {
+    const validation = validatePassword(password);
+    return { message: validation.error || 'Password does not meet security requirements' };
+  })
 });
 
 export async function POST(request: NextRequest) {
