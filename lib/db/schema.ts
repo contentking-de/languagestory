@@ -119,6 +119,48 @@ export const activityLogs = pgTable('activity_logs', {
   ipAddress: varchar('ip_address', { length: 45 }),
 });
 
+// Ticket Management System
+export const tickets = pgTable('tickets', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 200 }).notNull(),
+  description: text('description').notNull(),
+  ticketType: varchar('ticket_type', { length: 20 }).notNull(), // bug, tech_support, feature_request
+  priority: varchar('priority', { length: 10 }).default('medium'), // low, medium, high, urgent
+  status: varchar('status', { length: 20 }).default('open'), // open, in_progress, resolved, closed
+  assignedTo: integer('assigned_to').references(() => users.id),
+  createdBy: integer('created_by').notNull().references(() => users.id),
+  updatedBy: integer('updated_by').references(() => users.id),
+  dueDate: timestamp('due_date'),
+  resolutionNotes: text('resolution_notes'),
+  tags: text('tags'), // comma-separated tags
+  attachments: text('attachments'), // JSON string of file URLs
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  resolvedAt: timestamp('resolved_at'),
+});
+
+// Ticket Comments
+export const ticketComments = pgTable('ticket_comments', {
+  id: serial('id').primaryKey(),
+  ticketId: integer('ticket_id').notNull().references(() => tickets.id),
+  userId: integer('user_id').notNull().references(() => users.id),
+  comment: text('comment').notNull(),
+  isInternal: boolean('is_internal').default(false), // internal notes vs user-visible
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+// Ticket History (for audit trail)
+export const ticketHistory = pgTable('ticket_history', {
+  id: serial('id').primaryKey(),
+  ticketId: integer('ticket_id').notNull().references(() => tickets.id),
+  userId: integer('user_id').notNull().references(() => users.id),
+  action: varchar('action', { length: 100 }).notNull(), // created, updated, assigned, etc.
+  fieldName: varchar('field_name', { length: 100 }),
+  oldValue: text('old_value'),
+  newValue: text('new_value'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 export const invitations = pgTable('invitations', {
   id: serial('id').primaryKey(),
   teamId: integer('team_id')
@@ -153,6 +195,11 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   teamMembers: many(teamMembers),
   invitationsSent: many(invitations),
   mediaFiles: many(media_files),
+  ticketsCreated: many(tickets, { relationName: 'createdBy' }),
+  ticketsAssigned: many(tickets, { relationName: 'assignedTo' }),
+  ticketsUpdated: many(tickets, { relationName: 'updatedBy' }),
+  ticketComments: many(ticketComments),
+  ticketHistory: many(ticketHistory),
 }));
 
 export const teachingAssignmentsRelations = relations(teachingAssignments, ({ one }) => ({
@@ -221,6 +268,49 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   }),
 }));
 
+// Ticket Relations
+export const ticketsRelations = relations(tickets, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [tickets.createdBy],
+    references: [users.id],
+    relationName: 'createdBy',
+  }),
+  assignedTo: one(users, {
+    fields: [tickets.assignedTo],
+    references: [users.id],
+    relationName: 'assignedTo',
+  }),
+  updatedBy: one(users, {
+    fields: [tickets.updatedBy],
+    references: [users.id],
+    relationName: 'updatedBy',
+  }),
+  comments: many(ticketComments),
+  history: many(ticketHistory),
+}));
+
+export const ticketCommentsRelations = relations(ticketComments, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [ticketComments.ticketId],
+    references: [tickets.id],
+  }),
+  user: one(users, {
+    fields: [ticketComments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const ticketHistoryRelations = relations(ticketHistory, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [ticketHistory.ticketId],
+    references: [tickets.id],
+  }),
+  user: one(users, {
+    fields: [ticketHistory.userId],
+    references: [users.id],
+  }),
+}));
+
 export const invitationsRelations = relations(invitations, ({ one }) => ({
   team: one(teams, {
     fields: [invitations.teamId],
@@ -249,6 +339,12 @@ export type TeamMember = typeof teamMembers.$inferSelect;
 export type NewTeamMember = typeof teamMembers.$inferInsert;
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type NewActivityLog = typeof activityLogs.$inferInsert;
+export type Ticket = typeof tickets.$inferSelect;
+export type NewTicket = typeof tickets.$inferInsert;
+export type TicketComment = typeof ticketComments.$inferSelect;
+export type NewTicketComment = typeof ticketComments.$inferInsert;
+export type TicketHistory = typeof ticketHistory.$inferSelect;
+export type NewTicketHistory = typeof ticketHistory.$inferInsert;
 export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
 

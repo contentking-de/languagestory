@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserProgressSummary } from '@/components/user-progress-summary';
 import { 
   Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight,
-  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage
+  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage, Ticket
 } from 'lucide-react';
 
 interface NavItem {
@@ -44,6 +44,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
       ]
     },
     { href: '/dashboard/media', icon: FileImage, label: 'Media Library' },
+    { href: '/dashboard/tickets', icon: Ticket, label: 'Tickets' },
     { 
       href: '/dashboard/institutions', 
       icon: Building2, 

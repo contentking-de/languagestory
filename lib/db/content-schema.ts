@@ -560,4 +560,6 @@ export type NewDailyActivity = typeof daily_activity.$inferInsert;
 export type CompletedActivity = typeof completed_activities.$inferSelect;
 export type NewCompletedActivity = typeof completed_activities.$inferInsert;
 export type MediaFile = typeof media_files.$inferSelect;
-export type NewMediaFile = typeof media_files.$inferInsert; 
+export type NewMediaFile = typeof media_files.$inferInsert;
+
+ 
