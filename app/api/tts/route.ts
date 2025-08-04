@@ -11,10 +11,10 @@ const OPENAI_TTS_URL = 'https://api.openai.com/v1/audio/speech';
 
 // Voice mapping for different languages
 const VOICE_MAPPING = {
-  english: 'alloy',
-  french: 'echo',
+  english: 'fable',
+  french: 'fable',
   german: 'fable',
-  spanish: 'onyx'
+  spanish: 'fable'
 };
 
 // Language detection helper
@@ -100,6 +100,11 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('OpenAI TTS API error:', errorData);
+      console.error('Request details:', {
+        model: 'tts-1',
+        voice: selectedVoice,
+        text: text.substring(0, 100) + (text.length > 100 ? '...' : '')
+      });
       return NextResponse.json({ 
         error: 'Failed to generate speech',
         details: errorData 
