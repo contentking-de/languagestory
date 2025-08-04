@@ -25,14 +25,17 @@ import {
   Trash2
 } from 'lucide-react';
 import Link from 'next/link';
+import { CreateGameModal } from './CreateGameModal';
+import { MemoryGame, HangmanGame, FlashcardsGame } from './GameRenderers';
 
 interface DatabaseGame {
   id: number;
   title: string;
   description: string;
-  original_url: string;
-  normalized_url: string;
-  embed_html: string;
+  game_type: string;
+  original_url?: string;
+  normalized_url?: string;
+  embed_html?: string;
   thumbnail_url: string | null;
   author_name: string | null;
   author_url: string | null;
@@ -49,6 +52,7 @@ interface DatabaseGame {
   course_title?: string;
   course_language?: string;
   tags: string[] | null;
+  game_config?: any;
   is_active: boolean;
   is_featured: boolean;
   added_by: number;
@@ -100,6 +104,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [lessonFilter, setLessonFilter] = useState('all');
   const [assigningLesson, setAssigningLesson] = useState<number | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Check if user can create/edit games
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
@@ -121,7 +126,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
   const loadGamesFromDatabase = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/games/wordwall');
+      const response = await fetch('/api/games');
       if (response.ok) {
         const data = await response.json();
         setGames(data);
@@ -367,24 +372,25 @@ export function GamesClient({ userRole }: GamesClientProps) {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Gamepad2 className="h-8 w-8 text-indigo-600" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <Gamepad2 className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
             {canCreateEdit ? 'Educational Games Library' : 'Educational Games Overview'}
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">
             {canCreateEdit 
               ? 'Manage and organize interactive games from Wordwall'
               : 'Browse and play interactive games from Wordwall'
             }
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
           <Button
             onClick={() => loadGamesFromDatabase()}
             disabled={loading}
             variant="outline"
+            className="w-full sm:w-auto"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -394,18 +400,27 @@ export function GamesClient({ userRole }: GamesClientProps) {
             Refresh
           </Button>
           {canCreateEdit && (
-            <Button
-              onClick={loadSampleGames}
-              disabled={loading}
-              className="bg-blue-500 hover:bg-blue-600"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Play className="h-4 w-4 mr-2" />
-              )}
-              Load Sample Games
-            </Button>
+            <>
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Custom Game
+              </Button>
+              <Button
+                onClick={loadSampleGames}
+                disabled={loading}
+                className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Play className="h-4 w-4 mr-2" />
+                )}
+                Load Sample Games
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -635,12 +650,14 @@ export function GamesClient({ userRole }: GamesClientProps) {
                         <Play className="h-4 w-4 mr-2" />
                         {isExpanded ? 'Hide Game' : 'Play Game'}
                       </Button>
-                      <a href={game.original_url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm">
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          View on Wordwall
-                        </Button>
-                      </a>
+                      {game.game_type === 'wordwall' && game.original_url && (
+                        <a href={game.original_url} target="_blank" rel="noopener noreferrer">
+                          <Button variant="outline" size="sm">
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            View on Wordwall
+                          </Button>
+                        </a>
+                      )}
                     </div>
 
                     {/* Action Buttons */}
@@ -666,7 +683,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
                             onClick={async () => {
                               if (confirm('Are you sure you want to delete this game?')) {
                                 try {
-                                  const response = await fetch(`/api/games/wordwall/${game.id}`, {
+                                  const response = await fetch(`/api/games?id=${game.id}`, {
                                     method: 'DELETE'
                                   });
                                   if (response.ok) {
@@ -735,12 +752,25 @@ export function GamesClient({ userRole }: GamesClientProps) {
 
                     {/* Embedded Game */}
                     {isExpanded && (
-                      <div className="border rounded-lg overflow-hidden bg-gray-50">
-                        <div 
-                          className="w-full"
-                          dangerouslySetInnerHTML={{ __html: game.embed_html }}
-                          style={{ minHeight: `${game.height || 400}px` }}
-                        />
+                      <div className="border rounded-lg overflow-hidden bg-gray-50 p-4">
+                        {game.game_type === 'wordwall' && game.embed_html ? (
+                          <div 
+                            className="w-full"
+                            dangerouslySetInnerHTML={{ __html: game.embed_html }}
+                            style={{ minHeight: `${game.height || 400}px` }}
+                          />
+                        ) : game.game_type === 'memory' && game.game_config?.memory ? (
+                          <MemoryGame config={game.game_config.memory} />
+                        ) : game.game_type === 'hangman' && game.game_config?.hangman ? (
+                          <HangmanGame config={game.game_config.hangman} />
+                        ) : game.game_type === 'flashcards' && game.game_config?.flashcards ? (
+                          <FlashcardsGame config={game.game_config.flashcards} />
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <Gamepad2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                            <p>Game preview not available</p>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -748,7 +778,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
                     <div className="space-y-3 text-sm">
                       <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                         <div>
-                          <span className="font-medium">Dimensions:</span> {game.width || 'N/A'}x{game.height || 'N/A'}
+                          <span className="font-medium">Type:</span> {game.game_type}
                         </div>
                         <div>
                           <span className="font-medium">Category:</span> {game.category}
@@ -847,6 +877,16 @@ export function GamesClient({ userRole }: GamesClientProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Create Game Modal */}
+      <CreateGameModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onGameCreated={(newGame) => {
+          setGames([newGame, ...games]);
+          setShowCreateModal(false);
+        }}
+      />
     </div>
   );
 } 

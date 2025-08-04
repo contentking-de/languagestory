@@ -53,6 +53,11 @@ export const gameCategoryEnum = pgEnum('game_category', [
   'geography', 'vocabulary', 'grammar', 'general', 'quiz', 'matching', 'other'
 ]);
 
+export const gameTypeEnum = pgEnum('game_type', [
+  'wordwall', 'memory', 'hangman', 'word_search', 'crossword', 'flashcards', 
+  'fill_blank', 'multiple_choice', 'drag_drop', 'custom'
+]);
+
 // Main Courses table
 export const courses = pgTable('courses', {
   id: serial('id').primaryKey(),
@@ -221,14 +226,15 @@ export const games = pgTable('games', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 200 }).notNull(),
   description: text('description'),
-  original_url: varchar('original_url', { length: 500 }).notNull(),
-  normalized_url: varchar('normalized_url', { length: 500 }).notNull(),
-  embed_html: text('embed_html').notNull(),
+  game_type: gameTypeEnum('game_type').default('wordwall'), // Type of game
+  original_url: varchar('original_url', { length: 500 }), // Optional for custom games
+  normalized_url: varchar('normalized_url', { length: 500 }), // Optional for custom games
+  embed_html: text('embed_html'), // Optional for custom games
   thumbnail_url: varchar('thumbnail_url', { length: 500 }),
   author_name: varchar('author_name', { length: 200 }),
   author_url: varchar('author_url', { length: 500 }),
-  provider_name: varchar('provider_name', { length: 100 }).default('Wordwall'),
-  provider_url: varchar('provider_url', { length: 500 }).default('https://wordwall.net'),
+  provider_name: varchar('provider_name', { length: 100 }).default('Custom'),
+  provider_url: varchar('provider_url', { length: 500 }),
   width: integer('width'),
   height: integer('height'),
   category: gameCategoryEnum('category').default('general'),
@@ -237,6 +243,7 @@ export const games = pgTable('games', {
   estimated_duration: integer('estimated_duration'), // in minutes
   lesson_id: integer('lesson_id'), // Assign game to a specific lesson
   tags: json('tags'), // Array of tag strings
+  game_config: json('game_config'), // Game-specific configuration data
   is_active: boolean('is_active').default(true),
   is_featured: boolean('is_featured').default(false),
   added_by: integer('added_by').notNull(), // User ID who added the game
