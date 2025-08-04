@@ -26,25 +26,53 @@ export function FlagIcon({ language, size = "md", className = "" }: FlagIconProp
   
   if (!countryCode) {
     // Fallback to globe icon for unknown languages
-    return <span className={`${sizeClasses[size]} ${className}`}>🌐</span>;
+    return (
+      <div 
+        className={`inline-flex items-center justify-center ${className}`}
+        style={{
+          width: size === "sm" ? "20px" : size === "md" ? "24px" : size === "lg" ? "28px" : "32px",
+          height: size === "sm" ? "15px" : size === "md" ? "18px" : size === "lg" ? "21px" : "24px",
+        }}
+      >
+        <span className={`${sizeClasses[size]}`}>🌐</span>
+      </div>
+    );
   }
 
   // For "all languages" show a globe instead of UN flag
   if (language?.toLowerCase() === "all") {
-    return <span className={`${sizeClasses[size]} ${className}`}>🌐</span>;
+    return (
+      <div 
+        className={`inline-flex items-center justify-center ${className}`}
+        style={{
+          width: size === "sm" ? "20px" : size === "md" ? "24px" : size === "lg" ? "28px" : "32px",
+          height: size === "sm" ? "15px" : size === "md" ? "18px" : size === "lg" ? "21px" : "24px",
+        }}
+      >
+        <span className={`${sizeClasses[size]}`}>🌐</span>
+      </div>
+    );
   }
 
   return (
-    <ReactCountryFlag
-      countryCode={countryCode}
-      svg
+    <div 
+      className={`inline-flex items-center justify-center ${className}`}
       style={{
-        width: size === "sm" ? "16px" : size === "md" ? "20px" : size === "lg" ? "24px" : "28px",
-        height: size === "sm" ? "12px" : size === "md" ? "15px" : size === "lg" ? "18px" : "21px",
+        width: size === "sm" ? "20px" : size === "md" ? "24px" : size === "lg" ? "28px" : "32px",
+        height: size === "sm" ? "15px" : size === "md" ? "18px" : size === "lg" ? "21px" : "24px",
       }}
-      className={`inline-block ${className}`}
-      title={`${language.charAt(0).toUpperCase() + language.slice(1)} flag`}
-    />
+    >
+      <ReactCountryFlag
+        countryCode={countryCode}
+        svg
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "contain"
+        }}
+        title={`${language.charAt(0).toUpperCase() + language.slice(1)} flag`}
+      />
+    </div>
   );
 }
 

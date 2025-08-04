@@ -19,6 +19,7 @@ import {
   Languages
 } from 'lucide-react';
 import Link from 'next/link';
+import { FlagIcon } from '@/components/ui/flag-icon';
 
 interface Course {
   id: number;
@@ -91,12 +92,7 @@ export function CourseDetailClient({ userRole }: CourseDetailClientProps) {
   };
 
   const getLanguageFlag = (language: string) => {
-    const flags = {
-      french: '🇫🇷',
-      german: '🇩🇪',
-      spanish: '🇪🇸'
-    };
-    return flags[language as keyof typeof flags] || '🌐';
+    return <FlagIcon language={language} size="md" />;
   };
 
   const getLevelColor = (level: string) => {
@@ -188,7 +184,7 @@ export function CourseDetailClient({ userRole }: CourseDetailClientProps) {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{course.title}</h1>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-lg">{getLanguageFlag(course.language)}</span>
+              <FlagIcon language={course.language} size="lg" />
               <span className="text-gray-600 capitalize">{course.language}</span>
               <Badge className={getLevelColor(course.level)}>
                 {course.level}

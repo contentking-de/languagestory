@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { FlagIcon } from '@/components/ui/flag-icon';
 
 interface Course {
   id: number;
@@ -222,9 +223,24 @@ export default function CourseEditPage() {
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="french">🇫🇷 French</SelectItem>
-                      <SelectItem value="german">🇩🇪 German</SelectItem>
-                      <SelectItem value="spanish">🇪🇸 Spanish</SelectItem>
+                                      <SelectItem value="french">
+                  <div className="flex items-center gap-2">
+                    <FlagIcon language="french" size="sm" />
+                    <span>French</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="german">
+                  <div className="flex items-center gap-2">
+                    <FlagIcon language="german" size="sm" />
+                    <span>German</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="spanish">
+                  <div className="flex items-center gap-2">
+                    <FlagIcon language="spanish" size="sm" />
+                    <span>Spanish</span>
+                  </div>
+                </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

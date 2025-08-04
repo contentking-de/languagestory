@@ -17,6 +17,7 @@ import {
   Trophy,
   Flag
 } from 'lucide-react';
+import { FlagIcon } from '@/components/ui/flag-icon';
 import {
   Select,
   SelectContent,
@@ -115,12 +116,7 @@ export function CoursesClient({ userRole }: CoursesClientProps) {
   });
 
   const getLanguageFlag = (language: string) => {
-    const flags = {
-      french: '🇫🇷',
-      german: '🇩🇪',
-      spanish: '🇪🇸'
-    };
-    return flags[language as keyof typeof flags] || '🌐';
+    return <FlagIcon language={language} size="md" />;
   };
 
   const getLevelColor = (level: string) => {
@@ -251,9 +247,24 @@ export function CoursesClient({ userRole }: CoursesClientProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Languages</SelectItem>
-                <SelectItem value="french">🇫🇷 French</SelectItem>
-                <SelectItem value="german">🇩🇪 German</SelectItem>
-                <SelectItem value="spanish">🇪🇸 Spanish</SelectItem>
+                <SelectItem value="french">
+                  <div className="flex items-center gap-2">
+                    <FlagIcon language="french" size="sm" />
+                    <span>French</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="german">
+                  <div className="flex items-center gap-2">
+                    <FlagIcon language="german" size="sm" />
+                    <span>German</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="spanish">
+                  <div className="flex items-center gap-2">
+                    <FlagIcon language="spanish" size="sm" />
+                    <span>Spanish</span>
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -289,9 +300,11 @@ export function CoursesClient({ userRole }: CoursesClientProps) {
           <Card key={course.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{getLanguageFlag(course.language)}</span>
-                  <div>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-1">
+                    <FlagIcon language={course.language} size="lg" />
+                  </div>
+                  <div className="flex-1 min-w-0">
                     <CardTitle className="text-lg line-clamp-2">{course.title}</CardTitle>
                     <p className="text-sm text-gray-600 capitalize">{course.language}</p>
                   </div>
