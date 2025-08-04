@@ -11,6 +11,7 @@ import {
   Plus,
   Eye,
   Edit,
+  Trash2,
   Users,
   Clock,
   Trophy,
@@ -51,6 +52,7 @@ export function CoursesClient({ userRole }: CoursesClientProps) {
   const [languageFilter, setLanguageFilter] = useState('all');
   const [levelFilter, setLevelFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null);
 
   // Check if user can create/edit courses
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
@@ -70,6 +72,33 @@ export function CoursesClient({ userRole }: CoursesClientProps) {
       console.error('Error fetching courses:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: number, courseTitle: string) => {
+    if (!confirm(`Are you sure you want to delete "${courseTitle}"? This will permanently delete the course and all its lessons, quizzes, vocabulary, and other related content. This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingCourseId(courseId);
+    try {
+      const response = await fetch(`/api/courses/${courseId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove the course from the local state
+        setCourses(courses.filter(course => course.id !== courseId));
+        alert('Course deleted successfully');
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to delete course: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      alert('Failed to delete course. Please try again.');
+    } finally {
+      setDeletingCourseId(null);
     }
   };
 
@@ -305,12 +334,27 @@ export function CoursesClient({ userRole }: CoursesClientProps) {
                   </Button>
                 </Link>
                 {canCreateEdit && (
-                  <Link href={`/dashboard/content/courses/${course.id}/edit`} className="flex-1">
-                    <Button size="sm" className="w-full">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
+                  <>
+                    <Link href={`/dashboard/content/courses/${course.id}/edit`} className="flex-1">
+                      <Button size="sm" className="w-full">
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => handleDeleteCourse(course.id, course.title)}
+                      disabled={deletingCourseId === course.id}
+                      className="px-3"
+                    >
+                      {deletingCourseId === course.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </Button>
-                  </Link>
+                  </>
                 )}
               </div>
             </CardContent>
