@@ -30,7 +30,6 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
   // Full navigation for Super Admin and Content Creator
   const fullNavItems: NavItem[] = [
     { href: '/dashboard/welcome', icon: Heart, label: 'Welcome' },
-    { href: '/dashboard/ai-creator', icon: Brain, label: 'AI Creator' },
     { 
       href: '/dashboard/content', 
       icon: BookOpen, 
@@ -43,8 +42,6 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
       ]
     },
-    { href: '/dashboard/media', icon: FileImage, label: 'Media Library' },
-    { href: '/dashboard/tickets', icon: Ticket, label: 'Tickets' },
     { 
       href: '/dashboard/institutions', 
       icon: Building2, 
@@ -63,6 +60,13 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
         { href: '/dashboard/roles', icon: UserCheck, label: 'Roles' }
       ]
     }
+  ];
+
+  // Admin tools for Super Admin only
+  const adminTools: NavItem[] = [
+    { href: '/dashboard/ai-creator', icon: Brain, label: 'AI Creator' },
+    { href: '/dashboard/media', icon: FileImage, label: 'Media Library' },
+    { href: '/dashboard/tickets', icon: Ticket, label: 'Tickets' },
   ];
 
   // Stripped navigation for Teachers
@@ -217,6 +221,20 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
           <nav className="h-full overflow-y-auto p-4">
             {/* Navigation Items */}
             {navItems.map(item => renderNavItem(item))}
+            
+            {/* Admin Tools - Only show for super_admin */}
+            {userRole === 'super_admin' && (
+              <div className="mt-8">
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    Admin Tools
+                  </h3>
+                  <div className="space-y-1">
+                    {adminTools.map(item => renderNavItem(item))}
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Progress Summary - Only show for students */}
             {userRole === 'student' && (
