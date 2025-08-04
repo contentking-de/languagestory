@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { getUserWithTeamData } from '@/lib/db/queries';
 import EditTicketClient from '../components/EditTicketClient';
 
-export default async function EditTicketPage({ params }: { params: { id: string } }) {
+export default async function EditTicketPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getUserWithTeamData();
   
   if (!user) {
@@ -13,5 +13,6 @@ export default async function EditTicketPage({ params }: { params: { id: string 
     redirect('/dashboard');
   }
 
-  return <EditTicketClient ticketId={parseInt(params.id)} />;
+  const { id } = await params;
+  return <EditTicketClient ticketId={parseInt(id)} />;
 } 
