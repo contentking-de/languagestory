@@ -462,6 +462,8 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
                         text={lesson.cultural_information} 
                         language={lesson.course_language || 'english'} 
                         size="md"
+                        lessonId={lesson.id}
+                        type="cultural"
                       />
                     </div>
                   </div>

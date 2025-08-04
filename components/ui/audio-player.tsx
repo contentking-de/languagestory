@@ -10,6 +10,9 @@ interface AudioPlayerProps {
   voice?: string;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  vocabularyId?: number;
+  lessonId?: number;
+  type?: 'cultural';
 }
 
 export function AudioPlayer({ 
@@ -17,8 +20,13 @@ export function AudioPlayer({
   language, 
   voice, 
   className = '',
-  size = 'md'
+  size = 'md',
+  vocabularyId,
+  lessonId,
+  type
 }: AudioPlayerProps) {
+  // Version check to ensure we're using the latest code
+  console.log('AudioPlayer v2.1 loaded', { text, vocabularyId, lessonId, type });
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -53,28 +61,51 @@ export function AudioPlayer({
         body: JSON.stringify({
           text,
           language,
-          voice
+          voice,
+          vocabularyId,
+          lessonId,
+          type
         }),
       });
 
       if (response.ok) {
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+          console.log('TTS API response:', data); // Debug log
+        } catch (parseError) {
+          console.error('Failed to parse JSON response:', parseError);
+          const responseText = await response.text();
+          console.error('Raw response:', responseText);
+          return;
+        }
         
-        // Convert base64 to blob URL
-        const audioBlob = new Blob([
-          Uint8Array.from(atob(data.audio), c => c.charCodeAt(0))
-        ], { type: 'audio/mp3' });
+        // Validate response structure
+        if (!data.audio_url) {
+          console.error('Invalid response: missing audio_url', data);
+          return;
+        }
         
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
-        
-        // Play the audio
-        playAudio(url);
+        if (data.cached) {
+          // Audio was cached, use the URL directly
+          setAudioUrl(data.audio_url);
+          playAudio(data.audio_url);
+        } else {
+          // New audio generated, use the URL directly
+          setAudioUrl(data.audio_url);
+          playAudio(data.audio_url);
+        }
       } else {
         console.error('Failed to generate audio');
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
       }
     } catch (error) {
       console.error('Error generating audio:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+        console.error('Error stack:', error.stack);
+      }
     } finally {
       setIsLoading(false);
     }

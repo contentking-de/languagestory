@@ -245,6 +245,7 @@ export function VocabularyDetailClient({ userRole }: VocabularyDetailClientProps
                         text={lang.word} 
                         language={lang.language} 
                         size="md"
+                        vocabularyId={word.id}
                       />
                     </div>
                   </div>
@@ -274,6 +275,7 @@ export function VocabularyDetailClient({ userRole }: VocabularyDetailClientProps
                         text={word.context_sentence} 
                         language={word.course_language || 'english'} 
                         size="md"
+                        vocabularyId={word.id}
                       />
                     </div>
                   </div>

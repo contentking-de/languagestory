@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserWithTeamData } from '@/lib/db/queries';
+import { put } from '@vercel/blob';
+import { db } from '@/lib/db/drizzle';
+import { vocabulary, lessons } from '@/lib/db/content-schema';
+import { eq } from 'drizzle-orm';
 
 // OpenAI TTS API configuration
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -35,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { text, language, voice } = body;
+    const { text, language, voice, vocabularyId, lessonId, type } = body;
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
@@ -43,6 +47,35 @@ export async function POST(request: NextRequest) {
 
     if (!OPENAI_API_KEY) {
       return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+    }
+
+    // Check if audio already exists in database
+    let existingAudio = null;
+    if (vocabularyId) {
+      const [vocab] = await db
+        .select({ audio_url: vocabulary.audio_url })
+        .from(vocabulary)
+        .where(eq(vocabulary.id, vocabularyId))
+        .limit(1);
+      existingAudio = vocab?.audio_url;
+    } else if (lessonId && type === 'cultural') {
+      const [lesson] = await db
+        .select({ cultural_audio_url: lessons.cultural_audio_url })
+        .from(lessons)
+        .where(eq(lessons.id, lessonId))
+        .limit(1);
+      existingAudio = lesson?.cultural_audio_url;
+    }
+
+    // If audio exists, return it
+    if (existingAudio) {
+      return NextResponse.json({
+        success: true,
+        audio_url: existingAudio,
+        cached: true,
+        format: 'mp3',
+        text: text
+      });
     }
 
     // Determine voice based on language or use provided voice
@@ -75,11 +108,39 @@ export async function POST(request: NextRequest) {
 
     // Get the audio data
     const audioBuffer = await response.arrayBuffer();
-    const audioBase64 = Buffer.from(audioBuffer).toString('base64');
+    
+    // Upload to Vercel Blob
+    const filename = `tts-${Date.now()}-${Math.random().toString(36).substring(7)}.mp3`;
+    const blob = await put(filename, audioBuffer, {
+      access: 'public',
+      addRandomSuffix: false,
+    });
+
+    // Store in database
+    if (vocabularyId) {
+      await db
+        .update(vocabulary)
+        .set({
+          audio_blob_id: blob.url.split('/').pop()?.split('?')[0] || filename,
+          audio_url: blob.url,
+          audio_generated_at: new Date(),
+        })
+        .where(eq(vocabulary.id, vocabularyId));
+    } else if (lessonId && type === 'cultural') {
+      await db
+        .update(lessons)
+        .set({
+          cultural_audio_blob_id: blob.url.split('/').pop()?.split('?')[0] || filename,
+          cultural_audio_url: blob.url,
+          cultural_audio_generated_at: new Date(),
+        })
+        .where(eq(lessons.id, lessonId));
+    }
 
     return NextResponse.json({
       success: true,
-      audio: audioBase64,
+      audio_url: blob.url,
+      cached: false,
       format: 'mp3',
       voice: selectedVoice,
       text: text

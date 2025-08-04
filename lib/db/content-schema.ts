@@ -92,6 +92,10 @@ export const lessons = pgTable('lessons', {
   audio_file: varchar('audio_file', { length: 255 }),
   video_file: varchar('video_file', { length: 255 }),
   cultural_information: text('cultural_information'), // Cultural context and information
+  // Audio storage fields for cultural information TTS
+  cultural_audio_blob_id: varchar('cultural_audio_blob_id', { length: 255 }),
+  cultural_audio_url: text('cultural_audio_url'),
+  cultural_audio_generated_at: timestamp('cultural_audio_generated_at'),
   wp_lesson_id: integer('wp_lesson_id'), // Reference to original WordPress lesson
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
@@ -186,6 +190,10 @@ export const vocabulary = pgTable('vocabulary', {
   word_type: varchar('word_type', { length: 50 }), // noun, verb, adjective, etc.
   lesson_id: integer('lesson_id'),
   topic_id: integer('topic_id'),
+  // Audio storage fields for TTS
+  audio_blob_id: varchar('audio_blob_id', { length: 255 }),
+  audio_url: text('audio_url'),
+  audio_generated_at: timestamp('audio_generated_at'),
   created_at: timestamp('created_at').defaultNow(),
 });
 

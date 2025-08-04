@@ -382,6 +382,7 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                         text={word.word_english} 
                         language="english" 
                         size="sm"
+                        vocabularyId={word.id}
                       />
                     </div>
                     <div className="flex items-center gap-2 mt-2">
@@ -415,6 +416,7 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                         text={word.word_french} 
                         language="french" 
                         size="sm"
+                        vocabularyId={word.id}
                       />
                     </div>
                   )}
@@ -426,6 +428,7 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                         text={word.word_german} 
                         language="german" 
                         size="sm"
+                        vocabularyId={word.id}
                       />
                     </div>
                   )}
@@ -437,6 +440,7 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                         text={word.word_spanish} 
                         language="spanish" 
                         size="sm"
+                        vocabularyId={word.id}
                       />
                     </div>
                   )}
