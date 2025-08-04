@@ -46,6 +46,13 @@ interface Lesson {
   cultural_information?: string;
 }
 
+interface Course {
+  id: number;
+  title: string;
+  language: string;
+  level: string;
+}
+
 interface MediaFile {
   id: number;
   name: string;
@@ -61,6 +68,7 @@ export default function LessonEditPage() {
   const lessonId = params.id as string;
   
   const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -73,6 +81,7 @@ export default function LessonEditPage() {
     estimated_duration: 30,
     points_value: 10,
     is_published: false,
+    course_id: 0,
     cover_image: '',
     audio_file: '',
     video_file: '',
@@ -92,6 +101,7 @@ export default function LessonEditPage() {
   useEffect(() => {
     if (lessonId) {
       fetchLesson();
+      fetchCourses();
     }
   }, [lessonId]);
 
@@ -112,6 +122,7 @@ export default function LessonEditPage() {
           estimated_duration: lessonData.estimated_duration || 30,
           points_value: lessonData.points_value || 10,
           is_published: lessonData.is_published,
+          course_id: lessonData.course_id,
           cover_image: lessonData.cover_image || '',
           audio_file: lessonData.audio_file || '',
           video_file: lessonData.video_file || '',
@@ -170,6 +181,18 @@ export default function LessonEditPage() {
       console.error('Error fetching lesson:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCourses = async () => {
+    try {
+      const response = await fetch('/api/courses');
+      if (response.ok) {
+        const coursesData = await response.json();
+        setCourses(coursesData);
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error);
     }
   };
 
@@ -265,7 +288,7 @@ export default function LessonEditPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Edit Lesson</h1>
           <p className="text-gray-600 mt-1">
-            Course: {lesson.course_title}
+            Course: {courses.find(c => c.id === formData.course_id)?.title || lesson?.course_title || 'Loading...'}
           </p>
         </div>
       </div>
@@ -281,7 +304,7 @@ export default function LessonEditPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div>
                   <Label htmlFor="title">Lesson Title</Label>
                   <Input
@@ -304,6 +327,25 @@ export default function LessonEditPage() {
                     required
                     className="mt-1 font-mono"
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="course">Course</Label>
+                  <Select 
+                    value={formData.course_id.toString()} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, course_id: parseInt(value) }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {courses.map((course) => (
+                        <SelectItem key={course.id} value={course.id.toString()}>
+                          {course.title} ({course.language} - {course.level})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
