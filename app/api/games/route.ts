@@ -110,12 +110,7 @@ export async function POST(request: Request) {
       .returning();
 
     // Log the activity
-    await logGameActivityServer(
-      user.teamId,
-      user.id,
-      'CREATE_GAME',
-      newGame.id
-    );
+    await logGameActivityServer('CREATE_GAME');
 
     return NextResponse.json(newGame, { status: 201 });
   } catch (error) {
@@ -208,12 +203,7 @@ export async function PUT(request: Request) {
       .where(eq(games.id, gameId))
       .returning();
 
-    await logGameActivityServer(
-      user.teamId,
-      user.id,
-      'UPDATE_GAME',
-      gameId
-    );
+    await logGameActivityServer('CREATE_GAME');
 
     return NextResponse.json(updatedGame);
 
