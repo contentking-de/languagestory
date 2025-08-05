@@ -127,6 +127,105 @@ export async function POST(request: Request) {
   }
 }
 
+// PUT: Update an existing game
+export async function PUT(request: Request) {
+  try {
+    const user = await getUserWithTeamData();
+    if (!user || (user.role !== 'super_admin' && user.role !== 'content_creator')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Game ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const gameId = parseInt(id);
+    if (isNaN(gameId)) {
+      return NextResponse.json(
+        { error: 'Invalid game ID' },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json();
+    const {
+      title,
+      description,
+      game_type,
+      language,
+      category,
+      difficulty_level,
+      estimated_duration,
+      lesson_id,
+      tags,
+      is_featured
+    } = body;
+
+    // Check if game exists
+    const [existingGame] = await db
+      .select()
+      .from(games)
+      .where(eq(games.id, gameId))
+      .limit(1);
+
+    if (!existingGame) {
+      return NextResponse.json(
+        { error: 'Game not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check permissions (content creators can only edit their own games)
+    if (user.role !== 'super_admin' && existingGame.added_by !== user.id) {
+      return NextResponse.json(
+        { error: 'You can only edit games you created' },
+        { status: 403 }
+      );
+    }
+
+    // Update the game
+    const [updatedGame] = await db
+      .update(games)
+      .set({
+        title: title || existingGame.title,
+        description: description || existingGame.description,
+        game_type: game_type || existingGame.game_type,
+        language: language || null,
+        category: category || existingGame.category,
+        difficulty_level: difficulty_level || existingGame.difficulty_level,
+        estimated_duration: estimated_duration || null,
+        lesson_id: lesson_id || null,
+        tags: tags || null,
+        is_featured: is_featured !== undefined ? is_featured : existingGame.is_featured,
+        updated_at: new Date(),
+      })
+      .where(eq(games.id, gameId))
+      .returning();
+
+    await logGameActivityServer(
+      user.teamId,
+      user.id,
+      'UPDATE_GAME',
+      gameId
+    );
+
+    return NextResponse.json(updatedGame);
+
+  } catch (error) {
+    console.error('Error updating game:', error);
+    return NextResponse.json(
+      { error: 'Failed to update game', details: error },
+      { status: 500 }
+    );
+  }
+}
+
 // DELETE: Delete a game
 export async function DELETE(request: Request) {
   try {

@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { CreateGameModal } from './CreateGameModal';
-import { MemoryGame, HangmanGame, FlashcardsGame } from './GameRenderers';
+import { MemoryGame, HangmanGame, FlashcardsGame, WordSearchGame } from './GameRenderers';
 
 interface DatabaseGame {
   id: number;
@@ -765,6 +765,8 @@ export function GamesClient({ userRole }: GamesClientProps) {
                           <HangmanGame config={game.game_config.hangman} />
                         ) : game.game_type === 'flashcards' && game.game_config?.flashcards ? (
                           <FlashcardsGame config={game.game_config.flashcards} />
+                        ) : game.game_type === 'word_search' && game.game_config?.wordSearch ? (
+                          <WordSearchGame config={game.game_config.wordSearch} />
                         ) : (
                           <div className="text-center py-8 text-gray-500">
                             <Gamepad2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />

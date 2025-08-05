@@ -25,14 +25,16 @@ interface DatabaseGame {
   id: number;
   title: string;
   description: string;
-  original_url: string;
-  normalized_url: string;
-  embed_html: string;
+  game_type: string;
+  game_config?: any;
+  original_url?: string;
+  normalized_url?: string;
+  embed_html?: string;
   thumbnail_url: string | null;
   author_name: string | null;
   author_url: string | null;
   provider_name: string;
-  provider_url: string;
+  provider_url?: string;
   width: number | null;
   height: number | null;
   category: string;
@@ -72,6 +74,8 @@ export default function GameEditPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    game_type: '',
+    game_config: null as any,
     category: '',
     language: '',
     difficulty_level: 1,
@@ -90,13 +94,15 @@ export default function GameEditPage() {
 
   const fetchGame = async () => {
     try {
-      const response = await fetch(`/api/games/wordwall/${gameId}`);
+      const response = await fetch(`/api/games?id=${gameId}`);
       if (response.ok) {
         const gameData = await response.json();
         setGame(gameData);
         setFormData({
           title: gameData.title || '',
           description: gameData.description || '',
+          game_type: gameData.game_type || 'wordwall',
+          game_config: gameData.game_config || null,
           category: gameData.category || '',
           language: gameData.language || '',
           difficulty_level: gameData.difficulty_level || 1,
@@ -130,7 +136,7 @@ export default function GameEditPage() {
     setSaving(true);
 
     try {
-      const response = await fetch(`/api/games/wordwall/${gameId}`, {
+      const response = await fetch(`/api/games?id=${gameId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -238,6 +244,25 @@ export default function GameEditPage() {
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     placeholder="Describe the game and what students will learn..."
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="game_type">Game Type</Label>
+                  <Select 
+                    value={formData.game_type} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, game_type: value }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select game type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="wordwall">🎮 Wordwall</SelectItem>
+                      <SelectItem value="memory">🧠 Memory</SelectItem>
+                      <SelectItem value="hangman">🎯 Hangman</SelectItem>
+                      <SelectItem value="word_search">🔍 Word Search</SelectItem>
+                      <SelectItem value="flashcards">📝 Flashcards</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -386,14 +411,51 @@ export default function GameEditPage() {
                 </p>
               </div>
 
+              {/* Game Configuration Display */}
+              {formData.game_type !== 'wordwall' && formData.game_config && (
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-green-800 mb-2">Game Configuration</h3>
+                  <div className="text-sm text-green-700 space-y-1">
+                    <p><strong>Game Type:</strong> {formData.game_type}</p>
+                    {formData.game_type === 'memory' && formData.game_config.memory && (
+                      <div>
+                        <p><strong>Memory Cards:</strong> {formData.game_config.memory.cards?.length || 0} pairs</p>
+                        <p><strong>Grid Size:</strong> {formData.game_config.memory.gridSize || 'Auto'}</p>
+                      </div>
+                    )}
+                    {formData.game_type === 'word_search' && formData.game_config.wordSearch && (
+                      <div>
+                        <p><strong>Words:</strong> {formData.game_config.wordSearch.words?.length || 0} words</p>
+                        <p><strong>Grid Size:</strong> {formData.game_config.wordSearch.gridSize || 'Auto'}</p>
+                      </div>
+                    )}
+                    {formData.game_type === 'hangman' && formData.game_config.hangman && (
+                      <div>
+                        <p><strong>Words:</strong> {formData.game_config.hangman.words?.length || 0} words</p>
+                        <p><strong>Max Attempts:</strong> {formData.game_config.hangman.maxAttempts || 6}</p>
+                      </div>
+                    )}
+                    {formData.game_type === 'flashcards' && formData.game_config.flashcards && (
+                      <div>
+                        <p><strong>Cards:</strong> {formData.game_config.flashcards.cards?.length || 0} cards</p>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-green-600 mt-2">
+                    Note: Game configuration can only be modified when creating a new game.
+                  </p>
+                </div>
+              )}
+
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h3 className="font-medium text-blue-800 mb-2">Game Information</h3>
                 <div className="text-sm text-blue-700 space-y-1">
-                  <p><strong>Original URL:</strong> {game.original_url}</p>
+                  <p><strong>Game Type:</strong> {game.game_type || 'wordwall'}</p>
                   <p><strong>Provider:</strong> {game.provider_name}</p>
                   <p><strong>Author:</strong> {game.author_name || 'Unknown'}</p>
                   <p><strong>Usage Count:</strong> {game.usage_count} times</p>
                   <p><strong>Added:</strong> {new Date(game.created_at).toLocaleDateString()}</p>
+                  {game.original_url && <p><strong>Original URL:</strong> {game.original_url}</p>}
                 </div>
               </div>
 

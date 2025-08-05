@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -520,6 +520,367 @@ export function FlashcardsGame({ config }: FlashcardsGameProps) {
           {isPlaying ? 'Pause Timer' : 'Start Timer'}
         </Button>
       </div>
+    </div>
+  );
+} 
+
+interface WordSearchGameProps {
+  config: {
+    words: string[];
+    gridSize: number;
+    directions: string[];
+  };
+}
+
+export function WordSearchGame({ config }: WordSearchGameProps) {
+  const [foundWords, setFoundWords] = useState<string[]>([]);
+  const [selectedCells, setSelectedCells] = useState<number[][]>([]);
+  const [gameCompleted, setGameCompleted] = useState(false);
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  const [gameStarted, setGameStarted] = useState(false);
+
+  // Helper functions for word placement
+  const canPlaceWord = (grid: string[][], word: string, row: number, col: number, direction: string): boolean => {
+    const size = grid.length;
+    const wordLength = word.length;
+    
+    for (let i = 0; i < wordLength; i++) {
+      let r = row, c = col;
+      
+      switch (direction) {
+        case 'horizontal':
+          c = col + i;
+          break;
+        case 'vertical':
+          r = row + i;
+          break;
+        case 'diagonal':
+          r = row + i;
+          c = col + i;
+          break;
+      }
+      
+      if (r < 0 || r >= size || c < 0 || c >= size || (grid[r][c] !== '' && grid[r][c] !== word[i])) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const placeWord = (grid: string[][], word: string, row: number, col: number, direction: string) => {
+    for (let i = 0; i < word.length; i++) {
+      let r = row, c = col;
+      
+      switch (direction) {
+        case 'horizontal':
+          c = col + i;
+          break;
+        case 'vertical':
+          r = row + i;
+          break;
+        case 'diagonal':
+          r = row + i;
+          c = col + i;
+          break;
+      }
+      
+      grid[r][c] = word[i];
+    }
+  };
+
+  const getWordPositions = (row: number, col: number, direction: string, length: number): number[][] => {
+    const positions: number[][] = [];
+    for (let i = 0; i < length; i++) {
+      let r = row, c = col;
+      
+      switch (direction) {
+        case 'horizontal':
+          c = col + i;
+          break;
+        case 'vertical':
+          r = row + i;
+          break;
+        case 'diagonal':
+          r = row + i;
+          c = col + i;
+          break;
+      }
+      
+      positions.push([r, c]);
+    }
+    return positions;
+  };
+
+  // Generate the word search grid - use useRef to prevent re-generation on timer updates
+  const gridRef = useRef<{ grid: string[][], wordPositions: { [key: string]: number[][] } } | null>(null);
+  
+  if (!gridRef.current) {
+    // Use a more manageable grid size: 10 columns x 15 rows instead of 15x15
+    const cols = 10;
+    const rows = Math.ceil((config.gridSize || 15) * 1.5); // More rows to compensate for fewer columns
+    const grid = Array(rows).fill(null).map(() => Array(cols).fill(''));
+    const wordPositions: { [key: string]: number[][] } = {};
+    
+    // Place words in the grid
+    config.words.forEach(word => {
+      const upperWord = word.toUpperCase();
+      let placed = false;
+      let attempts = 0;
+      
+      while (!placed && attempts < 100) {
+        const direction = config.directions[Math.floor(Math.random() * config.directions.length)];
+        const row = Math.floor(Math.random() * rows);
+        const col = Math.floor(Math.random() * cols);
+        
+        if (canPlaceWord(grid, upperWord, row, col, direction)) {
+          placeWord(grid, upperWord, row, col, direction);
+          wordPositions[word] = getWordPositions(row, col, direction, upperWord.length);
+          console.log(`Placed word "${word}" at [${row},${col}] direction: ${direction}, positions:`, wordPositions[word]);
+          placed = true;
+        }
+        attempts++;
+      }
+      
+      if (!placed) {
+        console.warn(`Failed to place word: ${word}`);
+      }
+    });
+    
+    // Check for overlapping words
+    console.log('Final word positions:', wordPositions);
+    Object.entries(wordPositions).forEach(([word1, positions1]) => {
+      Object.entries(wordPositions).forEach(([word2, positions2]) => {
+        if (word1 !== word2) {
+          const overlap = positions1.filter(pos1 => 
+            positions2.some(pos2 => pos1[0] === pos2[0] && pos1[1] === pos2[1])
+          );
+          if (overlap.length > 0) {
+            console.warn(`Overlap between "${word1}" and "${word2}":`, overlap);
+          }
+        }
+      });
+    });
+    
+    // Fill empty cells with random letters
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        if (grid[i][j] === '') {
+          grid[i][j] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+        }
+      }
+    }
+    
+    gridRef.current = { grid, wordPositions };
+  }
+  
+  const { grid, wordPositions } = gridRef.current;
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (gameStarted && !gameCompleted) {
+      timer = setInterval(() => {
+        setTimeElapsed(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [gameStarted, gameCompleted]);
+
+  const handleCellClick = (row: number, col: number) => {
+    if (!gameStarted) setGameStarted(true);
+    if (gameCompleted) return;
+    
+    console.log(`=== CELL CLICK: [${row}, ${col}] ===`);
+    console.log('Current found words:', foundWords);
+    console.log('Current selected cells:', selectedCells);
+    
+    // Check if this cell is part of a word
+    const clickedCell = [row, col];
+    const isPartOfWord = Object.values(wordPositions).some(positions => 
+      positions.some(pos => pos[0] === row && pos[1] === col)
+    );
+    
+    if (!isPartOfWord) {
+      console.log('Cell is not part of any word, ignoring');
+      return;
+    }
+    
+    console.log('Cell is part of a word, adding to selection');
+    
+    // Add to selection (don't toggle)
+    setSelectedCells(prev => {
+      const isSelected = prev.some(cell => cell[0] === row && cell[1] === col);
+      if (isSelected) {
+        console.log('Cell already selected, keeping current selection');
+        return prev; // Keep it selected
+      } else {
+        const newSelection = [...prev, clickedCell];
+        console.log('New selection:', newSelection);
+        
+        // Check each word individually
+        Object.entries(wordPositions).forEach(([word, positions]) => {
+          console.log(`\n--- Checking word: "${word}" ---`);
+          console.log('Word positions:', positions);
+          console.log('Current selection:', newSelection);
+          
+          // Check if ALL positions of this word are in the current selection
+          const isFound = positions.every(pos => 
+            newSelection.some(cell => cell[0] === pos[0] && cell[1] === pos[1])
+          );
+          
+          // Check if the selection length matches the word length (exact match)
+          const isExactMatch = newSelection.length === positions.length;
+          
+          console.log(`isFound: ${isFound}, isExactMatch: ${isExactMatch}, alreadyFound: ${foundWords.includes(word)}`);
+          
+          // Only consider if not already found, all positions match, and exact length match
+          if (isFound && isExactMatch && !foundWords.includes(word)) {
+            console.log(`*** FOUND NEW WORD: "${word}" ***`);
+            setFoundWords(prevFound => {
+              // Double-check that the word isn't already in the list
+              if (prevFound.includes(word)) {
+                console.log(`*** WORD "${word}" ALREADY EXISTS, IGNORING ***`);
+                return prevFound;
+              }
+              
+              const newFoundWords = [...prevFound, word];
+              console.log(`*** UPDATED FOUND WORDS: ${newFoundWords.join(', ')} (${newFoundWords.length}/${config.words.length}) ***`);
+              
+              // Check if all words are found
+              if (newFoundWords.length === config.words.length) {
+                console.log('*** GAME COMPLETED! ***');
+                setGameCompleted(true);
+              }
+              
+              return newFoundWords;
+            });
+          }
+        });
+        
+        return newSelection;
+      }
+    });
+  };
+
+  const resetGame = () => {
+    setFoundWords([]);
+    setSelectedCells([]);
+    setGameCompleted(false);
+    setTimeElapsed(0);
+    setGameStarted(false);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const isCellSelected = (row: number, col: number) => {
+    return selectedCells.some(([r, c]) => r === row && c === col);
+  };
+
+  const isCellInFoundWord = (row: number, col: number) => {
+    return foundWords.some(word => 
+      wordPositions[word]?.some(([r, c]) => r === row && c === col)
+    );
+  };
+
+  // Debug: Log current state
+  useEffect(() => {
+    console.log('Current found words:', foundWords);
+    console.log('Word positions:', wordPositions);
+  }, [foundWords, wordPositions]);
+
+  return (
+    <div className="space-y-4">
+      {/* Game Header */}
+      <div className="flex flex-col sm:flex-row items-center justify-between bg-gradient-to-r from-green-500 to-emerald-600 text-white p-3 sm:p-4 rounded-lg gap-3 sm:gap-0">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="text-center">
+            <div className="text-xs sm:text-sm opacity-90">Time</div>
+            <div className="text-lg sm:text-xl font-bold">{formatTime(timeElapsed)}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs sm:text-sm opacity-90">Found</div>
+            <div className="text-lg sm:text-xl font-bold">{foundWords.length}/{config.words.length}</div>
+          </div>
+        </div>
+        <Button onClick={resetGame} variant="outline" size="sm" className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-xs">
+          <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          Reset
+        </Button>
+      </div>
+
+      {/* Word List */}
+      <div className="bg-gray-50 p-3 rounded-lg">
+        <h4 className="font-semibold mb-2 text-sm">Words to Find:</h4>
+        <div className="flex flex-wrap gap-2">
+          {config.words.map((word, index) => (
+            <span
+              key={index}
+              className={`px-2 py-1 rounded text-xs font-medium ${
+                foundWords.includes(word)
+                  ? 'bg-green-100 text-green-800 line-through'
+                  : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              {word}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Word Search Grid */}
+      <div className="flex justify-center overflow-x-auto px-4">
+        <div 
+          className="grid gap-0.5 sm:gap-1 p-4"
+          style={{ 
+            gridTemplateColumns: `repeat(${grid[0].length}, 28px)`,
+            width: 'fit-content'
+          }}
+        >
+          {grid.map((row, rowIndex) =>
+            row.map((cell, colIndex) => (
+              <div
+                key={`${rowIndex}-${colIndex}`}
+                className={`
+                  w-7 h-7 sm:w-8 sm:h-8
+                  flex items-center justify-center 
+                  text-xs sm:text-sm font-bold cursor-pointer rounded
+                  transition-all duration-200 select-none overflow-hidden
+                  ${
+                    isCellInFoundWord(rowIndex, colIndex)
+                      ? 'bg-green-500 text-white'
+                      : isCellSelected(rowIndex, colIndex)
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white border border-gray-300 hover:bg-gray-100'
+                  }
+                `}
+                onClick={() => handleCellClick(rowIndex, colIndex)}
+              >
+                <span className="truncate">{cell}</span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Instructions */}
+      <div className="text-center text-sm text-gray-600">
+        <p>Click on letters to select them. Find all the hidden words!</p>
+      </div>
+
+      {/* Game Completion */}
+      {gameCompleted && (
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center p-4 sm:p-6 rounded-lg">
+          <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-xl sm:text-2xl font-bold mb-2">Congratulations!</h3>
+          <p className="mb-3 sm:mb-4 text-sm sm:text-base">You've found all the words!</p>
+          <div className="text-sm">
+            <div className="font-bold">Final Time: {formatTime(timeElapsed)}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
