@@ -1270,7 +1270,7 @@ export function WordAssociationGame({ config }: WordAssociationGameProps) {
       {/* Word Grid */}
       <div className="bg-white border border-gray-200 p-4 rounded-lg">
         <div className="text-sm text-gray-600 mb-3">Click to select words:</div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="flex flex-wrap gap-3">
           {allWords.map((word, index) => {
             const status = getWordStatus(word);
             return (
@@ -1280,6 +1280,7 @@ export function WordAssociationGame({ config }: WordAssociationGameProps) {
                 disabled={status === 'matched'}
                 className={`
                   px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer
+                  min-h-[44px] min-w-[80px] max-w-[200px] flex items-center justify-center text-center
                   ${status === 'matched' 
                     ? 'bg-green-500 text-white cursor-not-allowed' 
                     : status === 'selected'
@@ -1288,7 +1289,7 @@ export function WordAssociationGame({ config }: WordAssociationGameProps) {
                   }
                 `}
               >
-                {word}
+                <span className="break-words leading-tight">{word}</span>
               </button>
             );
           })}

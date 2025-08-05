@@ -823,22 +823,20 @@ function WordAssociationGameConfig({ config, onChange }: { config?: any; onChang
 
         <div>
           <Label htmlFor="maxAttempts">Maximum Attempts</Label>
-          <Select value={maxAttempts.toString()} onValueChange={(value) => {
-            const attempts = parseInt(value);
-            setMaxAttempts(attempts);
-            onChange({ pairs, showTimer, shuffle, maxAttempts: attempts });
-          }}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1 attempt</SelectItem>
-              <SelectItem value="2">2 attempts</SelectItem>
-              <SelectItem value="3">3 attempts</SelectItem>
-              <SelectItem value="5">5 attempts</SelectItem>
-              <SelectItem value="10">10 attempts</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            id="maxAttempts"
+            type="number"
+            min="1"
+            max="100"
+            value={maxAttempts}
+            onChange={(e) => {
+              const attempts = parseInt(e.target.value) || 1;
+              setMaxAttempts(attempts);
+              onChange({ pairs, showTimer, shuffle, maxAttempts: attempts });
+            }}
+            placeholder="Enter number of attempts"
+            className="w-full"
+          />
         </div>
       </div>
     </div>
