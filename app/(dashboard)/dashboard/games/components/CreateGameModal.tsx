@@ -19,7 +19,8 @@ import {
   BookOpen,
   Clock,
   Star,
-  Shuffle
+  Shuffle,
+  Link
 } from 'lucide-react';
 
 interface CreateGameModalProps {
@@ -50,6 +51,12 @@ interface GameConfig {
     showTimer: boolean;
     allowHints: boolean;
   };
+  wordAssociation?: {
+    pairs: Array<{ id: string; word1: string; word2: string; category?: string }>;
+    showTimer: boolean;
+    shuffle: boolean;
+    maxAttempts: number;
+  };
   flashcards?: {
     cards: Array<{ front: string; back: string; image?: string }>;
     showTimer: boolean;
@@ -62,6 +69,7 @@ const gameTypes = [
   { value: 'hangman', label: 'Hangman', icon: Target, description: 'Guess the word letter by letter' },
   { value: 'word_search', label: 'Word Search', icon: BookOpen, description: 'Find hidden words in a grid' },
   { value: 'word_mixup', label: 'Word Mixup', icon: Shuffle, description: 'Reorder scrambled words to form correct sentences' },
+  { value: 'word_association', label: 'Word Association', icon: Link, description: 'Match related word pairs to build vocabulary connections' },
   { value: 'flashcards', label: 'Flashcards', icon: Star, description: 'Interactive flashcards for vocabulary practice' },
 ];
 
@@ -167,6 +175,21 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
       }
     }
 
+    if (selectedGameType === 'word_association' && (!gameConfig.wordAssociation || !gameConfig.wordAssociation.pairs || gameConfig.wordAssociation.pairs.length === 0)) {
+      alert('Please add at least one word pair for word association');
+      setLoading(false);
+      return;
+    }
+
+    if (selectedGameType === 'word_association' && gameConfig.wordAssociation?.pairs) {
+      const emptyPairs = gameConfig.wordAssociation.pairs.filter(pair => !pair.word1.trim() || !pair.word2.trim());
+      if (emptyPairs.length > 0) {
+        alert('Please fill in all word pair fields (both words)');
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const requestBody = {
         ...formData,
@@ -257,6 +280,8 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
         return <WordSearchGameConfig config={gameConfig.wordSearch} onChange={(config) => setGameConfig({ ...gameConfig, wordSearch: config })} />;
       case 'word_mixup':
         return <WordMixupGameConfig config={gameConfig.wordMixup} onChange={(config) => setGameConfig({ ...gameConfig, wordMixup: config })} />;
+      case 'word_association':
+        return <WordAssociationGameConfig config={gameConfig.wordAssociation} onChange={(config) => setGameConfig({ ...gameConfig, wordAssociation: config })} />;
       case 'flashcards':
         return <FlashcardsGameConfig config={gameConfig.flashcards} onChange={(config) => setGameConfig({ ...gameConfig, flashcards: config })} />;
       default:
@@ -698,6 +723,122 @@ function WordMixupGameConfig({ config, onChange }: { config?: any; onChange: (co
             className="rounded border-gray-300"
           />
           <Label htmlFor="allowHints">Allow Hints</Label>
+        </div>
+      </div>
+    </div>
+  );
+} 
+
+function WordAssociationGameConfig({ config, onChange }: { config?: any; onChange: (config: any) => void }) {
+  const [pairs, setPairs] = useState<Array<{ id: string; word1: string; word2: string; category?: string }>>(
+    config?.pairs || [{ id: '1', word1: '', word2: '', category: '' }]
+  );
+  const [showTimer, setShowTimer] = useState(config?.showTimer ?? true);
+  const [shuffle, setShuffle] = useState(config?.shuffle ?? true);
+  const [maxAttempts, setMaxAttempts] = useState(config?.maxAttempts ?? 3);
+
+  const addPair = () => {
+    const newId = (pairs.length + 1).toString();
+    setPairs([...pairs, { id: newId, word1: '', word2: '', category: '' }]);
+  };
+
+  const updatePair = (index: number, field: string, value: string) => {
+    const newPairs = [...pairs];
+    newPairs[index] = { ...newPairs[index], [field]: value };
+    setPairs(newPairs);
+    onChange({ pairs: newPairs, showTimer, shuffle, maxAttempts });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold">Word Pairs</h4>
+        <Button type="button" variant="outline" size="sm" onClick={addPair}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Pair
+        </Button>
+      </div>
+      
+      <div className="space-y-4">
+        {pairs.map((pair, index) => (
+          <div key={pair.id} className="border rounded-lg p-3 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div>
+                <Label>Word 1</Label>
+                <Input
+                  value={pair.word1}
+                  onChange={(e) => updatePair(index, 'word1', e.target.value)}
+                  placeholder="Enter first word"
+                />
+              </div>
+              <div>
+                <Label>Word 2</Label>
+                <Input
+                  value={pair.word2}
+                  onChange={(e) => updatePair(index, 'word2', e.target.value)}
+                  placeholder="Enter related word"
+                />
+              </div>
+              <div>
+                <Label>Category (Optional)</Label>
+                <Input
+                  value={pair.category || ''}
+                  onChange={(e) => updatePair(index, 'category', e.target.value)}
+                  placeholder="e.g., Animals, Colors, etc."
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <input
+            id="showTimer"
+            type="checkbox"
+            checked={showTimer}
+            onChange={(e) => {
+              setShowTimer(e.target.checked);
+              onChange({ pairs, showTimer: e.target.checked, shuffle, maxAttempts });
+            }}
+            className="rounded border-gray-300"
+          />
+          <Label htmlFor="showTimer">Show Timer</Label>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <input
+            id="shuffle"
+            type="checkbox"
+            checked={shuffle}
+            onChange={(e) => {
+              setShuffle(e.target.checked);
+              onChange({ pairs, showTimer, shuffle: e.target.checked, maxAttempts });
+            }}
+            className="rounded border-gray-300"
+          />
+          <Label htmlFor="shuffle">Shuffle Words</Label>
+        </div>
+
+        <div>
+          <Label htmlFor="maxAttempts">Maximum Attempts</Label>
+          <Select value={maxAttempts.toString()} onValueChange={(value) => {
+            const attempts = parseInt(value);
+            setMaxAttempts(attempts);
+            onChange({ pairs, showTimer, shuffle, maxAttempts: attempts });
+          }}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 attempt</SelectItem>
+              <SelectItem value="2">2 attempts</SelectItem>
+              <SelectItem value="3">3 attempts</SelectItem>
+              <SelectItem value="5">5 attempts</SelectItem>
+              <SelectItem value="10">10 attempts</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

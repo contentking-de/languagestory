@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { CreateGameModal } from './CreateGameModal';
-import { MemoryGame, HangmanGame, FlashcardsGame, WordSearchGame, WordMixupGame } from './GameRenderers';
+import { MemoryGame, HangmanGame, FlashcardsGame, WordSearchGame, WordMixupGame, WordAssociationGame } from './GameRenderers';
 
 interface DatabaseGame {
   id: number;
@@ -769,6 +769,8 @@ export function GamesClient({ userRole }: GamesClientProps) {
                           <WordSearchGame config={game.game_config.wordSearch} />
                         ) : game.game_type === 'word_mixup' && game.game_config?.wordMixup ? (
                           <WordMixupGame config={game.game_config.wordMixup} />
+                        ) : game.game_type === 'word_association' && game.game_config?.wordAssociation ? (
+                          <WordAssociationGame config={game.game_config.wordAssociation} />
                         ) : (
                           <div className="text-center py-8 text-gray-500">
                             <Gamepad2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />

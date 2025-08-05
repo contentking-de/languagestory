@@ -1042,7 +1042,7 @@ export function WordMixupGame({ config }: WordMixupGameProps) {
               💡 Hint
             </Button>
           )}
-          <Button onClick={resetCurrentSentence} variant="outline" size="sm" className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-xs">
+          <Button onClick={resetCurrentSentence} variant="outline" size="sm" className="bg-white text-purple-600 border-white hover:bg-gray-100 font-medium text-xs">
             <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Reset
           </Button>
@@ -1102,6 +1102,218 @@ export function WordMixupGame({ config }: WordMixupGameProps) {
           <div className="text-sm space-y-1">
             <div className="font-bold">Final Time: {formatTime(timeElapsed)}</div>
             <div className="font-bold">Total Moves: {moves}</div>
+          </div>
+          <Button onClick={resetGame} className="mt-4 bg-white/20 border-white/30 text-white hover:bg-white/30">
+            Play Again
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+} 
+
+interface WordAssociationGameProps {
+  config: {
+    pairs: Array<{ id: string; word1: string; word2: string; category?: string }>;
+    showTimer: boolean;
+    shuffle: boolean;
+    maxAttempts: number;
+  };
+}
+
+export function WordAssociationGame({ config }: WordAssociationGameProps) {
+  const [allWords, setAllWords] = useState<string[]>([]);
+  const [selectedWords, setSelectedWords] = useState<string[]>([]);
+  const [matchedPairs, setMatchedPairs] = useState<Set<string>>(new Set());
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameCompleted, setGameCompleted] = useState(false);
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  const [attempts, setAttempts] = useState(0);
+  const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Initialize the game
+  useEffect(() => {
+    if (config.pairs.length > 0) {
+      const words = config.pairs.flatMap(pair => [pair.word1, pair.word2]);
+      const shuffled = config.shuffle ? [...words].sort(() => Math.random() - 0.5) : words;
+      setAllWords(shuffled);
+      setSelectedWords([]);
+      setMatchedPairs(new Set());
+      setAttempts(0);
+    }
+  }, [config.pairs, config.shuffle]);
+
+  // Timer effect
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (gameStarted && !gameCompleted && config.showTimer) {
+      timer = setInterval(() => {
+        setTimeElapsed(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [gameStarted, gameCompleted, config.showTimer]);
+
+  const handleWordClick = (word: string) => {
+    if (!gameStarted) setGameStarted(true);
+    if (gameCompleted) return;
+    if (matchedPairs.has(word)) return; // Already matched
+
+    const newSelectedWords = [...selectedWords, word];
+    setSelectedWords(newSelectedWords);
+
+    if (newSelectedWords.length === 2) {
+      setAttempts(prev => prev + 1);
+      
+      // Check if the selected words form a valid pair
+      const isPair = config.pairs.some(pair => 
+        (pair.word1 === newSelectedWords[0] && pair.word2 === newSelectedWords[1]) ||
+        (pair.word1 === newSelectedWords[1] && pair.word2 === newSelectedWords[0])
+      );
+
+      if (isPair) {
+        // Correct match
+        const pairKey = `${newSelectedWords[0]}-${newSelectedWords[1]}`;
+        setMatchedPairs(prev => new Set([...prev, newSelectedWords[0], newSelectedWords[1]]));
+        setShowFeedback({ type: 'success', message: 'Great match! 🎉' });
+        
+        // Check if game is complete
+        if (matchedPairs.size + 2 === allWords.length) {
+          setGameCompleted(true);
+        }
+      } else {
+        // Wrong match
+        setShowFeedback({ type: 'error', message: 'Try again! 💡' });
+      }
+
+      // Clear selection after a delay
+      setTimeout(() => {
+        setSelectedWords([]);
+        setShowFeedback(null);
+      }, 1500);
+    }
+  };
+
+  const resetGame = () => {
+    const words = config.pairs.flatMap(pair => [pair.word1, pair.word2]);
+    const shuffled = config.shuffle ? [...words].sort(() => Math.random() - 0.5) : words;
+    setAllWords(shuffled);
+    setSelectedWords([]);
+    setMatchedPairs(new Set());
+    setGameStarted(false);
+    setGameCompleted(false);
+    setTimeElapsed(0);
+    setAttempts(0);
+    setShowFeedback(null);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getWordStatus = (word: string) => {
+    if (matchedPairs.has(word)) return 'matched';
+    if (selectedWords.includes(word)) return 'selected';
+    return 'available';
+  };
+
+  if (config.pairs.length === 0) {
+    return <div className="text-center text-gray-500">No word pairs configured</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Game Header */}
+      <div className="flex flex-col sm:flex-row items-center justify-between bg-gradient-to-r from-purple-500 to-pink-600 text-white p-3 sm:p-4 rounded-lg gap-3 sm:gap-0">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="text-center">
+            <div className="text-xs sm:text-sm opacity-90">Matched</div>
+            <div className="text-lg sm:text-xl font-bold">{matchedPairs.size / 2}/{config.pairs.length}</div>
+          </div>
+          {config.showTimer && (
+            <div className="text-center">
+              <div className="text-xs sm:text-sm opacity-90">Time</div>
+              <div className="text-lg sm:text-xl font-bold">{formatTime(timeElapsed)}</div>
+            </div>
+          )}
+          <div className="text-center">
+            <div className="text-xs sm:text-sm opacity-90">Attempts</div>
+            <div className="text-lg sm:text-xl font-bold">{attempts}/{config.maxAttempts}</div>
+          </div>
+        </div>
+        <Button onClick={resetGame} variant="outline" size="sm" className="bg-white text-purple-600 border-white hover:bg-gray-100 font-medium text-xs">
+          <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          Reset
+        </Button>
+      </div>
+
+      {/* Feedback Message */}
+      {showFeedback && (
+        <div className={`p-3 rounded-lg text-center font-medium ${
+          showFeedback.type === 'success' 
+            ? 'bg-green-100 text-green-800 border border-green-200' 
+            : 'bg-red-100 text-red-800 border border-red-200'
+        }`}>
+          {showFeedback.message}
+        </div>
+      )}
+
+      {/* Game Instructions */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div className="text-sm text-blue-800">
+          <strong>Instructions:</strong> Click on two words that are related to each other. Match all pairs to complete the game!
+        </div>
+      </div>
+
+      {/* Word Grid */}
+      <div className="bg-white border border-gray-200 p-4 rounded-lg">
+        <div className="text-sm text-gray-600 mb-3">Click to select words:</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {allWords.map((word, index) => {
+            const status = getWordStatus(word);
+            return (
+              <button
+                key={`${word}-${index}`}
+                onClick={() => handleWordClick(word)}
+                disabled={status === 'matched'}
+                className={`
+                  px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer
+                  ${status === 'matched' 
+                    ? 'bg-green-500 text-white cursor-not-allowed' 
+                    : status === 'selected'
+                    ? 'bg-purple-500 text-white shadow-lg scale-105'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-800 hover:shadow-md'
+                  }
+                `}
+              >
+                {word}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Game Over - Max Attempts Reached */}
+      {attempts >= config.maxAttempts && !gameCompleted && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <div className="text-red-800 font-medium mb-2">Maximum attempts reached!</div>
+          <Button onClick={resetGame} variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50">
+            Try Again
+          </Button>
+        </div>
+      )}
+
+      {/* Game Completion */}
+      {gameCompleted && (
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center p-4 sm:p-6 rounded-lg">
+          <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-xl sm:text-2xl font-bold mb-2">Excellent!</h3>
+          <p className="mb-3 sm:mb-4 text-sm sm:text-base">You've matched all word associations!</p>
+          <div className="text-sm space-y-1">
+            <div className="font-bold">Final Time: {formatTime(timeElapsed)}</div>
+            <div className="font-bold">Total Attempts: {attempts}</div>
           </div>
           <Button onClick={resetGame} className="mt-4 bg-white/20 border-white/30 text-white hover:bg-white/30">
             Play Again
