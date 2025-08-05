@@ -717,6 +717,8 @@ export function WordSearchGame({ config }: WordSearchGameProps) {
         console.log('New selection:', newSelection);
         
         // Check each word individually
+        let foundNewWord = false;
+        
         Object.entries(wordPositions).forEach(([word, positions]) => {
           console.log(`\n--- Checking word: "${word}" ---`);
           console.log('Word positions:', positions);
@@ -753,8 +755,16 @@ export function WordSearchGame({ config }: WordSearchGameProps) {
               
               return newFoundWords;
             });
+            
+            foundNewWord = true;
           }
         });
+        
+        // Clear the selection if we found a word
+        if (foundNewWord) {
+          console.log('*** CLEARING SELECTION AFTER FINDING WORD ***');
+          return [];
+        }
         
         return newSelection;
       }

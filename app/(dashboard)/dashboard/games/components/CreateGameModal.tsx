@@ -393,7 +393,9 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
 
 // Game-specific configuration components
 function MemoryGameConfig({ config, onChange }: { config?: any; onChange: (config: any) => void }) {
-  const [cards, setCards] = useState(config?.cards || [{ id: '1', word: '', translation: '' }]);
+  const [cards, setCards] = useState<Array<{ id: string; word: string; translation: string; image?: string }>>(
+    config?.cards || [{ id: '1', word: '', translation: '' }]
+  );
 
   const addCard = () => {
     setCards([...cards, { id: Date.now().toString(), word: '', translation: '' }]);
@@ -443,8 +445,8 @@ function MemoryGameConfig({ config, onChange }: { config?: any; onChange: (confi
 }
 
 function HangmanGameConfig({ config, onChange }: { config?: any; onChange: (config: any) => void }) {
-  const [words, setWords] = useState(config?.words || ['']);
-  const [hints, setHints] = useState(config?.hints || ['']);
+  const [words, setWords] = useState<string[]>(config?.words || ['']);
+  const [hints, setHints] = useState<string[]>(config?.hints || ['']);
 
   const addWord = () => {
     setWords([...words, '']);
@@ -502,7 +504,7 @@ function HangmanGameConfig({ config, onChange }: { config?: any; onChange: (conf
 }
 
 function WordSearchGameConfig({ config, onChange }: { config?: any; onChange: (config: any) => void }) {
-  const [words, setWords] = useState(config?.words || ['']);
+  const [words, setWords] = useState<string[]>(config?.words || ['']);
 
   const addWord = () => {
     setWords([...words, '']);
@@ -542,7 +544,9 @@ function WordSearchGameConfig({ config, onChange }: { config?: any; onChange: (c
 }
 
 function FlashcardsGameConfig({ config, onChange }: { config?: any; onChange: (config: any) => void }) {
-  const [cards, setCards] = useState(config?.cards || [{ front: '', back: '' }]);
+  const [cards, setCards] = useState<Array<{ front: string; back: string; image?: string }>>(
+    config?.cards || [{ front: '', back: '' }]
+  );
 
   const addCard = () => {
     setCards([...cards, { front: '', back: '' }]);
