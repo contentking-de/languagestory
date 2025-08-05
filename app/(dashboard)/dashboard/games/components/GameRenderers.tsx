@@ -894,3 +894,220 @@ export function WordSearchGame({ config }: WordSearchGameProps) {
     </div>
   );
 } 
+
+interface WordMixupGameProps {
+  config: {
+    sentences: Array<{ id: string; sentence: string; hint?: string }>;
+    showTimer: boolean;
+    allowHints: boolean;
+  };
+}
+
+export function WordMixupGame({ config }: WordMixupGameProps) {
+  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
+  const [scrambledWords, setScrambledWords] = useState<string[]>([]);
+  const [selectedWords, setSelectedWords] = useState<string[]>([]);
+  const [remainingWords, setRemainingWords] = useState<string[]>([]);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameCompleted, setGameCompleted] = useState(false);
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  const [moves, setMoves] = useState(0);
+  const [showHint, setShowHint] = useState(false);
+
+  // Initialize the current sentence
+  useEffect(() => {
+    if (config.sentences.length > 0) {
+      const currentSentence = config.sentences[currentSentenceIndex];
+      const words = currentSentence.sentence.split(' ').filter(word => word.trim());
+      const shuffled = [...words].sort(() => Math.random() - 0.5);
+      setScrambledWords(shuffled);
+      setRemainingWords(shuffled);
+      setSelectedWords([]);
+      setShowHint(false);
+    }
+  }, [currentSentenceIndex, config.sentences]);
+
+  // Timer effect
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (gameStarted && !gameCompleted && config.showTimer) {
+      timer = setInterval(() => {
+        setTimeElapsed(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [gameStarted, gameCompleted, config.showTimer]);
+
+  const handleWordSelect = (word: string, index: number) => {
+    if (!gameStarted) setGameStarted(true);
+    
+    const newSelectedWords = [...selectedWords, word];
+    const newRemainingWords = remainingWords.filter((_, i) => i !== index);
+    
+    setSelectedWords(newSelectedWords);
+    setRemainingWords(newRemainingWords);
+    setMoves(prev => prev + 1);
+
+    // Check if sentence is complete
+    const currentSentence = config.sentences[currentSentenceIndex];
+    const correctWords = currentSentence.sentence.split(' ').filter(word => word.trim());
+    const isComplete = newSelectedWords.length === correctWords.length;
+    
+    if (isComplete) {
+      const isCorrect = newSelectedWords.every((word, i) => word === correctWords[i]);
+      if (isCorrect) {
+        if (currentSentenceIndex + 1 >= config.sentences.length) {
+          setGameCompleted(true);
+        } else {
+          setCurrentSentenceIndex(prev => prev + 1);
+        }
+      } else {
+        // Wrong order, reset
+        setTimeout(() => {
+          setSelectedWords([]);
+          setRemainingWords(scrambledWords);
+        }, 1000);
+      }
+    }
+  };
+
+  const handleWordDeselect = (word: string, index: number) => {
+    const newSelectedWords = selectedWords.filter((_, i) => i !== index);
+    const newRemainingWords = [...remainingWords, word];
+    
+    setSelectedWords(newSelectedWords);
+    setRemainingWords(newRemainingWords);
+    setMoves(prev => prev + 1);
+  };
+
+  const resetCurrentSentence = () => {
+    const currentSentence = config.sentences[currentSentenceIndex];
+    const words = currentSentence.sentence.split(' ').filter(word => word.trim());
+    const shuffled = [...words].sort(() => Math.random() - 0.5);
+    setScrambledWords(shuffled);
+    setRemainingWords(shuffled);
+    setSelectedWords([]);
+    setShowHint(false);
+  };
+
+  const resetGame = () => {
+    setCurrentSentenceIndex(0);
+    setGameStarted(false);
+    setGameCompleted(false);
+    setTimeElapsed(0);
+    setMoves(0);
+    setShowHint(false);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  if (config.sentences.length === 0) {
+    return <div className="text-center text-gray-500">No sentences configured</div>;
+  }
+
+  const currentSentence = config.sentences[currentSentenceIndex];
+
+  return (
+    <div className="space-y-4">
+      {/* Game Header */}
+      <div className="flex flex-col sm:flex-row items-center justify-between bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-3 sm:p-4 rounded-lg gap-3 sm:gap-0">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="text-center">
+            <div className="text-xs sm:text-sm opacity-90">Sentence</div>
+            <div className="text-lg sm:text-xl font-bold">{currentSentenceIndex + 1}/{config.sentences.length}</div>
+          </div>
+          {config.showTimer && (
+            <div className="text-center">
+              <div className="text-xs sm:text-sm opacity-90">Time</div>
+              <div className="text-lg sm:text-xl font-bold">{formatTime(timeElapsed)}</div>
+            </div>
+          )}
+          <div className="text-center">
+            <div className="text-xs sm:text-sm opacity-90">Moves</div>
+            <div className="text-lg sm:text-xl font-bold">{moves}</div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {config.allowHints && currentSentence.hint && (
+            <Button 
+              onClick={() => setShowHint(!showHint)} 
+              variant="outline" 
+              size="sm" 
+              className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-xs"
+            >
+              💡 Hint
+            </Button>
+          )}
+          <Button onClick={resetCurrentSentence} variant="outline" size="sm" className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-xs">
+            <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            Reset
+          </Button>
+        </div>
+      </div>
+
+      {/* Hint */}
+      {showHint && currentSentence.hint && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <div className="text-sm text-yellow-800">
+            <strong>Hint:</strong> {currentSentence.hint}
+          </div>
+        </div>
+      )}
+
+      {/* Selected Words (Building the sentence) */}
+      <div className="bg-gray-50 p-4 rounded-lg min-h-[60px]">
+        <div className="text-sm text-gray-600 mb-2">Your sentence:</div>
+        <div className="flex flex-wrap gap-2">
+          {selectedWords.map((word, index) => (
+            <button
+              key={`selected-${index}`}
+              onClick={() => handleWordDeselect(word, index)}
+              className="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors cursor-pointer"
+            >
+              {word}
+            </button>
+          ))}
+          {selectedWords.length === 0 && (
+            <div className="text-gray-400 italic">Click words below to build your sentence</div>
+          )}
+        </div>
+      </div>
+
+      {/* Remaining Words */}
+      <div className="bg-white border border-gray-200 p-4 rounded-lg">
+        <div className="text-sm text-gray-600 mb-3">Available words:</div>
+        <div className="flex flex-wrap gap-2">
+          {remainingWords.map((word, index) => (
+            <button
+              key={`remaining-${index}`}
+              onClick={() => handleWordSelect(word, index)}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+            >
+              {word}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Game Completion */}
+      {gameCompleted && (
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center p-4 sm:p-6 rounded-lg">
+          <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-xl sm:text-2xl font-bold mb-2">Congratulations!</h3>
+          <p className="mb-3 sm:mb-4 text-sm sm:text-base">You've completed all sentences!</p>
+          <div className="text-sm space-y-1">
+            <div className="font-bold">Final Time: {formatTime(timeElapsed)}</div>
+            <div className="font-bold">Total Moves: {moves}</div>
+          </div>
+          <Button onClick={resetGame} className="mt-4 bg-white/20 border-white/30 text-white hover:bg-white/30">
+            Play Again
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+} 

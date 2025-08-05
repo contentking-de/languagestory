@@ -18,7 +18,8 @@ import {
   Target,
   BookOpen,
   Clock,
-  Star
+  Star,
+  Shuffle
 } from 'lucide-react';
 
 interface CreateGameModalProps {
@@ -44,6 +45,11 @@ interface GameConfig {
     gridSize: number;
     directions: string[];
   };
+  wordMixup?: {
+    sentences: Array<{ id: string; sentence: string; hint?: string }>;
+    showTimer: boolean;
+    allowHints: boolean;
+  };
   flashcards?: {
     cards: Array<{ front: string; back: string; image?: string }>;
     showTimer: boolean;
@@ -55,6 +61,7 @@ const gameTypes = [
   { value: 'memory', label: 'Memory Game', icon: Brain, description: 'Match pairs of cards with words and translations' },
   { value: 'hangman', label: 'Hangman', icon: Target, description: 'Guess the word letter by letter' },
   { value: 'word_search', label: 'Word Search', icon: BookOpen, description: 'Find hidden words in a grid' },
+  { value: 'word_mixup', label: 'Word Mixup', icon: Shuffle, description: 'Reorder scrambled words to form correct sentences' },
   { value: 'flashcards', label: 'Flashcards', icon: Star, description: 'Interactive flashcards for vocabulary practice' },
 ];
 
@@ -140,6 +147,21 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
       const emptyCards = gameConfig.flashcards.cards.filter(card => !card.front.trim() || !card.back.trim());
       if (emptyCards.length > 0) {
         alert('Please fill in all flashcard fields (front and back)');
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (selectedGameType === 'word_mixup' && (!gameConfig.wordMixup || !gameConfig.wordMixup.sentences || gameConfig.wordMixup.sentences.length === 0)) {
+      alert('Please add at least one sentence for word mixup');
+      setLoading(false);
+      return;
+    }
+
+    if (selectedGameType === 'word_mixup' && gameConfig.wordMixup?.sentences) {
+      const emptySentences = gameConfig.wordMixup.sentences.filter(sentence => !sentence.sentence.trim());
+      if (emptySentences.length > 0) {
+        alert('Please fill in all sentence fields');
         setLoading(false);
         return;
       }
@@ -233,6 +255,8 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
         return <HangmanGameConfig config={gameConfig.hangman} onChange={(config) => setGameConfig({ ...gameConfig, hangman: config })} />;
       case 'word_search':
         return <WordSearchGameConfig config={gameConfig.wordSearch} onChange={(config) => setGameConfig({ ...gameConfig, wordSearch: config })} />;
+      case 'word_mixup':
+        return <WordMixupGameConfig config={gameConfig.wordMixup} onChange={(config) => setGameConfig({ ...gameConfig, wordMixup: config })} />;
       case 'flashcards':
         return <FlashcardsGameConfig config={gameConfig.flashcards} onChange={(config) => setGameConfig({ ...gameConfig, flashcards: config })} />;
       default:
@@ -590,6 +614,91 @@ function FlashcardsGameConfig({ config, onChange }: { config?: any; onChange: (c
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+} 
+
+function WordMixupGameConfig({ config, onChange }: { config?: any; onChange: (config: any) => void }) {
+  const [sentences, setSentences] = useState<Array<{ id: string; sentence: string; hint?: string }>>(
+    config?.sentences || [{ id: '1', sentence: '', hint: '' }]
+  );
+  const [showTimer, setShowTimer] = useState(config?.showTimer ?? true);
+  const [allowHints, setAllowHints] = useState(config?.allowHints ?? true);
+
+  const addSentence = () => {
+    const newId = (sentences.length + 1).toString();
+    setSentences([...sentences, { id: newId, sentence: '', hint: '' }]);
+  };
+
+  const updateSentence = (index: number, field: string, value: string) => {
+    const newSentences = [...sentences];
+    newSentences[index] = { ...newSentences[index], [field]: value };
+    setSentences(newSentences);
+    onChange({ sentences: newSentences, showTimer, allowHints });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold">Sentences</h4>
+        <Button type="button" variant="outline" size="sm" onClick={addSentence}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Sentence
+        </Button>
+      </div>
+      
+      <div className="space-y-4">
+        {sentences.map((sentence, index) => (
+          <div key={sentence.id} className="border rounded-lg p-3 space-y-2">
+            <div>
+              <Label>Sentence {index + 1}</Label>
+              <Input
+                value={sentence.sentence}
+                onChange={(e) => updateSentence(index, 'sentence', e.target.value)}
+                placeholder="Enter the correct sentence"
+              />
+            </div>
+            <div>
+              <Label>Hint (Optional)</Label>
+              <Input
+                value={sentence.hint || ''}
+                onChange={(e) => updateSentence(index, 'hint', e.target.value)}
+                placeholder="Enter a hint for this sentence"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <input
+            id="showTimer"
+            type="checkbox"
+            checked={showTimer}
+            onChange={(e) => {
+              setShowTimer(e.target.checked);
+              onChange({ sentences, showTimer: e.target.checked, allowHints });
+            }}
+            className="rounded border-gray-300"
+          />
+          <Label htmlFor="showTimer">Show Timer</Label>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <input
+            id="allowHints"
+            type="checkbox"
+            checked={allowHints}
+            onChange={(e) => {
+              setAllowHints(e.target.checked);
+              onChange({ sentences, showTimer, allowHints: e.target.checked });
+            }}
+            className="rounded border-gray-300"
+          />
+          <Label htmlFor="allowHints">Allow Hints</Label>
+        </div>
       </div>
     </div>
   );
