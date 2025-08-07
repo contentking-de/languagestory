@@ -28,7 +28,8 @@ import {
   Plus,
   Palette
 } from 'lucide-react';
-import { Terminal } from './terminal';
+import { FlagIcon } from '@/components/ui/flag-icon';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 // Modal content data
@@ -1271,7 +1272,16 @@ export default function HomePage() {
               </div>
             </div>
             <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
-              <Terminal />
+              <div className="relative w-full h-96 lg:h-auto">
+                <Image
+                  src="/lingoletics-team.png"
+                  alt="Lingoletics Team"
+                  width={600}
+                  height={400}
+                  className="w-full h-full object-cover rounded-lg shadow-lg"
+                  priority
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -1342,8 +1352,8 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center bg-white p-6 rounded-lg shadow-sm">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Flag className="h-8 w-8 text-blue-600" />
+              <div className="flex justify-center mb-4">
+                <FlagIcon language="french" size="xl" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">French</h3>
               <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">
@@ -1352,8 +1362,8 @@ export default function HomePage() {
               </p>
             </div>
             <div className="text-center bg-white p-6 rounded-lg shadow-sm">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Flag className="h-8 w-8 text-red-600" />
+              <div className="flex justify-center mb-4">
+                <FlagIcon language="german" size="xl" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">German</h3>
               <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">
@@ -1362,8 +1372,8 @@ export default function HomePage() {
               </p>
             </div>
             <div className="text-center bg-white p-6 rounded-lg shadow-sm">
-              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Flag className="h-8 w-8 text-yellow-600" />
+              <div className="flex justify-center mb-4">
+                <FlagIcon language="spanish" size="xl" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Spanish</h3>
               <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">
