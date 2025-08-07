@@ -23,6 +23,25 @@ interface MemoryGameProps {
 }
 
 export function MemoryGame({ config }: MemoryGameProps) {
+  // Debug logging
+  console.log('MemoryGame: config received:', config);
+  console.log('MemoryGame: config type:', typeof config);
+  console.log('MemoryGame: config.cards:', config?.cards);
+  
+  // Validate config
+  if (!config || !config.cards || !Array.isArray(config.cards) || config.cards.length === 0) {
+    console.log('MemoryGame: Validation failed');
+    return (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500">Invalid game configuration</p>
+          <p className="text-xs text-gray-400 mt-2">Debug: {JSON.stringify(config)}</p>
+        </div>
+      </div>
+    );
+  }
+
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [matchedPairs, setMatchedPairs] = useState<string[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
@@ -226,6 +245,25 @@ interface HangmanGameProps {
 }
 
 export function HangmanGame({ config }: HangmanGameProps) {
+  // Debug logging
+  console.log('HangmanGame: config received:', config);
+  console.log('HangmanGame: config type:', typeof config);
+  console.log('HangmanGame: config.words:', config?.words);
+  
+  // Validate config
+  if (!config || !config.words || !Array.isArray(config.words) || config.words.length === 0) {
+    console.log('HangmanGame: Validation failed');
+    return (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500">Invalid game configuration</p>
+          <p className="text-xs text-gray-400 mt-2">Debug: {JSON.stringify(config)}</p>
+        </div>
+      </div>
+    );
+  }
+
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [guessedLetters, setGuessedLetters] = useState<string[]>([]);
   const [wrongGuesses, setWrongGuesses] = useState(0);
@@ -379,6 +417,18 @@ interface FlashcardsGameProps {
 }
 
 export function FlashcardsGame({ config }: FlashcardsGameProps) {
+  // Validate config
+  if (!config || !config.cards || !Array.isArray(config.cards) || config.cards.length === 0) {
+    return (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500">Invalid game configuration</p>
+        </div>
+      </div>
+    );
+  }
+
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showTimer, setShowTimer] = useState(config.showTimer);
@@ -533,6 +583,18 @@ interface WordSearchGameProps {
 }
 
 export function WordSearchGame({ config }: WordSearchGameProps) {
+  // Validate config
+  if (!config || !config.words || !Array.isArray(config.words) || config.words.length === 0) {
+    return (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500">Invalid game configuration</p>
+        </div>
+      </div>
+    );
+  }
+
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [selectedCells, setSelectedCells] = useState<number[][]>([]);
   const [gameCompleted, setGameCompleted] = useState(false);
@@ -904,6 +966,18 @@ interface WordMixupGameProps {
 }
 
 export function WordMixupGame({ config }: WordMixupGameProps) {
+  // Validate config
+  if (!config || !config.sentences || !Array.isArray(config.sentences) || config.sentences.length === 0) {
+    return (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500">Invalid game configuration</p>
+        </div>
+      </div>
+    );
+  }
+
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [scrambledWords, setScrambledWords] = useState<string[]>([]);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
@@ -1122,6 +1196,18 @@ interface WordAssociationGameProps {
 }
 
 export function WordAssociationGame({ config }: WordAssociationGameProps) {
+  // Validate config
+  if (!config || !config.pairs || !Array.isArray(config.pairs) || config.pairs.length === 0) {
+    return (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500">Invalid game configuration</p>
+        </div>
+      </div>
+    );
+  }
+
   const [allWords, setAllWords] = useState<string[]>([]);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
   const [matchedPairs, setMatchedPairs] = useState<Set<string>>(new Set());

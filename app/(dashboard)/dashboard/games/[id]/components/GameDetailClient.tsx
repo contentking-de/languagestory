@@ -22,19 +22,28 @@ import {
   Eye
 } from 'lucide-react';
 import Link from 'next/link';
+import { 
+  MemoryGame, 
+  HangmanGame, 
+  FlashcardsGame, 
+  WordSearchGame, 
+  WordMixupGame, 
+  WordAssociationGame 
+} from '../../components/GameRenderers';
 
 interface DatabaseGame {
   id: number;
   title: string;
   description: string;
-  original_url: string;
-  normalized_url: string;
-  embed_html: string;
+  game_type: string;
+  original_url: string | null;
+  normalized_url: string | null;
+  embed_html: string | null;
   thumbnail_url: string | null;
   author_name: string | null;
   author_url: string | null;
-  provider_name: string;
-  provider_url: string;
+  provider_name: string | null;
+  provider_url: string | null;
   width: number | null;
   height: number | null;
   category: string;
@@ -46,6 +55,7 @@ interface DatabaseGame {
   course_title?: string;
   course_language?: string;
   tags: string[] | null;
+  game_config: any;
   is_active: boolean;
   is_featured: boolean;
   added_by: number;
@@ -78,9 +88,12 @@ export function GameDetailClient({ userRole }: GameDetailClientProps) {
 
   const fetchGame = async () => {
     try {
-      const response = await fetch(`/api/games/wordwall/${gameId}`);
+      const response = await fetch(`/api/games/${gameId}`);
       if (response.ok) {
         const gameData = await response.json();
+        console.log('Raw game data:', gameData);
+        console.log('Game config type:', typeof gameData.game_config);
+        console.log('Game config value:', gameData.game_config);
         setGame(gameData);
         
         // Log that user played/viewed a game
@@ -102,7 +115,7 @@ export function GameDetailClient({ userRole }: GameDetailClientProps) {
 
     setDeleting(true);
     try {
-      const response = await fetch(`/api/games/wordwall/${gameId}`, {
+      const response = await fetch(`/api/games/${gameId}`, {
         method: 'DELETE'
       });
 
@@ -166,6 +179,93 @@ export function GameDetailClient({ userRole }: GameDetailClientProps) {
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   };
 
+  const renderGameComponent = () => {
+    if (!game) return null;
+
+    // For Wordwall games, use embed_html if available
+    if (game.game_type === 'wordwall' && game.embed_html) {
+      return (
+        <div 
+          className="w-full bg-gray-100 rounded-lg overflow-hidden"
+          style={{ 
+            minHeight: game.height ? `${game.height}px` : '400px',
+            maxHeight: '600px'
+          }}
+          dangerouslySetInnerHTML={{ __html: game.embed_html }}
+        />
+      );
+    }
+
+    // For custom games, render the appropriate component
+    if (game.game_config) {
+      // Parse game_config if it's a string
+      let parsedConfig;
+      try {
+        parsedConfig = typeof game.game_config === 'string' 
+          ? JSON.parse(game.game_config) 
+          : game.game_config;
+        
+        // Debug logging
+        console.log('Game type:', game.game_type);
+        console.log('Parsed config:', parsedConfig);
+      } catch (error) {
+        console.error('Error parsing game config:', error);
+        return (
+          <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+            <div className="text-center">
+              <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+              <p className="text-gray-500">Invalid game configuration format</p>
+            </div>
+          </div>
+        );
+      }
+
+      switch (game.game_type) {
+        case 'memory':
+          return <MemoryGame config={parsedConfig.memory || parsedConfig} />;
+        case 'hangman':
+          return <HangmanGame config={parsedConfig.hangman || parsedConfig} />;
+        case 'flashcards':
+          return <FlashcardsGame config={parsedConfig.flashcards || parsedConfig} />;
+        case 'word_search':
+          return <WordSearchGame config={parsedConfig.wordSearch || parsedConfig} />;
+        case 'word_mixup':
+          return <WordMixupGame config={parsedConfig.wordMixup || parsedConfig} />;
+        case 'word_association':
+          return <WordAssociationGame config={parsedConfig.wordAssociation || parsedConfig} />;
+        default:
+          return (
+            <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="text-center">
+                <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500">Game type not supported</p>
+              </div>
+            </div>
+          );
+      }
+    }
+
+    // Fallback for games without embed_html or game_config
+    return (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500">Game embed not available</p>
+          {game.original_url && (
+            <a 
+              href={game.original_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              Open in new tab
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="p-6">
@@ -226,17 +326,19 @@ export function GameDetailClient({ userRole }: GameDetailClientProps) {
           </div>
         </div>
         <div className="flex gap-2">
-          <a 
-            href={game.original_url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex"
-          >
-            <Button variant="outline">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Open Game
-            </Button>
-          </a>
+          {game.game_type === 'wordwall' && game.original_url && (
+            <a 
+              href={game.original_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex"
+            >
+              <Button variant="outline">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View on Wordwall
+              </Button>
+            </a>
+          )}
           {canCreateEdit && (
             <>
               <Link href={`/dashboard/games/${game.id}/edit`}>
@@ -270,31 +372,7 @@ export function GameDetailClient({ userRole }: GameDetailClientProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {game.embed_html ? (
-                <div 
-                  className="w-full bg-gray-100 rounded-lg overflow-hidden"
-                  style={{ 
-                    minHeight: game.height ? `${game.height}px` : '400px',
-                    maxHeight: '600px'
-                  }}
-                  dangerouslySetInnerHTML={{ __html: game.embed_html }}
-                />
-              ) : (
-                <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">Game embed not available</p>
-                    <a 
-                      href={game.original_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      Open in new tab
-                    </a>
-                  </div>
-                </div>
-              )}
+              {renderGameComponent()}
             </CardContent>
           </Card>
 
@@ -338,6 +416,14 @@ export function GameDetailClient({ userRole }: GameDetailClientProps) {
               <CardTitle>Game Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-600">Game Type</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-lg">🎮</span>
+                  <span className="text-gray-900 capitalize">{game.game_type.replace('_', ' ')}</span>
+                </div>
+              </div>
+
               <div>
                 <label className="text-sm font-medium text-gray-600">Category</label>
                 <div className="flex items-center gap-2 mt-1">
@@ -426,7 +512,7 @@ export function GameDetailClient({ userRole }: GameDetailClientProps) {
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-600">Provider</label>
-                <p className="text-gray-900 mt-1">{game.provider_name}</p>
+                <p className="text-gray-900 mt-1">{game.provider_name || 'Custom Game'}</p>
               </div>
 
               <div>
