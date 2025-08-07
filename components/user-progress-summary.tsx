@@ -359,7 +359,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
       </div>
 
       {/* Recent Achievements */}
-      {achievements?.length > 0 && (
+      {achievements && achievements.length > 0 && (
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
           <h4 className="text-sm font-medium text-white mb-3">Recent Achievements</h4>
           <div className="flex flex-wrap gap-2">
