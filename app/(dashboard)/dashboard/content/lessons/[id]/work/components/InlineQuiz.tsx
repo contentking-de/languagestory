@@ -260,15 +260,13 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
   const handleDrop = (e: React.DragEvent, gapKey: string) => {
     e.preventDefault();
     const word = e.dataTransfer.getData('text/plain');
-    console.log('Drop event:', { gapKey, word, draggedWord });
-    setGapAnswers(prev => {
-      const newAnswers = {
-        ...prev,
-        [gapKey]: word
-      };
-      console.log('Updated gap answers:', newAnswers);
-      return newAnswers;
-    });
+          setGapAnswers(prev => {
+        const newAnswers = {
+          ...prev,
+          [gapKey]: word
+        };
+        return newAnswers;
+      });
     setDraggedWord(null);
   };
 
@@ -322,16 +320,13 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
       });
       
       totalPoints = actualGapCount;
-      console.log('Gap counting:', { blankGaps, wordGaps, gaps, actualGapCount, totalPoints });
+      // Gap counting complete
       
       // For scoring, we need to iterate through the text parts to match the gap key generation
       // textParts is already defined above, so we can reuse it
       let gapIndex = 0;
       
-      console.log('Scoring gap fill quiz:');
-      console.log('Text parts:', textParts);
-      console.log('Gap answers:', gapAnswers);
-      console.log('Word bank:', gapFillConfig.word_bank);
+      // Debug logging for gap fill scoring
       
       textParts.forEach((part, partIndex) => {
         const isGap = useWordFormat ? part.match(/\{[^}]+\}/) : part === '[BLANK]';
@@ -339,18 +334,16 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
           const gapKey = `gap-${partIndex}`;
           const userAnswer = gapAnswers[gapKey];
           
-          console.log(`Gap ${partIndex}:`, { part, gapKey, userAnswer, isGap });
+          // Debug logging for individual gaps
           
           if (useWordFormat) {
             const correctAnswer = part.replace(/\{|\}/g, '');
             const isCorrect = userAnswer && userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
-            console.log(`  Word format - correct answer: "${correctAnswer}", user answer: "${userAnswer}", correct: ${isCorrect}`);
             if (isCorrect) {
               earnedPoints++;
             }
           } else {
             const isCorrect = userAnswer && gapFillConfig.word_bank.includes(userAnswer);
-            console.log(`  Blank format - user answer: "${userAnswer}", in word bank: ${isCorrect}`);
             if (isCorrect) {
               earnedPoints++;
             }
@@ -358,7 +351,7 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
         }
       });
       
-      console.log(`Final score: ${earnedPoints}/${totalPoints} = ${Math.round((earnedPoints / totalPoints) * 100)}%`);
+      // Final score calculation complete
     } else {
       // Handle regular question-based quiz scoring
       questions.forEach(question => {
@@ -709,7 +702,6 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
               )
             ) : (
               <div className="space-y-4">
-                {console.log('Rendering questions array:', questions)}
                 {questions.length > 0 ? (
                   questions.map((question, index) => renderQuestion(question, index))
                 ) : (
