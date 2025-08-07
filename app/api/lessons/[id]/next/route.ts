@@ -37,6 +37,16 @@ export async function GET(
     }
 
     // Find the next lesson in the same course
+    const whereConditions = [
+      eq(lessons.course_id, currentLesson.course_id),
+      eq(lessons.is_published, true)
+    ];
+
+    // Only add lesson_order condition if current lesson has a lesson_order
+    if (currentLesson.lesson_order !== null) {
+      whereConditions.push(gt(lessons.lesson_order, currentLesson.lesson_order));
+    }
+
     const [nextLesson] = await db
       .select({
         id: lessons.id,
@@ -49,13 +59,7 @@ export async function GET(
       })
       .from(lessons)
       .leftJoin(courses, eq(lessons.course_id, courses.id))
-      .where(
-        and(
-          eq(lessons.course_id, currentLesson.course_id),
-          gt(lessons.lesson_order, currentLesson.lesson_order),
-          eq(lessons.is_published, true)
-        )
-      )
+      .where(and(...whereConditions))
       .orderBy(lessons.lesson_order)
       .limit(1);
 

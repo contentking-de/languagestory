@@ -428,19 +428,10 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
 
   const renderProgressSteps = () => {
     const steps = buildWorkflowSteps();
-    const progressPercentage = steps.length > 0 ? ((currentStep + 1) / steps.length) * 100 : 0;
 
     return (
       <div className="bg-gray-50 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-gray-700">Lesson Steps</h3>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <Clock className="h-3 w-3" />
-            {Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}
-          </div>
-        </div>
-        
-        <Progress value={progressPercentage} className="mb-3 h-2" />
+        <h3 className="text-sm font-medium text-gray-700 mb-3">Lesson Steps</h3>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
           {steps.map((step, index) => (
@@ -515,6 +506,18 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         </div>
       </div>
 
+      {/* Progress Bar */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-gray-700">Lesson Progress</h3>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Clock className="h-3 w-3" />
+            {Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}
+          </div>
+        </div>
+        <Progress value={steps.length > 0 ? ((currentStep + 1) / steps.length) * 100 : 0} className="h-2" />
+      </div>
+
       {/* Current Step Content */}
       <div className="mb-8">
         {renderCurrentStep()}
@@ -556,7 +559,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
           className="w-full flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900"
         >
           <span className="text-sm">
-            {showProgressSteps ? 'Hide' : 'Show'} Lesson Steps ({steps.length} total)
+            {showProgressSteps ? 'Hide' : 'Show'} Detailed Steps ({steps.length} total)
           </span>
           {showProgressSteps ? (
             <ChevronUp className="h-4 w-4" />
