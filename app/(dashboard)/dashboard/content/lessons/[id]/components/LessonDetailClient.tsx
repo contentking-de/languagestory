@@ -266,14 +266,22 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
             </div>
           </div>
         </div>
-        {canCreateEdit && (
-          <Link href={`/dashboard/content/lessons/${lesson.id}/edit`}>
-            <Button className="flex items-center gap-2">
-              <Edit className="h-4 w-4" />
-              Edit Lesson
+        <div className="flex items-center gap-2">
+          <Link href={`/dashboard/content/lessons/${lesson.id}/work`}>
+            <Button className="flex items-center gap-2 bg-green-600 hover:bg-green-700">
+              <Play className="h-4 w-4" />
+              Start Lesson
             </Button>
           </Link>
-        )}
+          {canCreateEdit && (
+            <Link href={`/dashboard/content/lessons/${lesson.id}/edit`}>
+              <Button className="flex items-center gap-2">
+                <Edit className="h-4 w-4" />
+                Edit Lesson
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Lesson Stats */}
@@ -426,6 +434,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
                         size="md"
                         lessonId={lesson.id}
                         type="content"
+                        showSpeedControl={true}
                       />
                     </div>
                   </div>
@@ -475,6 +484,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
                         size="md"
                         lessonId={lesson.id}
                         type="cultural"
+                        showSpeedControl={true}
                       />
                     </div>
                   </div>

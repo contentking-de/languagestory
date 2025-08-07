@@ -12,7 +12,9 @@ interface AudioPlayerProps {
   size?: 'sm' | 'md' | 'lg';
   vocabularyId?: number;
   lessonId?: number;
-  type?: 'cultural';
+  type?: 'cultural' | 'content';
+  uniqueId?: string; // Add unique identifier for different audio instances
+  showSpeedControl?: boolean; // Show speed control selector
 }
 
 export function AudioPlayer({ 
@@ -23,13 +25,16 @@ export function AudioPlayer({
   size = 'md',
   vocabularyId,
   lessonId,
-  type
+  type,
+  uniqueId,
+  showSpeedControl = false
 }: AudioPlayerProps) {
   // Version check to ensure we're using the latest code
   console.log('AudioPlayer v2.1 loaded', { text, vocabularyId, lessonId, type });
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const sizeClasses = {
@@ -51,8 +56,18 @@ export function AudioPlayer({
       return;
     }
 
+    // Only generate uniqueId if not provided and we need to prevent conflicts
+    // For lesson content and cultural info, we'll use the type parameter instead
+    const textHash = uniqueId || (text
+      .split('')
+      .map(char => char.charCodeAt(0))
+      .reduce((a, b) => a + b, 0)
+      .toString(36)
+      .slice(0, 20));
+
     setIsLoading(true);
     try {
+      console.log(`AudioPlayer: Sending request with type: ${type}, lessonId: ${lessonId}`);
       const response = await fetch('/api/tts', {
         method: 'POST',
         headers: {
@@ -122,6 +137,9 @@ export function AudioPlayer({
     const audio = new Audio(audioToPlay);
     audioRef.current = audio;
     
+    // Set playback speed
+    audio.playbackRate = playbackSpeed;
+    
     audio.addEventListener('play', () => setIsPlaying(true));
     audio.addEventListener('pause', () => setIsPlaying(false));
     audio.addEventListener('ended', () => setIsPlaying(false));
@@ -145,8 +163,15 @@ export function AudioPlayer({
     setIsPlaying(false);
   };
 
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (audioRef.current && isPlaying) {
+      audioRef.current.playbackRate = speed;
+    }
+  };
+
   return (
-    <div className={`inline-flex gap-1 ${className}`}>
+    <div className={`inline-flex items-center gap-1 ${className}`}>
       {isPlaying ? (
         <>
           {/* Stop Button */}
@@ -176,6 +201,26 @@ export function AudioPlayer({
             <Volume2 className={`${sizeClasses[size]} text-gray-600 hover:text-blue-600`} />
           )}
         </Button>
+      )}
+      
+      {/* Speed Control */}
+      {showSpeedControl && (
+        <div className="flex items-center gap-1 ml-2">
+          <span className="text-xs text-gray-500">Speed:</span>
+          <select
+            value={playbackSpeed}
+            onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+            className="text-xs border border-gray-300 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+            title="Playback speed"
+          >
+            <option value={0.5}>0.5x</option>
+            <option value={0.75}>0.75x</option>
+            <option value={1.0}>1x</option>
+            <option value={1.25}>1.25x</option>
+            <option value={1.5}>1.5x</option>
+            <option value={2.0}>2x</option>
+          </select>
+        </div>
       )}
     </div>
   );

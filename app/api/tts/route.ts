@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
 
     // Check if audio already exists in database
     let existingAudio = null;
+    console.log(`TTS: Checking cache for lessonId: ${lessonId}, type: ${type}, vocabularyId: ${vocabularyId}`);
+    
     if (vocabularyId) {
       const [vocab] = await db
         .select({ audio_url: vocabulary.audio_url })
@@ -58,6 +60,7 @@ export async function POST(request: NextRequest) {
         .where(eq(vocabulary.id, vocabularyId))
         .limit(1);
       existingAudio = vocab?.audio_url;
+      console.log(`TTS: Vocabulary cache check - found: ${existingAudio ? 'yes' : 'no'}`);
     } else if (lessonId && type === 'cultural') {
       const [lesson] = await db
         .select({ cultural_audio_url: lessons.cultural_audio_url })
@@ -65,6 +68,7 @@ export async function POST(request: NextRequest) {
         .where(eq(lessons.id, lessonId))
         .limit(1);
       existingAudio = lesson?.cultural_audio_url;
+      console.log(`TTS: Cultural cache check - found: ${existingAudio ? 'yes' : 'no'}`);
     } else if (lessonId && type === 'content') {
       const [lesson] = await db
         .select({ content_audio_url: lessons.content_audio_url })
@@ -72,10 +76,16 @@ export async function POST(request: NextRequest) {
         .where(eq(lessons.id, lessonId))
         .limit(1);
       existingAudio = lesson?.content_audio_url;
+      console.log(`TTS: Content cache check - found: ${existingAudio ? 'yes' : 'no'}`);
     }
+
+    // Simple caching logic: if audio exists in database, use it
+    // This works for both main page and workflow
+    console.log(`TTS: Final cache decision - existingAudio: ${existingAudio ? 'found' : 'not found'}`);
 
     // If audio exists, return it
     if (existingAudio) {
+      console.log(`TTS: Returning cached audio for ${type}: ${existingAudio}`);
       return NextResponse.json({
         success: true,
         audio_url: existingAudio,
@@ -138,6 +148,7 @@ export async function POST(request: NextRequest) {
           audio_generated_at: new Date(),
         })
         .where(eq(vocabulary.id, vocabularyId));
+      console.log(`TTS: Stored vocabulary audio for ID: ${vocabularyId}`);
     } else if (lessonId && type === 'cultural') {
       await db
         .update(lessons)
@@ -147,6 +158,7 @@ export async function POST(request: NextRequest) {
           cultural_audio_generated_at: new Date(),
         })
         .where(eq(lessons.id, lessonId));
+      console.log(`TTS: Stored cultural audio for lesson: ${lessonId}`);
     } else if (lessonId && type === 'content') {
       await db
         .update(lessons)
@@ -156,8 +168,12 @@ export async function POST(request: NextRequest) {
           content_audio_generated_at: new Date(),
         })
         .where(eq(lessons.id, lessonId));
+      console.log(`TTS: Stored content audio for lesson: ${lessonId}`);
     }
 
+    // Audio is stored in database for all cases
+
+    console.log(`TTS: Generated new audio for ${type}: ${blob.url}`);
     return NextResponse.json({
       success: true,
       audio_url: blob.url,

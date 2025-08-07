@@ -1,52 +1,43 @@
-import { NextResponse } from 'next/server';
-import { getStudentProgress } from '@/lib/gamification';
+import { NextRequest, NextResponse } from 'next/server';
 import { getUserWithTeamData } from '@/lib/db/queries';
+import { db } from '@/lib/db/drizzle';
+import { student_progress } from '@/lib/db/content-schema';
+import { eq, and } from 'drizzle-orm';
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ studentId: string }> }
 ) {
   try {
-    const { studentId } = await params;
-    const studentIdNum = parseInt(studentId);
-
-    if (isNaN(studentIdNum)) {
-      return NextResponse.json(
-        { error: 'Invalid student ID' },
-        { status: 400 }
-      );
-    }
-
-    // Get current user to verify permissions
     const user = await getUserWithTeamData();
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Allow users to view their own progress, or admins/teachers to view any student
-    const canViewProgress = 
-      user.id === studentIdNum || 
-      user.role === 'super_admin' || 
-      user.role === 'teacher' || 
-      user.role === 'content_creator' ||
-      user.role === 'parent';
+    const { studentId } = await params;
+    const { searchParams } = new URL(request.url);
+    const lessonId = searchParams.get('lessonId');
 
-    if (!canViewProgress) {
-      return NextResponse.json(
-        { error: 'Forbidden - Cannot view this student\'s progress' },
-        { status: 403 }
-      );
+    if (!lessonId) {
+      return NextResponse.json({ error: 'Lesson ID is required' }, { status: 400 });
     }
 
-    const progressData = await getStudentProgress(studentIdNum);
-    return NextResponse.json(progressData);
+    // Fetch all progress records for this student and lesson
+    const progressRecords = await db
+      .select()
+      .from(student_progress)
+      .where(
+        and(
+          eq(student_progress.student_id, parseInt(studentId)),
+          eq(student_progress.lesson_id, parseInt(lessonId))
+        )
+      );
+
+    return NextResponse.json(progressRecords);
   } catch (error) {
     console.error('Error fetching student progress:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch student progress' },
+      { error: 'Failed to fetch progress' },
       { status: 500 }
     );
   }
