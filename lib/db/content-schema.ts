@@ -101,6 +101,10 @@ export const lessons = pgTable('lessons', {
   cultural_audio_blob_id: varchar('cultural_audio_blob_id', { length: 255 }),
   cultural_audio_url: text('cultural_audio_url'),
   cultural_audio_generated_at: timestamp('cultural_audio_generated_at'),
+  // Audio storage fields for lesson content TTS
+  content_audio_blob_id: varchar('content_audio_blob_id', { length: 255 }),
+  content_audio_url: text('content_audio_url'),
+  content_audio_generated_at: timestamp('content_audio_generated_at'),
   wp_lesson_id: integer('wp_lesson_id'), // Reference to original WordPress lesson
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),

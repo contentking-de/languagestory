@@ -65,6 +65,13 @@ export async function POST(request: NextRequest) {
         .where(eq(lessons.id, lessonId))
         .limit(1);
       existingAudio = lesson?.cultural_audio_url;
+    } else if (lessonId && type === 'content') {
+      const [lesson] = await db
+        .select({ content_audio_url: lessons.content_audio_url })
+        .from(lessons)
+        .where(eq(lessons.id, lessonId))
+        .limit(1);
+      existingAudio = lesson?.content_audio_url;
     }
 
     // If audio exists, return it
@@ -138,6 +145,15 @@ export async function POST(request: NextRequest) {
           cultural_audio_blob_id: blob.url.split('/').pop()?.split('?')[0] || filename,
           cultural_audio_url: blob.url,
           cultural_audio_generated_at: new Date(),
+        })
+        .where(eq(lessons.id, lessonId));
+    } else if (lessonId && type === 'content') {
+      await db
+        .update(lessons)
+        .set({
+          content_audio_blob_id: blob.url.split('/').pop()?.split('?')[0] || filename,
+          content_audio_url: blob.url,
+          content_audio_generated_at: new Date(),
         })
         .where(eq(lessons.id, lessonId));
     }

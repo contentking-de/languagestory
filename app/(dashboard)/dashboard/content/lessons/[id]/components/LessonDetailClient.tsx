@@ -414,9 +414,20 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
               {lesson.content ? (
                 <div className="prose max-w-none">
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
-                      {lesson.content}
-                    </pre>
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1">
+                        <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
+                          {lesson.content}
+                        </pre>
+                      </div>
+                      <AudioPlayer 
+                        text={lesson.content} 
+                        language={lesson.course_language || 'english'} 
+                        size="md"
+                        lessonId={lesson.id}
+                        type="content"
+                      />
+                    </div>
                   </div>
                 </div>
               ) : (
