@@ -464,22 +464,22 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
   const isLastStep = currentStep === steps.length - 1;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-4 sm:py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <Link href={`/dashboard/content/lessons/${lessonId}`}>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Lesson
             </Button>
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{lesson?.title}</h1>
-            <p className="text-gray-600">Interactive Learning Session</p>
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">{lesson?.title}</h1>
+            <p className="text-sm sm:text-base text-gray-600">Interactive Learning Session</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex justify-center sm:justify-end">
           <Badge variant="outline" className="flex items-center gap-1">
             <Trophy className="h-3 w-3" />
             {lesson?.points_value} pts
@@ -496,17 +496,18 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
         <Button
           variant="outline"
           onClick={handlePrevious}
           disabled={currentStep === 0}
+          className="w-full sm:w-auto order-2 sm:order-1"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Previous
         </Button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 order-1 sm:order-2">
           <span className="text-sm text-gray-600">
             Step {currentStep + 1} of {steps.length}
           </span>
@@ -515,6 +516,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         <Button
           onClick={handleNext}
           disabled={isLastStep && (steps[currentStep]?.status === 'completed' || lessonCompleted)}
+          className="w-full sm:w-auto order-3"
         >
           {isLastStep ? 'Complete Lesson' : 'Next'}
           <ArrowRight className="h-4 w-4 ml-2" />
