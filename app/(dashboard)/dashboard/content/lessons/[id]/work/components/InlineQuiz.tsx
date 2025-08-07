@@ -596,8 +596,8 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
           <div className="mb-4">
             {gapText.split(/(\{[^}]+\})/).map((part, partIndex) => {
               if (part.match(/\{[^}]+\}/)) {
-                const gapIndex = gaps.indexOf(part);
-                const gapKey = `${question.id}-${gapIndex}`;
+                // Use partIndex for unique gap keys instead of gaps.indexOf
+                const gapKey = `${question.id}-${partIndex}`;
                 const correctAnswer = part.replace(/\{|\}/g, '');
                 const userAnswer = gapAnswers[gapKey];
                 
