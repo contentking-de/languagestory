@@ -235,47 +235,47 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
   const TypeIcon = getTypeIcon(lesson.lesson_type);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <Link href="/dashboard/content/lessons">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
           </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{lesson.title}</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-lg">{getLanguageFlag(lesson.course_language)}</span>
-              <Link href={`/dashboard/content/courses/${lesson.course_id}`} className="text-gray-600 hover:text-gray-900">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 break-words">{lesson.title}</h1>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <span className="text-base sm:text-lg">{getLanguageFlag(lesson.course_language)}</span>
+              <Link href={`/dashboard/content/courses/${lesson.course_id}`} className="text-gray-600 hover:text-gray-900 text-sm sm:text-base truncate">
                 {lesson.course_title}
               </Link>
-              <Badge className={getLevelColor(lesson.course_level)}>
+              <Badge className={`${getLevelColor(lesson.course_level)} text-xs`}>
                 {lesson.course_level}
               </Badge>
-              <Badge className={getTypeColor(lesson.lesson_type)}>
+              <Badge className={`${getTypeColor(lesson.lesson_type)} text-xs`}>
                 <TypeIcon className="h-3 w-3 mr-1" />
                 {lesson.lesson_type}
               </Badge>
               <div className={`w-2 h-2 rounded-full ${lesson.is_published ? 'bg-green-500' : 'bg-gray-400'}`} />
-              <span className={`text-sm ${lesson.is_published ? 'text-green-600' : 'text-gray-500'}`}>
+              <span className={`text-xs sm:text-sm ${lesson.is_published ? 'text-green-600' : 'text-gray-500'}`}>
                 {lesson.is_published ? 'Published' : 'Draft'}
               </span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href={`/dashboard/content/lessons/${lesson.id}/work`}>
-            <Button className="flex items-center gap-2 bg-green-600 hover:bg-green-700">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <Link href={`/dashboard/content/lessons/${lesson.id}/work`} className="w-full sm:w-auto">
+            <Button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 w-full sm:w-auto">
               <Play className="h-4 w-4" />
               Start Lesson
             </Button>
           </Link>
           {canCreateEdit && (
-            <Link href={`/dashboard/content/lessons/${lesson.id}/edit`}>
-              <Button className="flex items-center gap-2">
+            <Link href={`/dashboard/content/lessons/${lesson.id}/edit`} className="w-full sm:w-auto">
+              <Button className="flex items-center gap-2 w-full sm:w-auto">
                 <Edit className="h-4 w-4" />
                 Edit Lesson
               </Button>
@@ -347,7 +347,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Cover Image */}
               {lesson.cover_image && (
                 <div className="space-y-2">
