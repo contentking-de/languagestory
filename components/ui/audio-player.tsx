@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Volume2, Loader2, Square } from 'lucide-react';
 
@@ -36,6 +36,22 @@ export function AudioPlayer({
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Reset audio state when key props change (text, type, lessonId, vocabularyId)
+  useEffect(() => {
+    console.log('AudioPlayer: Props changed, resetting audio state', { text: text?.slice(0, 50), type, lessonId, vocabularyId });
+    
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    
+    // Reset state
+    setAudioUrl(null);
+    setIsPlaying(false);
+    setIsLoading(false);
+  }, [text, type, lessonId, vocabularyId]);
 
   const sizeClasses = {
     sm: 'h-6 w-6',
