@@ -24,6 +24,8 @@ import {
 import Link from 'next/link';
 import { AudioPlayer } from '@/components/ui/audio-player';
 import { InlineQuiz } from './InlineQuiz';
+import { InlineGame } from './InlineGame';
+import { LessonCompletionModal } from '@/components/lesson-completion-modal';
 
 interface Lesson {
   id: number;
@@ -79,6 +81,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
   const [loading, setLoading] = useState(true);
   const [timeSpent, setTimeSpent] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [lessonCompleted, setLessonCompleted] = useState(false);
 
   useEffect(() => {
     fetchLessonData();
@@ -228,7 +232,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     } else {
       // Lesson completed
       setIsTimerRunning(false);
-      // You could show a completion modal or redirect
+      setLessonCompleted(true);
+      setShowCompletionModal(true);
     }
   };
 
@@ -236,6 +241,21 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const handleContinueToNextLesson = () => {
+    // TODO: Navigate to next lesson or course
+    // For now, just close the modal
+    setShowCompletionModal(false);
+  };
+
+  const handleGoHome = () => {
+    // Navigate to dashboard
+    window.location.href = '/dashboard';
+  };
+
+  const handleCloseModal = () => {
+    setShowCompletionModal(false);
   };
 
   const renderCurrentStep = () => {
@@ -343,30 +363,34 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
 
       case 'game':
         const game = games.find(g => g.id === currentStepData.gameId);
+        if (!game) {
+          return (
+            <Card className="max-w-4xl mx-auto">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Game not found</h3>
+                  <p className="text-gray-600">The game could not be loaded.</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
+        
         return (
-          <Card className="max-w-4xl mx-auto">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Gamepad2 className="h-5 w-5" />
-                {game?.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Gamepad2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Game: {game?.title}</h3>
-                <p className="text-gray-600 mb-4">
-                  {game?.description || 'Click below to start the game'}
-                </p>
-                <Link href={`/dashboard/games/${game?.id}`}>
-                  <Button>
-                    <Play className="h-4 w-4 mr-2" />
-                    Start Game
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+          <InlineGame
+            key={`game-${game.id}`} // Force remount when game changes
+            gameId={game.id}
+            onComplete={(score, passed) => {
+              console.log(`Game completed: ${score}%, passed: ${passed}`);
+              // Update progress when game is completed
+              updateProgress(currentStep, 'completed', score);
+            }}
+            onNext={() => {
+              // Move to next step when game is completed
+              handleNext();
+            }}
+          />
         );
 
       default:
@@ -490,12 +514,23 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
 
         <Button
           onClick={handleNext}
-          disabled={isLastStep && steps[currentStep]?.status === 'completed'}
+          disabled={isLastStep && (steps[currentStep]?.status === 'completed' || lessonCompleted)}
         >
           {isLastStep ? 'Complete Lesson' : 'Next'}
           <ArrowRight className="h-4 w-4 ml-2" />
         </Button>
       </div>
+
+      {/* Lesson Completion Modal */}
+      <LessonCompletionModal
+        isOpen={showCompletionModal}
+        onClose={handleCloseModal}
+        onContinue={handleContinueToNextLesson}
+        onGoHome={handleGoHome}
+        lessonTitle={lesson?.title || 'Lesson'}
+        pointsEarned={lesson?.points_value || 0}
+        hasNextLesson={true} // TODO: Check if there's a next lesson
+      />
     </div>
   );
 } 

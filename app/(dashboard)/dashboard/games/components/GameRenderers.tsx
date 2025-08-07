@@ -20,9 +20,10 @@ interface MemoryGameProps {
     gridSize: number;
     timeLimit?: number;
   };
+  onComplete?: (score: number) => void;
 }
 
-export function MemoryGame({ config }: MemoryGameProps) {
+export function MemoryGame({ config, onComplete }: MemoryGameProps) {
   // Debug logging
   console.log('MemoryGame: config received:', config);
   console.log('MemoryGame: config type:', typeof config);
@@ -104,6 +105,11 @@ export function MemoryGame({ config }: MemoryGameProps) {
         // Check if game is completed
         if (matchedPairs.length + 1 === config.cards.length) {
           setGameCompleted(true);
+          // Calculate score based on time and moves
+          const timeScore = Math.max(0, 100 - Math.floor(timeElapsed / 10));
+          const moveScore = Math.max(0, 100 - moves * 2);
+          const finalScore = Math.round((timeScore + moveScore) / 2);
+          onComplete?.(finalScore);
         }
       } else {
         // No match - flip both cards back after delay
@@ -242,9 +248,10 @@ interface HangmanGameProps {
     hints: string[];
     maxAttempts: number;
   };
+  onComplete?: (score: number) => void;
 }
 
-export function HangmanGame({ config }: HangmanGameProps) {
+export function HangmanGame({ config, onComplete }: HangmanGameProps) {
   // Debug logging
   console.log('HangmanGame: config received:', config);
   console.log('HangmanGame: config type:', typeof config);
@@ -299,6 +306,11 @@ export function HangmanGame({ config }: HangmanGameProps) {
       
       if (isWordComplete) {
         setGameWon(true);
+        // Check if all words are completed
+        if (currentWordIndex + 1 >= config.words.length) {
+          const accuracy = Math.round(((config.words.length - wrongGuesses) / config.words.length) * 100);
+          onComplete?.(Math.max(accuracy, 0));
+        }
       }
     }
   };
@@ -414,9 +426,10 @@ interface FlashcardsGameProps {
     showTimer: boolean;
     shuffle: boolean;
   };
+  onComplete?: (score: number) => void;
 }
 
-export function FlashcardsGame({ config }: FlashcardsGameProps) {
+export function FlashcardsGame({ config, onComplete }: FlashcardsGameProps) {
   // Validate config
   if (!config || !config.cards || !Array.isArray(config.cards) || config.cards.length === 0) {
     return (
@@ -452,6 +465,10 @@ export function FlashcardsGame({ config }: FlashcardsGameProps) {
     if (currentCardIndex < cards.length - 1) {
       setCurrentCardIndex(prev => prev + 1);
       setIsFlipped(false);
+    } else {
+      // All cards viewed, consider game complete
+      const timeScore = Math.max(0, 100 - Math.floor(timeElapsed / 10));
+      onComplete?.(timeScore);
     }
   };
 
@@ -580,9 +597,10 @@ interface WordSearchGameProps {
     gridSize: number;
     directions: string[];
   };
+  onComplete?: (score: number) => void;
 }
 
-export function WordSearchGame({ config }: WordSearchGameProps) {
+export function WordSearchGame({ config, onComplete }: WordSearchGameProps) {
   // Validate config
   if (!config || !config.words || !Array.isArray(config.words) || config.words.length === 0) {
     return (
@@ -813,6 +831,8 @@ export function WordSearchGame({ config }: WordSearchGameProps) {
               if (newFoundWords.length === config.words.length) {
                 console.log('*** GAME COMPLETED! ***');
                 setGameCompleted(true);
+                const timeScore = Math.max(0, 100 - Math.floor(timeElapsed / 10));
+                onComplete?.(timeScore);
               }
               
               return newFoundWords;
@@ -963,9 +983,10 @@ interface WordMixupGameProps {
     showTimer: boolean;
     allowHints: boolean;
   };
+  onComplete?: (score: number) => void;
 }
 
-export function WordMixupGame({ config }: WordMixupGameProps) {
+export function WordMixupGame({ config, onComplete }: WordMixupGameProps) {
   // Validate config
   if (!config || !config.sentences || !Array.isArray(config.sentences) || config.sentences.length === 0) {
     return (
@@ -1032,6 +1053,10 @@ export function WordMixupGame({ config }: WordMixupGameProps) {
       if (isCorrect) {
         if (currentSentenceIndex + 1 >= config.sentences.length) {
           setGameCompleted(true);
+          const timeScore = Math.max(0, 100 - Math.floor(timeElapsed / 10));
+          const moveScore = Math.max(0, 100 - moves * 2);
+          const finalScore = Math.round((timeScore + moveScore) / 2);
+          onComplete?.(finalScore);
         } else {
           setCurrentSentenceIndex(prev => prev + 1);
         }
@@ -1193,9 +1218,10 @@ interface WordAssociationGameProps {
     shuffle: boolean;
     maxAttempts: number;
   };
+  onComplete?: (score: number) => void;
 }
 
-export function WordAssociationGame({ config }: WordAssociationGameProps) {
+export function WordAssociationGame({ config, onComplete }: WordAssociationGameProps) {
   // Validate config
   if (!config || !config.pairs || !Array.isArray(config.pairs) || config.pairs.length === 0) {
     return (
@@ -1266,6 +1292,10 @@ export function WordAssociationGame({ config }: WordAssociationGameProps) {
         // Check if game is complete
         if (matchedPairs.size + 2 === allWords.length) {
           setGameCompleted(true);
+          const timeScore = Math.max(0, 100 - Math.floor(timeElapsed / 10));
+          const attemptScore = Math.max(0, 100 - attempts * 5);
+          const finalScore = Math.round((timeScore + attemptScore) / 2);
+          onComplete?.(finalScore);
         }
       } else {
         // Wrong match
