@@ -21,12 +21,16 @@ interface UserProgressSummaryProps {
 }
 
 interface ProgressData {
-  streak: {
+  totalLessons?: number;
+  totalPoints?: number;
+  recentActivity?: number;
+  progressRecords?: any[];
+  streak?: {
     current_streak: number;
     longest_streak: number;
     total_points: number;
   } | null;
-  completionStats: {
+  completionStats?: {
     total_completions: number;
     quizzes_completed: number;
     lessons_completed: number;
@@ -34,7 +38,7 @@ interface ProgressData {
     games_completed: number;
     average_score: number;
   };
-  achievements: Array<{
+  achievements?: Array<{
     id: number;
     title: string;
     badge_icon: string;
@@ -111,7 +115,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
     return null;
   }
 
-  const { streak, completionStats, achievements } = progressData;
+  const { streak, completionStats, achievements, totalLessons, totalPoints, recentActivity } = progressData;
 
   if (compact) {
     return (
@@ -138,7 +142,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
               <span className="text-xs text-gray-600">Points</span>
             </div>
             <div className="text-lg font-bold text-gray-900">
-              {streak?.total_points || 0}
+              {totalPoints || streak?.total_points || 0}
             </div>
           </div>
 
@@ -167,7 +171,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
               <span className="text-xs text-gray-600">Badges</span>
             </div>
             <div className="text-lg font-bold text-gray-900">
-              {achievements.length}
+              {achievements?.length || 0}
             </div>
           </div>
 
@@ -180,14 +184,14 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
               <span className="text-xs text-gray-600">Done</span>
             </div>
             <div className="text-lg font-bold text-gray-900">
-              {completionStats.total_completions}
+              {totalLessons || completionStats?.total_completions || 0}
             </div>
           </div>
         </div>
 
         {/* Activity Breakdown */}
         <div className="grid grid-cols-2 gap-2 mb-3">
-          {completionStats.quizzes_completed > 0 && (
+          {completionStats?.quizzes_completed > 0 && (
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
               <div className="flex items-center gap-2">
                 <Target className="h-3 w-3 text-gray-600" />
@@ -195,7 +199,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
               </div>
             </div>
           )}
-          {completionStats.lessons_completed > 0 && (
+          {completionStats?.lessons_completed > 0 && (
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
               <div className="flex items-center gap-2">
                 <BookOpen className="h-3 w-3 text-gray-600" />
@@ -203,7 +207,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
               </div>
             </div>
           )}
-          {completionStats.vocabulary_completed > 0 && (
+          {completionStats?.vocabulary_completed > 0 && (
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
               <div className="flex items-center gap-2">
                 <Brain className="h-3 w-3 text-gray-600" />
@@ -211,7 +215,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
               </div>
             </div>
           )}
-          {completionStats.games_completed > 0 && (
+          {completionStats?.games_completed > 0 && (
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
               <div className="flex items-center gap-2">
                 <GamepadIcon className="h-3 w-3 text-gray-600" />
@@ -274,7 +278,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
             <span className="text-sm text-white/70">Total Points</span>
           </div>
           <div className="text-2xl font-bold text-white">
-            {streak?.total_points || 0}
+            {totalPoints || streak?.total_points || 0}
           </div>
         </div>
 
@@ -300,7 +304,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
             <span className="text-sm text-white/70">Badges</span>
           </div>
           <div className="text-2xl font-bold text-white">
-            {achievements.length}
+            {achievements?.length || 0}
           </div>
         </div>
 
@@ -313,14 +317,14 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
             <span className="text-sm text-white/70">Completed</span>
           </div>
           <div className="text-2xl font-bold text-white">
-            {completionStats.total_completions}
+            {totalLessons || completionStats?.total_completions || 0}
           </div>
         </div>
       </div>
 
       {/* Activity Breakdown */}
       <div className="flex flex-wrap gap-3 mb-6">
-        {completionStats.quizzes_completed > 0 && (
+        {completionStats?.quizzes_completed > 0 && (
           <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-white/80" />
@@ -328,7 +332,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
             </div>
           </div>
         )}
-        {completionStats.lessons_completed > 0 && (
+        {completionStats?.lessons_completed > 0 && (
           <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-white/80" />
@@ -336,7 +340,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
             </div>
           </div>
         )}
-        {completionStats.vocabulary_completed > 0 && (
+        {completionStats?.vocabulary_completed > 0 && (
           <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20">
             <div className="flex items-center gap-2">
               <Brain className="h-4 w-4 text-white/80" />
@@ -344,7 +348,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
             </div>
           </div>
         )}
-        {completionStats.games_completed > 0 && (
+        {completionStats?.games_completed > 0 && (
           <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20">
             <div className="flex items-center gap-2">
               <GamepadIcon className="h-4 w-4 text-white/80" />
@@ -355,7 +359,7 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
       </div>
 
       {/* Recent Achievements */}
-      {achievements.length > 0 && (
+      {achievements?.length > 0 && (
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
           <h4 className="text-sm font-medium text-white mb-3">Recent Achievements</h4>
           <div className="flex flex-wrap gap-2">
