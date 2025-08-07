@@ -34,6 +34,9 @@ interface Lesson {
   cultural_information?: string;
   course_language: string;
   points_value: number;
+  course_id?: number;
+  lesson_order?: number;
+  course_title?: string;
 }
 
 interface Quiz {
@@ -83,6 +86,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [lessonCompleted, setLessonCompleted] = useState(false);
+  const [nextLesson, setNextLesson] = useState<any>(null);
+  const [hasNextLesson, setHasNextLesson] = useState(true);
 
   useEffect(() => {
     fetchLessonData();
@@ -137,6 +142,20 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
       }
     } catch (error) {
       console.error('Error fetching user progress:', error);
+    }
+  };
+
+  const fetchNextLesson = async () => {
+    try {
+      const response = await fetch(`/api/lessons/${lessonId}/next`);
+      if (response.ok) {
+        const data = await response.json();
+        setNextLesson(data.nextLesson);
+        setHasNextLesson(!!data.nextLesson);
+      }
+    } catch (error) {
+      console.error('Error fetching next lesson:', error);
+      setHasNextLesson(false);
     }
   };
 
@@ -234,6 +253,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
       setIsTimerRunning(false);
       setLessonCompleted(true);
       setShowCompletionModal(true);
+      // Fetch next lesson information
+      fetchNextLesson();
     }
   };
 
@@ -244,9 +265,13 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
   };
 
   const handleContinueToNextLesson = () => {
-    // TODO: Navigate to next lesson or course
-    // For now, just close the modal
-    setShowCompletionModal(false);
+    if (nextLesson) {
+      // Navigate to the next lesson
+      window.location.href = `/dashboard/content/lessons/${nextLesson.id}/work`;
+    } else {
+      // No next lesson available, go to dashboard
+      window.location.href = '/dashboard';
+    }
   };
 
   const handleGoHome = () => {
@@ -531,7 +556,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         onGoHome={handleGoHome}
         lessonTitle={lesson?.title || 'Lesson'}
         pointsEarned={lesson?.points_value || 0}
-        hasNextLesson={true} // TODO: Check if there's a next lesson
+        hasNextLesson={hasNextLesson}
       />
     </div>
   );
