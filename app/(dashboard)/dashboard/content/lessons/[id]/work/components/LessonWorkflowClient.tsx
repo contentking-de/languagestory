@@ -19,7 +19,9 @@ import {
   Clock,
   Play,
   Pause,
-  AlertCircle
+  AlertCircle,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import Link from 'next/link';
 import { AudioPlayer } from '@/components/ui/audio-player';
@@ -88,6 +90,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
   const [lessonCompleted, setLessonCompleted] = useState(false);
   const [nextLesson, setNextLesson] = useState<any>(null);
   const [hasNextLesson, setHasNextLesson] = useState(true);
+  const [showProgressSteps, setShowProgressSteps] = useState(false);
 
   useEffect(() => {
     fetchLessonData();
@@ -428,22 +431,22 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     const progressPercentage = steps.length > 0 ? ((currentStep + 1) / steps.length) * 100 : 0;
 
     return (
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Lesson Progress</h2>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Clock className="h-4 w-4" />
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-gray-700">Lesson Steps</h3>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Clock className="h-3 w-3" />
             {Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}
           </div>
         </div>
         
-        <Progress value={progressPercentage} className="mb-4" />
+        <Progress value={progressPercentage} className="mb-3 h-2" />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
           {steps.map((step, index) => (
             <div
               key={index}
-              className={`flex items-center gap-2 p-3 rounded-lg border ${
+              className={`flex items-center gap-2 p-2 rounded-md border text-xs ${
                 index === currentStep
                   ? 'border-blue-500 bg-blue-50'
                   : index < currentStep
@@ -452,13 +455,13 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
               }`}
             >
               {index < currentStep ? (
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CheckCircle className="h-3 w-3 text-green-600 flex-shrink-0" />
               ) : index === currentStep ? (
-                <Circle className="h-4 w-4 text-blue-600 fill-current" />
+                <Circle className="h-3 w-3 text-blue-600 fill-current flex-shrink-0" />
               ) : (
-                <Circle className="h-4 w-4 text-gray-400" />
+                <Circle className="h-3 w-3 text-gray-400 flex-shrink-0" />
               )}
-              <span className={`text-sm ${
+              <span className={`truncate ${
                 index === currentStep
                   ? 'text-blue-900 font-medium'
                   : index < currentStep
@@ -512,9 +515,6 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         </div>
       </div>
 
-      {/* Progress Steps */}
-      {renderProgressSteps()}
-
       {/* Current Step Content */}
       <div className="mb-8">
         {renderCurrentStep()}
@@ -546,6 +546,30 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
           {isLastStep ? 'Complete Lesson' : 'Next'}
           <ArrowRight className="h-4 w-4 ml-2" />
         </Button>
+      </div>
+
+      {/* Progress Steps Toggle */}
+      <div className="mt-8 border-t border-gray-200 pt-6">
+        <Button
+          variant="ghost"
+          onClick={() => setShowProgressSteps(!showProgressSteps)}
+          className="w-full flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900"
+        >
+          <span className="text-sm">
+            {showProgressSteps ? 'Hide' : 'Show'} Lesson Steps ({steps.length} total)
+          </span>
+          {showProgressSteps ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </Button>
+        
+        {showProgressSteps && (
+          <div className="mt-4">
+            {renderProgressSteps()}
+          </div>
+        )}
       </div>
 
       {/* Lesson Completion Modal */}
