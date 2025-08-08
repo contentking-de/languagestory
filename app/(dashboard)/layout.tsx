@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { use, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { CircleIcon, Home, LogOut, Menu, X, User as UserIcon, ChevronDown, TrendingUp, Settings, Activity, Shield } from 'lucide-react';
+import { CircleIcon, Home, LogOut, LogIn, UserPlus, Menu, X, User as UserIcon, ChevronDown, TrendingUp, Settings, Activity, Shield } from 'lucide-react';
 
 
 import {
@@ -82,10 +82,16 @@ function UserMenu() {
             Plans & Pricing
           </a>
           <Button asChild className="rounded-lg bg-orange-500 hover:bg-orange-600 text-lg">
-            <Link href="/sign-in">Login</Link>
+            <Link href="/sign-in">
+              <LogIn className="h-4 w-4" />
+              Login
+            </Link>
           </Button>
           <Button asChild className="rounded-lg btn-signup text-lg">
-            <Link href="/sign-up">Sign Up</Link>
+            <Link href="/sign-up">
+              <UserPlus className="h-4 w-4" />
+              Sign Up
+            </Link>
           </Button>
         </div>
 
@@ -165,10 +171,16 @@ function UserMenu() {
               </a>
               <div className="pt-4 space-y-3">
                 <Button asChild className="w-full rounded-lg bg-orange-500 hover:bg-orange-600 text-base">
-                  <Link href="/sign-in" onClick={() => setIsMenuOpen(false)}>Login</Link>
+                  <Link href="/sign-in" onClick={() => setIsMenuOpen(false)}>
+                    <LogIn className="h-4 w-4" />
+                    Login
+                  </Link>
                 </Button>
                 <Button asChild className="w-full rounded-lg btn-signup text-base">
-                  <Link href="/sign-up" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
+                  <Link href="/sign-up" onClick={() => setIsMenuOpen(false)}>
+                    <UserPlus className="h-4 w-4" />
+                    Sign Up
+                  </Link>
                 </Button>
               </div>
             </div>
