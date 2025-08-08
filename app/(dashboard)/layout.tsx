@@ -39,20 +39,20 @@ function UserMenu() {
         <div className="hidden xl:flex items-center space-x-4">
           <a
             href="#why-choose-us"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+            className="text-lg font-medium text-gray-700 hover:text-gray-900"
           >
             Why Choose Us
           </a>
           <a
             href="#features"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+            className="text-lg font-medium text-gray-700 hover:text-gray-900"
           >
             Features
           </a>
           
           {/* Learning Resources Dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none">
+            <DropdownMenuTrigger className="flex items-center text-lg font-medium text-gray-700 hover:text-gray-900 focus:outline-none">
               Learning Resources
               <ChevronDown className="ml-1 h-3 w-3" />
             </DropdownMenuTrigger>
@@ -77,14 +77,14 @@ function UserMenu() {
           
           <a
             href="#pricing"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+            className="text-lg font-medium text-gray-700 hover:text-gray-900"
           >
             Plans & Pricing
           </a>
-          <Button asChild className="rounded-lg bg-orange-500 hover:bg-orange-600">
+          <Button asChild className="rounded-lg bg-orange-500 hover:bg-orange-600 text-lg">
             <Link href="/sign-in">Login</Link>
           </Button>
-          <Button asChild className="rounded-lg btn-signup">
+          <Button asChild className="rounded-lg btn-signup text-lg">
             <Link href="/sign-up">Sign Up</Link>
           </Button>
         </div>
@@ -107,14 +107,14 @@ function UserMenu() {
             <div className="px-4 py-6 space-y-4">
               <a
                 href="#why-choose-us"
-                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                className="block text-base font-medium text-gray-700 hover:text-gray-900 py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Why Choose Us
               </a>
               <a
                 href="#features"
-                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                className="block text-base font-medium text-gray-700 hover:text-gray-900 py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Features
@@ -123,7 +123,7 @@ function UserMenu() {
               {/* Learning Resources Expandable Section */}
               <div>
                 <button
-                  className="flex items-center justify-between w-full text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                  className="flex items-center justify-between w-full text-base font-medium text-gray-700 hover:text-gray-900 py-2"
                   onClick={() => setIsLearningResourcesOpen(!isLearningResourcesOpen)}
                 >
                   Learning Resources
@@ -158,16 +158,16 @@ function UserMenu() {
               
               <a
                 href="#pricing"
-                className="block text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
+                className="block text-base font-medium text-gray-700 hover:text-gray-900 py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Plans & Pricing
               </a>
               <div className="pt-4 space-y-3">
-                <Button asChild className="w-full rounded-lg bg-orange-500 hover:bg-orange-600">
+                <Button asChild className="w-full rounded-lg bg-orange-500 hover:bg-orange-600 text-base">
                   <Link href="/sign-in" onClick={() => setIsMenuOpen(false)}>Login</Link>
                 </Button>
-                <Button asChild className="w-full rounded-lg btn-signup">
+                <Button asChild className="w-full rounded-lg btn-signup text-base">
                   <Link href="/sign-up" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
                 </Button>
               </div>
