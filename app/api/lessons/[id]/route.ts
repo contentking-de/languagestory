@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { lessons, courses } from '@/lib/db/schema';
+import { lessons, courses, vocabulary } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function GET(
@@ -53,7 +53,24 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(lessonData);
+    // Also fetch lesson vocabulary (assigned directly to lesson)
+    const vocab = await db
+      .select({
+        id: vocabulary.id,
+        word_english: vocabulary.word_english,
+        word_french: vocabulary.word_french,
+        word_german: vocabulary.word_german,
+        word_spanish: vocabulary.word_spanish,
+        pronunciation: vocabulary.pronunciation,
+        phonetic: vocabulary.phonetic,
+        context_sentence: vocabulary.context_sentence,
+        difficulty_level: vocabulary.difficulty_level,
+        word_type: vocabulary.word_type,
+      })
+      .from(vocabulary)
+      .where(eq(vocabulary.lesson_id, lessonId));
+
+    return NextResponse.json({ ...lessonData, vocabulary: vocab });
   } catch (error) {
     console.error('Error fetching lesson:', error);
     return NextResponse.json(

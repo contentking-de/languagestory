@@ -27,6 +27,7 @@ import Link from 'next/link';
 import { AudioPlayer } from '@/components/ui/audio-player';
 import { InlineQuiz } from './InlineQuiz';
 import { InlineGame } from './InlineGame';
+import InlineVocabTrainer, { LessonVocabularyItem } from './InlineVocabTrainer';
 import { LessonCompletionModal } from '@/components/lesson-completion-modal';
 
 interface Lesson {
@@ -40,6 +41,7 @@ interface Lesson {
   lesson_order?: number;
   course_title?: string;
   flow_order?: any;
+  vocabulary?: LessonVocabularyItem[];
 }
 
 interface Quiz {
@@ -165,8 +167,13 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
 
   const buildWorkflowSteps = (): ProgressItem[] => {
     // If a flow_order exists on the lesson, use it to drive ordering
-    const items: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game'; id?: number; title?: string }> = Array.isArray(lesson?.flow_order) ? lesson!.flow_order : [];
+    const items: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game' | 'vocab'; id?: number; title?: string }> = Array.isArray(lesson?.flow_order) ? lesson!.flow_order : [];
     const steps: ProgressItem[] = [];
+    const addVocab = () => {
+      if (lesson?.vocabulary && lesson.vocabulary.length > 0) {
+        steps.push({ id: steps.length, type: 'content', title: 'Vocabulary Trainer', status: 'not_started' } as any);
+      }
+    };
 
     const addContent = () => {
       if (lesson?.content) {
@@ -196,6 +203,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     if (items.length > 0) {
       for (const it of items) {
         if (it.type === 'content') addContent();
+        else if (it.type === 'vocab') addVocab();
         else if (it.type === 'cultural') addCultural();
         else if (it.type === 'quiz') addQuizById(it.id);
         else if (it.type === 'game') addGameById(it.id);
@@ -204,6 +212,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     }
 
     // Fallback default order if no saved order exists
+    addVocab();
     addContent();
     addCultural();
     quizzes.forEach(q => addQuizById(q.id));
@@ -294,6 +303,18 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     if (!currentStepData) return null;
 
     switch (currentStepData.type) {
+      case 'content':
+        if (currentStepData.title === 'Vocabulary Trainer' && lesson?.vocabulary && lesson.vocabulary.length > 0) {
+          return (
+            <InlineVocabTrainer
+              words={lesson.vocabulary}
+              targetLanguage={(lesson.course_language as any) || 'english'}
+              onComplete={() => updateProgress(currentStep, 'completed', 100)}
+              onNext={handleNext}
+            />
+          );
+        }
+        // fall through to normal content rendering
       case 'content':
         return (
           <Card className="max-w-4xl mx-auto">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +49,18 @@ interface Lesson {
   video_file?: string;
   cultural_information?: string;
   flow_order?: any;
+  vocabulary?: Array<{
+    id: number;
+    word_english: string;
+    word_french?: string;
+    word_german?: string;
+    word_spanish?: string;
+    pronunciation?: string;
+    phonetic?: string;
+    context_sentence?: string;
+    difficulty_level: number;
+    word_type?: string;
+  }>;
 }
 
 interface Quiz {
@@ -205,6 +218,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
       return idx === -1 ? 1 : idx;
     })();
 
+    if ((lesson as any)?.vocabulary && (lesson as any).vocabulary.length > 0) order.push({ key: 'vocab', index: -2 });
     if (lesson?.content) order.push({ key: 'content', index: contentIdx });
     if (lesson?.cultural_information) order.push({ key: 'cultural', index: culturalIdx });
     if (quizzes.length > 0) order.push({ key: 'quizzes', index: firstQuizIndex === Number.MAX_SAFE_INTEGER ? 2 : firstQuizIndex });
@@ -546,10 +560,47 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
         <div className="lg:col-span-2">
           {(() => {
             const order = getOverviewOrder();
-            const blocks: JSX.Element[] = [];
+            const blocks: ReactNode[] = [];
+
+            const VocabTrainer = ((lesson as any)?.vocabulary && (lesson as any).vocabulary.length > 0) ? (
+              <Card key={`vocab-${lesson.id}`}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5" />
+                    Vocabulary Trainer
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">Practice the vocabulary assigned to this lesson.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {(lesson as any).vocabulary.slice(0, 6).map((v: any) => (
+                        <div key={v.id} className="p-3 border rounded-md bg-gray-50">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-gray-900">{v.word_english}</p>
+                              {v.context_sentence && (
+                                <p className="text-xs text-gray-600 line-clamp-1">{v.context_sentence}</p>
+                              )}
+                            </div>
+                            <Badge className={getDifficultyColor(v.difficulty_level)} variant="outline">Lvl {v.difficulty_level}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <Link href={`/dashboard/content/lessons/${lesson.id}/work`}>
+                      <Button size="sm">
+                        <Play className="h-4 w-4 mr-2" />
+                        Start Trainer
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null;
 
             const ContentCard = (
-              <Card key="content">
+              <Card key={`content-${lesson.id}`}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5" />
@@ -599,7 +650,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
             );
 
             const CulturalCard = lesson.cultural_information ? (
-              <Card key="cultural" className="mt-6">
+              <Card key={`cultural-${lesson.id}`} className="mt-6">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Languages className="h-5 w-5" />
@@ -629,7 +680,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
             ) : null;
 
             const QuizzesCard = (
-              <Card key="quizzes" className="mt-6">
+              <Card key={`quizzes-${lesson.id}`} className="mt-6">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <FileQuestion className="h-5 w-5" />
@@ -709,7 +760,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
             );
 
             const GamesCard = (
-              <Card key="games" className="mt-6">
+              <Card key={`games-${lesson.id}`} className="mt-6">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Gamepad2 className="h-5 w-5" />
@@ -734,7 +785,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
                               <Gamepad2 className="h-4 w-4 text-gray-600" />
                             </div>
                             <div>
-                              <h3 className="font-medium text_gray-900">{game.title}</h3>
+                              <h3 className="font-medium text-gray-900">{game.title}</h3>
                               <p className="text-sm text-gray-600 line-clamp-1 mt-1">
                                 {game.description || 'No description'}
                               </p>
@@ -781,7 +832,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <Gamepad2 className="h-12 w-12 text-gray-400 mx_auto mb-4" />
+                      <Gamepad2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No games yet</h3>
                       <p className="text-gray-600 mb-4">
                         {canCreateEdit ? 'Add interactive games to make learning more engaging.' : "This lesson doesn't have any games yet."}
@@ -800,7 +851,8 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
               </Card>
             );
 
-            order.forEach((k) => {
+            order.forEach((k, idx) => {
+              if (k === 'vocab' && VocabTrainer) blocks.push(VocabTrainer);
               if (k === 'content') blocks.push(ContentCard);
               if (k === 'cultural' && CulturalCard) blocks.push(CulturalCard);
               if (k === 'quizzes') blocks.push(QuizzesCard);
