@@ -10,7 +10,8 @@ import {
   ArrowLeft,
   Save,
   Loader2,
-  Gamepad2
+  Gamepad2,
+  Target
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -21,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import CefrDifficultySelect from '@/components/ui/cefr-difficulty-select';
+import { GameConfigEditor, getConfigKeyForType } from '../../components/GameConfigEditors';
 
 interface DatabaseGame {
   id: number;
@@ -95,7 +97,7 @@ export default function GameEditPage() {
 
   const fetchGame = async () => {
     try {
-      const response = await fetch(`/api/games?id=${gameId}`);
+      const response = await fetch(`/api/games/${gameId}`);
       if (response.ok) {
         const gameData = await response.json();
         setGame(gameData);
@@ -137,7 +139,7 @@ export default function GameEditPage() {
     setSaving(true);
 
     try {
-      const response = await fetch(`/api/games?id=${gameId}`, {
+      const response = await fetch(`/api/games/${gameId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -403,40 +405,34 @@ export default function GameEditPage() {
                 </p>
               </div>
 
-              {/* Game Configuration Display */}
-              {formData.game_type !== 'wordwall' && formData.game_config && (
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h3 className="font-medium text-green-800 mb-2">Game Configuration</h3>
-                  <div className="text-sm text-green-700 space-y-1">
-                    <p><strong>Game Type:</strong> {formData.game_type}</p>
-                    {formData.game_type === 'memory' && formData.game_config.memory && (
-                      <div>
-                        <p><strong>Memory Cards:</strong> {formData.game_config.memory.cards?.length || 0} pairs</p>
-                        <p><strong>Grid Size:</strong> {formData.game_config.memory.gridSize || 'Auto'}</p>
-                      </div>
-                    )}
-                    {formData.game_type === 'word_search' && formData.game_config.wordSearch && (
-                      <div>
-                        <p><strong>Words:</strong> {formData.game_config.wordSearch.words?.length || 0} words</p>
-                        <p><strong>Grid Size:</strong> {formData.game_config.wordSearch.gridSize || 'Auto'}</p>
-                      </div>
-                    )}
-                    {formData.game_type === 'hangman' && formData.game_config.hangman && (
-                      <div>
-                        <p><strong>Words:</strong> {formData.game_config.hangman.words?.length || 0} words</p>
-                        <p><strong>Max Attempts:</strong> {formData.game_config.hangman.maxAttempts || 6}</p>
-                      </div>
-                    )}
-                    {formData.game_type === 'flashcards' && formData.game_config.flashcards && (
-                      <div>
-                        <p><strong>Cards:</strong> {formData.game_config.flashcards.cards?.length || 0} cards</p>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-green-600 mt-2">
-                    Note: Game configuration can only be modified when creating a new game.
-                  </p>
-                </div>
+              {/* Editable Game Configuration */}
+              {formData.game_type !== 'wordwall' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-5 w-5" />
+                      Game Configuration
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const key = getConfigKeyForType(formData.game_type);
+                      if (!key) return <div>Select a game type</div>;
+                      const cfg = formData.game_config ? (formData.game_config as any)[key] : undefined;
+                      return (
+                        <GameConfigEditor
+                          gameType={formData.game_type}
+                          config={cfg}
+                          onChange={(updated) => {
+                            const next = { ...(formData.game_config || {}) } as any;
+                            next[key] = updated;
+                            setFormData(prev => ({ ...prev, game_config: next }));
+                          }}
+                        />
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
               )}
 
               <div className="bg-blue-50 p-4 rounded-lg">
