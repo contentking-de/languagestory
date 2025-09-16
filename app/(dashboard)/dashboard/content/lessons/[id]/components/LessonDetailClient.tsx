@@ -47,6 +47,7 @@ interface Lesson {
   audio_file?: string;
   video_file?: string;
   cultural_information?: string;
+  flow_order?: any;
 }
 
 interface Quiz {
@@ -85,6 +86,9 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
+  const [flowItems, setFlowItems] = useState<Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game'; id?: number; title: string }>>([]);
+  const [dragOverKey, setDragOverKey] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
   // Check if user can create/edit lessons
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
@@ -173,6 +177,135 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+  };
+
+  // Determine overview card order (content, cultural, quizzes, games) from flow_order
+  const getOverviewOrder = () => {
+    const order: Array<{ key: 'content' | 'cultural' | 'quizzes' | 'games'; index: number }> = [];
+    const items: Array<{ type: 'content' | 'cultural' | 'quiz' | 'game' }> = Array.isArray((lesson as any)?.flow_order)
+      ? (lesson as any).flow_order
+      : [];
+
+    const findIndex = (type: 'content' | 'cultural' | 'quiz' | 'game') => items.findIndex((i) => i.type === type);
+    const firstQuizIndex = (() => {
+      const idx = items.findIndex((i) => i.type === 'quiz');
+      return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
+    })();
+    const firstGameIndex = (() => {
+      const idx = items.findIndex((i) => i.type === 'game');
+      return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
+    })();
+
+    const contentIdx = (() => {
+      const idx = findIndex('content');
+      return idx === -1 ? 0 : idx;
+    })();
+    const culturalIdx = (() => {
+      const idx = findIndex('cultural');
+      return idx === -1 ? 1 : idx;
+    })();
+
+    if (lesson?.content) order.push({ key: 'content', index: contentIdx });
+    if (lesson?.cultural_information) order.push({ key: 'cultural', index: culturalIdx });
+    if (quizzes.length > 0) order.push({ key: 'quizzes', index: firstQuizIndex === Number.MAX_SAFE_INTEGER ? 2 : firstQuizIndex });
+    if (games.length > 0) order.push({ key: 'games', index: firstGameIndex === Number.MAX_SAFE_INTEGER ? 3 : firstGameIndex });
+
+    order.sort((a, b) => a.index - b.index);
+    return order.map((o) => o.key);
+  };
+
+  // Flow ordering (admin-only): build default list
+  useEffect(() => {
+    if (!lesson) return;
+    const base: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game'; id?: number; title: string }> = [];
+    if (lesson.content) base.push({ key: 'content', type: 'content', title: 'Lesson Content' });
+    if (lesson.cultural_information) base.push({ key: 'cultural', type: 'cultural', title: 'Cultural Information' });
+    quizzes.forEach(q => base.push({ key: `quiz-${q.id}`, type: 'quiz', id: q.id, title: q.title }));
+    games.forEach(g => base.push({ key: `game-${g.id}`, type: 'game', id: g.id, title: g.title }));
+
+    // Load saved order from localStorage
+    try {
+      const saved = typeof window !== 'undefined' ? window.localStorage.getItem(`lesson_flow_order_${lesson.id}`) : null;
+      if (saved) {
+        const parsed: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game'; id?: number; title: string }> = JSON.parse(saved);
+        // Filter to only present items and keep saved order precedence
+        const presentKeys = new Set(base.map(i => i.key));
+        const fromSaved = parsed.filter(i => presentKeys.has(i.key));
+        const savedKeys = new Set(fromSaved.map(i => i.key));
+        const rest = base.filter(i => !savedKeys.has(i.key));
+        setFlowItems([...fromSaved, ...rest]);
+        return;
+      }
+    } catch {}
+    setFlowItems(base);
+  }, [lesson, quizzes, games]);
+
+  const saveFlowOrder = async () => {
+    if (!lesson) return;
+    // Persist locally for immediate effect
+    try {
+      window.localStorage.setItem(`lesson_flow_order_${lesson.id}`, JSON.stringify(flowItems));
+    } catch {}
+    // Persist to server
+    try {
+      setSaveStatus('saving');
+      const res = await fetch(`/api/lessons/${lesson.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flow_order: flowItems })
+      });
+      if (res.ok) {
+        setSaveStatus('success');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } else {
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      }
+    } catch {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
+  };
+
+  const resetFlowOrder = () => {
+    if (!lesson) return;
+    try {
+      window.localStorage.removeItem(`lesson_flow_order_${lesson.id}`);
+    } catch {}
+    // Rebuild from current data
+    const base: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game'; id?: number; title: string }> = [];
+    if (lesson.content) base.push({ key: 'content', type: 'content', title: 'Lesson Content' });
+    if (lesson.cultural_information) base.push({ key: 'cultural', type: 'cultural', title: 'Cultural Information' });
+    quizzes.forEach(q => base.push({ key: `quiz-${q.id}`, type: 'quiz', id: q.id, title: q.title }));
+    games.forEach(g => base.push({ key: `game-${g.id}`, type: 'game', id: g.id, title: g.title }));
+    setFlowItems(base);
+  };
+
+  // Drag-and-drop handlers
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, key: string) => {
+    e.dataTransfer.setData('text/plain', key);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, overKey: string) => {
+    e.preventDefault();
+    setDragOverKey(overKey);
+  };
+  const handleDragLeave = () => setDragOverKey(null);
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropKey: string) => {
+    e.preventDefault();
+    const dragKey = e.dataTransfer.getData('text/plain');
+    if (!dragKey || dragKey === dropKey) {
+      setDragOverKey(null);
+      return;
+    }
+    const current = [...flowItems];
+    const fromIndex = current.findIndex(i => i.key === dragKey);
+    const toIndex = current.findIndex(i => i.key === dropKey);
+    if (fromIndex === -1 || toIndex === -1) return;
+    const [moved] = current.splice(fromIndex, 1);
+    current.splice(toIndex, 0, moved);
+    setFlowItems(current);
+    setDragOverKey(null);
   };
 
   const getGameCategoryColor = (category: string) => {
@@ -411,263 +544,271 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
       {/* Lesson Content & Quizzes */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Lesson Content
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {lesson.content ? (
-                <div className="prose max-w-none">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1">
-                        <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
-                          {lesson.content}
-                        </pre>
-                      </div>
-                      <AudioPlayer 
-                        text={lesson.content} 
-                        language={lesson.course_language || 'english'} 
-                        size="md"
-                        lessonId={lesson.id}
-                        type="content"
-                        showSpeedControl={true}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No content available</h3>
-                  <p className="text-gray-600 mb-4">
-                    {canCreateEdit 
-                      ? 'This lesson doesn\'t have content yet.'
-                      : 'This lesson doesn\'t have content yet.'
-                    }
-                  </p>
-                  {canCreateEdit && (
-                    <Link href={`/dashboard/content/lessons/${lesson.id}/edit`}>
-                      <Button>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Add Content
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {(() => {
+            const order = getOverviewOrder();
+            const blocks: JSX.Element[] = [];
 
-          {/* Cultural Information */}
-          {lesson.cultural_information && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Languages className="h-5 w-5" />
-                  Cultural Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose max-w-none">
-                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
-                        {lesson.cultural_information}
-                      </div>
-                      <AudioPlayer 
-                        text={lesson.cultural_information} 
-                        language={lesson.course_language || 'english'} 
-                        size="md"
-                        lessonId={lesson.id}
-                        type="cultural"
-                        showSpeedControl={true}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Quizzes Section */}
-          <Card className="mt-6">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <FileQuestion className="h-5 w-5" />
-                Lesson Quizzes ({quizzes.length})
-              </CardTitle>
-              {canCreateEdit && (
-                <Link href={`/dashboard/content/quizzes/create?lessonId=${lesson.id}`}>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Quiz
-                  </Button>
-                </Link>
-              )}
-            </CardHeader>
-            <CardContent>
-              {quizzes.length > 0 ? (
-                <div className="space-y-3">
-                  {quizzes.map((quiz) => (
-                    <div key={quiz.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-lg">
-                          <FileQuestion className="h-4 w-4 text-gray-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{quiz.title}</h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <Badge className={getTypeColor(quiz.quiz_type)} variant="outline">
-                              {quiz.quiz_type}
-                            </Badge>
-                            <span className="flex items-center gap-1">
-                              <Trophy className="h-3 w-3" />
-                              {quiz.points_value} pts
-                            </span>
-                            <div className={`w-2 h-2 rounded-full ${quiz.is_published ? 'bg-green-500' : 'bg-gray-400'}`} />
-                            <span className={quiz.is_published ? 'text-green-600' : 'text-gray-500'}>
-                              {quiz.is_published ? 'Published' : 'Draft'}
-                            </span>
+            const ContentCard = (
+              <Card key="content">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Lesson Content
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {lesson.content ? (
+                    <div className="prose max-w-none">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1">
+                            <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
+                              {lesson.content}
+                            </pre>
                           </div>
+                          <AudioPlayer 
+                            text={lesson.content} 
+                            language={lesson.course_language || 'english'} 
+                            size="md"
+                            lessonId={lesson.id}
+                            type="content"
+                            showSpeedControl={true}
+                          />
                         </div>
                       </div>
-                      <div className="flex gap-1">
-                        <Link href={`/dashboard/content/quizzes/${quiz.id}`}>
-                          <Button variant="outline" size="sm">
-                            <Play className="h-4 w-4" />
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No content available</h3>
+                      <p className="text-gray-600 mb-4">
+                        {canCreateEdit ? "This lesson doesn't have content yet." : "This lesson doesn't have content yet."}
+                      </p>
+                      {canCreateEdit && (
+                        <Link href={`/dashboard/content/lessons/${lesson.id}/edit`}>
+                          <Button>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Add Content
                           </Button>
                         </Link>
-                        {canCreateEdit && (
-                          <Link href={`/dashboard/content/quizzes/${quiz.id}/edit`}>
-                            <Button size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </Link>
-                        )}
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+
+            const CulturalCard = lesson.cultural_information ? (
+              <Card key="cultural" className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Languages className="h-5 w-5" />
+                    Cultural Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="prose max-w-none">
+                    <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
+                          {lesson.cultural_information}
+                        </div>
+                        <AudioPlayer 
+                          text={lesson.cultural_information} 
+                          language={lesson.course_language || 'english'} 
+                          size="md"
+                          lessonId={lesson.id}
+                          type="cultural"
+                          showSpeedControl={true}
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <FileQuestion className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No quizzes yet</h3>
-                  <p className="text-gray-600 mb-4">
-                    {canCreateEdit 
-                      ? 'Add quizzes to test student understanding.'
-                      : 'This lesson doesn\'t have any quizzes yet.'
-                    }
-                  </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null;
+
+            const QuizzesCard = (
+              <Card key="quizzes" className="mt-6">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <FileQuestion className="h-5 w-5" />
+                    Lesson Quizzes ({quizzes.length})
+                  </CardTitle>
                   {canCreateEdit && (
                     <Link href={`/dashboard/content/quizzes/create?lessonId=${lesson.id}`}>
-                      <Button>
+                      <Button size="sm">
                         <Plus className="h-4 w-4 mr-2" />
-                        Add First Quiz
+                        Add Quiz
                       </Button>
                     </Link>
                   )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Games Section */}
-          <Card className="mt-6">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Gamepad2 className="h-5 w-5" />
-                Lesson Games ({games.length})
-              </CardTitle>
-              {canCreateEdit && (
-                <Link href={`/dashboard/games?lessonId=${lesson.id}`}>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Game
-                  </Button>
-                </Link>
-              )}
-            </CardHeader>
-            <CardContent>
-              {games.length > 0 ? (
-                <div className="space-y-3">
-                  {games.map((game) => (
-                    <div key={game.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-lg">
-                          <Gamepad2 className="h-4 w-4 text-gray-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{game.title}</h3>
-                          <p className="text-sm text-gray-600 line-clamp-1 mt-1">
-                            {game.description || 'No description'}
-                          </p>
-                          <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
-                            <Badge className={getGameCategoryColor(game.category)} variant="outline">
-                              {game.category}
-                            </Badge>
-                            <Badge className={getDifficultyColor(game.difficulty_level)} variant="outline">
-                              Level {game.difficulty_level}
-                            </Badge>
-                            {game.estimated_duration && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {formatDuration(game.estimated_duration)}
-                              </span>
+                </CardHeader>
+                <CardContent>
+                  {quizzes.length > 0 ? (
+                    <div className="space-y-3">
+                      {quizzes.map((quiz) => (
+                        <div key={quiz.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-lg">
+                              <FileQuestion className="h-4 w-4 text-gray-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-gray-900">{quiz.title}</h3>
+                              <div className="flex items-center gap-4 text-sm text-gray-600">
+                                <Badge className={getTypeColor(quiz.quiz_type)} variant="outline">
+                                  {quiz.quiz_type}
+                                </Badge>
+                                <span className="flex items-center gap-1">
+                                  <Trophy className="h-3 w-3" />
+                                  {quiz.points_value} pts
+                                </span>
+                                <div className={`w-2 h-2 rounded-full ${quiz.is_published ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                <span className={quiz.is_published ? 'text-green-600' : 'text-gray-500'}>
+                                  {quiz.is_published ? 'Published' : 'Draft'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Link href={`/dashboard/content/quizzes/${quiz.id}`}>
+                              <Button variant="outline" size="sm">
+                                <Play className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            {canCreateEdit && (
+                              <Link href={`/dashboard/content/quizzes/${quiz.id}/edit`}>
+                                <Button size="sm">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </Link>
                             )}
-                            <span className="flex items-center gap-1">
-                              <Users className="h-3 w-3" />
-                              {game.usage_count} plays
-                            </span>
-                            <div className={`w-2 h-2 rounded-full ${game.is_active ? 'bg-green-500' : 'bg-gray-400'}`} />
-                            <span className={game.is_active ? 'text-green-600' : 'text-gray-500'}>
-                              {game.is_active ? 'Active' : 'Inactive'}
-                            </span>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <Link href={`/dashboard/games/${game.id}`}>
-                          <Button variant="outline" size="sm">
-                            <Play className="h-4 w-4" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <FileQuestion className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No quizzes yet</h3>
+                      <p className="text-gray-600 mb-4">
+                        {canCreateEdit ? 'Add quizzes to test student understanding.' : "This lesson doesn't have any quizzes yet."}
+                      </p>
+                      {canCreateEdit && (
+                        <Link href={`/dashboard/content/quizzes/create?lessonId=${lesson.id}`}>
+                          <Button>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add First Quiz
                           </Button>
                         </Link>
-                        {canCreateEdit && (
-                          <Link href={`/dashboard/games/${game.id}/edit`}>
-                            <Button size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </Link>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Gamepad2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No games yet</h3>
-                  <p className="text-gray-600 mb-4">
-                    {canCreateEdit 
-                      ? 'Add interactive games to make learning more engaging.'
-                      : 'This lesson doesn\'t have any games yet.'
-                    }
-                  </p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+
+            const GamesCard = (
+              <Card key="games" className="mt-6">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Gamepad2 className="h-5 w-5" />
+                    Lesson Games ({games.length})
+                  </CardTitle>
                   {canCreateEdit && (
                     <Link href={`/dashboard/games?lessonId=${lesson.id}`}>
-                      <Button>
+                      <Button size="sm">
                         <Plus className="h-4 w-4 mr-2" />
-                        Add First Game
+                        Add Game
                       </Button>
                     </Link>
                   )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent>
+                  {games.length > 0 ? (
+                    <div className="space-y-3">
+                      {games.map((game) => (
+                        <div key={game.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-lg">
+                              <Gamepad2 className="h-4 w-4 text-gray-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text_gray-900">{game.title}</h3>
+                              <p className="text-sm text-gray-600 line-clamp-1 mt-1">
+                                {game.description || 'No description'}
+                              </p>
+                              <div className="flex items-center gap-4 text-sm text-gray-600 mt-2">
+                                <Badge className={getGameCategoryColor(game.category)} variant="outline">
+                                  {game.category}
+                                </Badge>
+                                <Badge className={getDifficultyColor(game.difficulty_level)} variant="outline">
+                                  Level {game.difficulty_level}
+                                </Badge>
+                                {game.estimated_duration && (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {formatDuration(game.estimated_duration)}
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {game.usage_count} plays
+                                </span>
+                                <div className={`w-2 h-2 rounded-full ${game.is_active ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                <span className={game.is_active ? 'text-green-600' : 'text-gray-500'}>
+                                  {game.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Link href={`/dashboard/games/${game.id}`}>
+                              <Button variant="outline" size="sm">
+                                <Play className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            {canCreateEdit && (
+                              <Link href={`/dashboard/games/${game.id}/edit`}>
+                                <Button size="sm">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Gamepad2 className="h-12 w-12 text-gray-400 mx_auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No games yet</h3>
+                      <p className="text-gray-600 mb-4">
+                        {canCreateEdit ? 'Add interactive games to make learning more engaging.' : "This lesson doesn't have any games yet."}
+                      </p>
+                      {canCreateEdit && (
+                        <Link href={`/dashboard/games?lessonId=${lesson.id}`}>
+                          <Button>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add First Game
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+
+            order.forEach((k) => {
+              if (k === 'content') blocks.push(ContentCard);
+              if (k === 'cultural' && CulturalCard) blocks.push(CulturalCard);
+              if (k === 'quizzes') blocks.push(QuizzesCard);
+              if (k === 'games') blocks.push(GamesCard);
+            });
+
+            return <>{blocks}</>;
+          })()}
         </div>
 
         <div>
@@ -715,6 +856,54 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
               </div>
             </CardContent>
           </Card>
+
+          {canCreateEdit && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Lesson Flow Order (Admin)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {flowItems.length === 0 ? (
+                  <p className="text-sm text-gray-600">No steps available to order.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {flowItems.map(item => (
+                      <div
+                        key={item.key}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, item.key)}
+                        onDragOver={(e) => handleDragOver(e, item.key)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, item.key)}
+                        className={`flex items-center justify-between p-2 border rounded-md bg-white ${dragOverKey === item.key ? 'border-blue-400 bg-blue-50' : 'border-gray-200'}`}
+                        title="Drag to reorder"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="cursor-move text-gray-400">⋮⋮</span>
+                          <Badge variant="outline">
+                            {item.type}
+                          </Badge>
+                          <span className="text-sm text-gray-800 truncate max-w-[12rem]">{item.title}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center gap-3 mt-3">
+                  <Button size="sm" onClick={saveFlowOrder} disabled={saveStatus === 'saving'}>
+                    {saveStatus === 'saving' ? 'Saving…' : 'Save Order'}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={resetFlowOrder}>Reset Default</Button>
+                  {saveStatus === 'success' && (
+                    <span className="text-sm text-green-700">Order saved</span>
+                  )}
+                  {saveStatus === 'error' && (
+                    <span className="text-sm text-red-700">Failed to save. Try again.</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

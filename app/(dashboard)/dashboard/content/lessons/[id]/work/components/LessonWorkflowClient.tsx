@@ -39,6 +39,7 @@ interface Lesson {
   course_id?: number;
   lesson_order?: number;
   course_title?: string;
+  flow_order?: any;
 }
 
 interface Quiz {
@@ -163,50 +164,50 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
   };
 
   const buildWorkflowSteps = (): ProgressItem[] => {
+    // If a flow_order exists on the lesson, use it to drive ordering
+    const items: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game'; id?: number; title?: string }> = Array.isArray(lesson?.flow_order) ? lesson!.flow_order : [];
     const steps: ProgressItem[] = [];
 
-    // Step 1: Lesson Content
-    if (lesson?.content) {
-      steps.push({
-        id: 0,
-        type: 'content',
-        title: 'Lesson Content',
-        status: 'not_started'
-      });
+    const addContent = () => {
+      if (lesson?.content) {
+        steps.push({ id: steps.length, type: 'content', title: 'Lesson Content', status: 'not_started' });
+      }
+    };
+    const addCultural = () => {
+      if (lesson?.cultural_information) {
+        steps.push({ id: steps.length, type: 'cultural', title: 'Cultural Information', status: 'not_started' });
+      }
+    };
+    const addQuizById = (qid?: number) => {
+      if (!qid) return;
+      const quiz = quizzes.find(q => q.id === qid);
+      if (quiz) {
+        steps.push({ id: steps.length, type: 'quiz', title: quiz.title, status: 'not_started', quizId: quiz.id });
+      }
+    };
+    const addGameById = (gid?: number) => {
+      if (!gid) return;
+      const game = games.find(g => g.id === gid);
+      if (game) {
+        steps.push({ id: steps.length, type: 'game', title: game.title, status: 'not_started', gameId: game.id });
+      }
+    };
+
+    if (items.length > 0) {
+      for (const it of items) {
+        if (it.type === 'content') addContent();
+        else if (it.type === 'cultural') addCultural();
+        else if (it.type === 'quiz') addQuizById(it.id);
+        else if (it.type === 'game') addGameById(it.id);
+      }
+      return steps;
     }
 
-    // Step 2: Cultural Information
-    if (lesson?.cultural_information) {
-      steps.push({
-        id: steps.length,
-        type: 'cultural',
-        title: 'Cultural Information',
-        status: 'not_started'
-      });
-    }
-
-    // Step 3: Quizzes
-    quizzes.forEach((quiz, index) => {
-      steps.push({
-        id: steps.length,
-        type: 'quiz',
-        title: quiz.title,
-        status: 'not_started',
-        quizId: quiz.id // Store the actual quiz ID
-      });
-    });
-
-    // Step 4: Games
-    games.forEach((game, index) => {
-      steps.push({
-        id: steps.length,
-        type: 'game',
-        title: game.title,
-        status: 'not_started',
-        gameId: game.id // Store the actual game ID
-      });
-    });
-
+    // Fallback default order if no saved order exists
+    addContent();
+    addCultural();
+    quizzes.forEach(q => addQuizById(q.id));
+    games.forEach(g => addGameById(g.id));
     return steps;
   };
 

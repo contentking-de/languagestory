@@ -1,1 +1,1 @@
-ALTER TABLE "games" ADD COLUMN "lesson_id" integer;
+ALTER TABLE "games" ADD COLUMN IF NOT EXISTS "lesson_id" integer;

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { quizzes } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { quizzes, topics } from '@/lib/db/schema';
+import { eq, inArray, or } from 'drizzle-orm';
 
 export async function GET(
   request: Request,
@@ -18,6 +18,14 @@ export async function GET(
       );
     }
 
+    // Also include quizzes attached to topics within this lesson
+    const lessonTopicIds = await db
+      .select({ id: topics.id })
+      .from(topics)
+      .where(eq(topics.lesson_id, lessonId));
+
+    const topicIds = lessonTopicIds.map(t => t.id);
+
     const quizzesData = await db
       .select({
         id: quizzes.id,
@@ -27,7 +35,11 @@ export async function GET(
         is_published: quizzes.is_published,
       })
       .from(quizzes)
-      .where(eq(quizzes.lesson_id, lessonId))
+      .where(
+        topicIds.length > 0
+          ? or(eq(quizzes.lesson_id, lessonId), inArray(quizzes.topic_id, topicIds))
+          : eq(quizzes.lesson_id, lessonId)
+      )
       .orderBy(quizzes.created_at);
 
     return NextResponse.json(quizzesData);

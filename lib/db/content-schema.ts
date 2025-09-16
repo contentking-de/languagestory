@@ -97,6 +97,8 @@ export const lessons = pgTable('lessons', {
   audio_file: varchar('audio_file', { length: 255 }),
   video_file: varchar('video_file', { length: 255 }),
   cultural_information: text('cultural_information'), // Cultural context and information
+  // Persisted lesson flow order (content, cultural, quizzes, games)
+  flow_order: json('flow_order'),
   // Audio storage fields for cultural information TTS
   cultural_audio_blob_id: varchar('cultural_audio_blob_id', { length: 255 }),
   cultural_audio_url: text('cultural_audio_url'),

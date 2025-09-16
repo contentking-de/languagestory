@@ -1,2 +1,2 @@
-ALTER TABLE "users" ADD COLUMN "class" varchar(50);--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "year_group" varchar(20);
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "class" varchar(50);--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "year_group" varchar(20);

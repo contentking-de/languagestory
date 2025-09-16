@@ -39,6 +39,7 @@ export async function GET(
         audio_file: lessons.audio_file,
         video_file: lessons.video_file,
         cultural_information: lessons.cultural_information,
+        flow_order: lessons.flow_order,
       })
       .from(lessons)
       .leftJoin(courses, eq(lessons.course_id, courses.id))
@@ -92,26 +93,28 @@ export async function PUT(
       cover_image,
       audio_file,
       video_file,
-      cultural_information
+      cultural_information,
+      flow_order
     } = body;
 
     const [updatedLesson] = await db
       .update(lessons)
       .set({
-        title,
-        slug,
-        description,
-        content,
-        lesson_type,
-        lesson_order,
-        estimated_duration,
-        points_value,
-        is_published,
-        course_id,
-        cover_image,
-        audio_file,
-        video_file,
-        cultural_information,
+        title: title ?? undefined,
+        slug: slug ?? undefined,
+        description: description ?? undefined,
+        content: content ?? undefined,
+        lesson_type: lesson_type ?? undefined,
+        lesson_order: typeof lesson_order === 'number' ? lesson_order : undefined,
+        estimated_duration: typeof estimated_duration === 'number' ? estimated_duration : undefined,
+        points_value: typeof points_value === 'number' ? points_value : undefined,
+        is_published: typeof is_published === 'boolean' ? is_published : undefined,
+        course_id: typeof course_id === 'number' ? course_id : undefined,
+        cover_image: cover_image ?? undefined,
+        audio_file: audio_file ?? undefined,
+        video_file: video_file ?? undefined,
+        cultural_information: cultural_information ?? undefined,
+        flow_order: Array.isArray(flow_order) ? flow_order : undefined,
         updated_at: new Date(),
       })
       .where(eq(lessons.id, lessonId))
