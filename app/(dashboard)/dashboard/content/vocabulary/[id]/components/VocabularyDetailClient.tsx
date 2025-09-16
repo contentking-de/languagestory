@@ -130,8 +130,15 @@ export function VocabularyDetailClient({ userRole }: VocabularyDetailClientProps
     return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const getDifficultyStars = (level: number) => {
-    return '⭐'.repeat(level);
+  const getCefrLabel = (level: number) => {
+    const labels: { [key: number]: string } = {
+      1: 'Beginner (A1)',
+      2: 'Elementary (A2)',
+      3: 'Intermediate (B1)',
+      4: 'Upper-Intermediate (B2)',
+      5: 'Advanced (C1)'
+    };
+    return labels[level] || `Level ${level}`;
   };
 
   const getTypeIcon = (type: string) => {
@@ -343,9 +350,8 @@ export function VocabularyDetailClient({ userRole }: VocabularyDetailClientProps
                 <label className="text-sm font-medium text-gray-600">Difficulty Level</label>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge className={getDifficultyColor(word.difficulty_level)}>
-                    {getDifficultyStars(word.difficulty_level)}
+                    {getCefrLabel(word.difficulty_level)}
                   </Badge>
-                  <span className="text-sm text-gray-600">Level {word.difficulty_level}</span>
                 </div>
               </div>
 
@@ -408,7 +414,12 @@ export function VocabularyDetailClient({ userRole }: VocabularyDetailClientProps
                 {word.course_level && (
                   <div>
                     <label className="text-sm font-medium text-gray-600">Level</label>
-                    <Badge className={`${getDifficultyColor(parseInt(word.course_level))} mt-1`}>
+                    <Badge className={`mt-1 ${
+                      word.course_level === 'beginner' ? 'bg-green-100 text-green-800' :
+                      word.course_level === 'intermediate' ? 'bg-orange-100 text-orange-800' :
+                      word.course_level === 'advanced' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
                       {word.course_level}
                     </Badge>
                   </div>
