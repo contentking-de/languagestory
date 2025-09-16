@@ -98,12 +98,23 @@ export default function AICreatorPage() {
         }),
       });
 
+      const contentTypeHeader = response.headers.get('content-type') || '';
       if (response.ok) {
-        const result = await response.json();
-        setGeneratedContent(result);
+        if (contentTypeHeader.includes('application/json')) {
+          const result = await response.json();
+          setGeneratedContent(result);
+        } else {
+          const text = await response.text();
+          setError(text || 'Failed to generate content');
+        }
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to generate content');
+        if (contentTypeHeader.includes('application/json')) {
+          const errorData = await response.json();
+          setError(errorData.error || 'Failed to generate content');
+        } else {
+          const text = await response.text();
+          setError(text || 'Failed to generate content');
+        }
       }
     } catch (error) {
       console.error('Error generating content:', error);
@@ -172,7 +183,8 @@ export default function AICreatorPage() {
     const providers = {
       openai: { name: 'OpenAI GPT-4', description: 'Best for creative and diverse content generation' },
       anthropic: { name: 'Claude', description: 'Excellent for educational content and detailed explanations' },
-      perplexity: { name: 'Perplexity', description: 'Great for fact-based and research-oriented content' }
+      perplexity: { name: 'Perplexity', description: 'Great for fact-based and research-oriented content' },
+      gpt5: { name: 'OpenAI GPT-5', description: 'Latest-generation model for high-quality, structured outputs' }
     };
     return providers[provider as keyof typeof providers] || { name: provider, description: '' };
   };
@@ -263,6 +275,12 @@ export default function AICreatorPage() {
                       <div>
                         <div className="font-medium">OpenAI GPT-4</div>
                         <div className="text-xs text-gray-500">Creative and diverse content</div>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="gpt5">
+                      <div>
+                        <div className="font-medium">OpenAI GPT-5</div>
+                        <div className="text-xs text-gray-500">Latest-generation quality and structure</div>
                       </div>
                     </SelectItem>
                     <SelectItem value="anthropic">

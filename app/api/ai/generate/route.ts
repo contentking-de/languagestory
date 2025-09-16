@@ -217,6 +217,59 @@ export async function POST(request: Request) {
 
       rawResponse = completion.choices[0]?.message?.content || '';
     } 
+    else if (aiProvider === 'gpt5') {
+      if (!process.env.OPENAI_API_KEY) {
+        return NextResponse.json(
+          { error: 'OpenAI API key not configured' },
+          { status: 500 }
+        );
+      }
+
+      const gpt5Model = process.env.OPENAI_GPT5_MODEL || 'gpt-5';
+      try {
+        const completion = await openai.chat.completions.create({
+          model: gpt5Model,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert language teacher and educational content creator. Always respond with valid JSON in the exact format requested.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 4000,
+        });
+
+        rawResponse = completion.choices[0]?.message?.content || '';
+      } catch (err: any) {
+        // Attempt fallback model if configured or default to gpt-4o
+        const fallbackModel = process.env.OPENAI_GPT5_FALLBACK || 'gpt-4o';
+        try {
+          const completion = await openai.chat.completions.create({
+            model: fallbackModel,
+            messages: [
+              { role: 'system', content: 'You are an expert language teacher and educational content creator. Always respond with valid JSON in the exact format requested.' },
+              { role: 'user', content: prompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 4000,
+          });
+          rawResponse = completion.choices[0]?.message?.content || '';
+        } catch (fallbackErr: any) {
+          console.error('OpenAI GPT-5 error:', err?.response?.data || err?.message || err);
+          console.error('OpenAI fallback error:', fallbackErr?.response?.data || fallbackErr?.message || fallbackErr);
+          const message = err?.response?.data?.error?.message || err?.message || 'Unknown error';
+          const fbMessage = fallbackErr?.response?.data?.error?.message || fallbackErr?.message || 'Unknown error';
+          return NextResponse.json(
+            { error: `GPT-5 request failed: ${message}. Fallback to ${fallbackModel} also failed: ${fbMessage}. You can set OPENAI_GPT5_MODEL/OPENAI_GPT5_FALLBACK to accessible models.` },
+            { status: 500 }
+          );
+        }
+      }
+    }
     else if (aiProvider === 'anthropic') {
       if (!process.env.ANTHROPIC_API_KEY) {
         return NextResponse.json(
