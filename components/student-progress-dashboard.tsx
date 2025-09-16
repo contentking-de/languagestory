@@ -112,8 +112,12 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
   }
 
   const { streak } = progressData as any;
-  const achievementsArr = Array.isArray((progressData as any).achievements) ? (progressData as any).achievements : [];
-  const recentTransactionsArr = Array.isArray((progressData as any).recentTransactions) ? (progressData as any).recentTransactions : [];
+  const achievementsArr: ProgressData['achievements'] = Array.isArray((progressData as any).achievements)
+    ? ((progressData as any).achievements as ProgressData['achievements'])
+    : [];
+  const recentTransactionsArr: ProgressData['recentTransactions'] = Array.isArray((progressData as any).recentTransactions)
+    ? ((progressData as any).recentTransactions as ProgressData['recentTransactions'])
+    : [];
 
   // Build a normalized recentActivity array (last 7 days) even if API returns a number
   const now = new Date();
