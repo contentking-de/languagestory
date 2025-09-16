@@ -54,6 +54,14 @@ interface ProgressData {
     vocabulary_practiced: number;
     games_played: number;
   }>;
+  // Fallback fields from alternative API shape
+  progressRecords?: Array<{
+    last_accessed: string | null;
+    points_earned?: number | null;
+    status?: string | null;
+  }>;
+  totalPoints?: number;
+  totalLessons?: number;
 }
 
 export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
@@ -103,10 +111,38 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
     );
   }
 
-  const { streak, achievements, recentTransactions, recentActivity } = progressData;
+  const { streak } = progressData as any;
+  const achievementsArr = Array.isArray((progressData as any).achievements) ? (progressData as any).achievements : [];
+  const recentTransactionsArr = Array.isArray((progressData as any).recentTransactions) ? (progressData as any).recentTransactions : [];
+
+  // Build a normalized recentActivity array (last 7 days) even if API returns a number
+  const now = new Date();
+  const last7: Array<{ activity_date: string; points_earned: number; lessons_completed: number; quizzes_completed: number; vocabulary_practiced: number; games_played: number; }>
+    = Array.from({ length: 7 }).map((_, idx) => {
+      const d = new Date(now);
+      d.setDate(now.getDate() - (6 - idx));
+      const iso = d.toISOString().split('T')[0];
+      return { activity_date: iso, points_earned: 0, lessons_completed: 0, quizzes_completed: 0, vocabulary_practiced: 0, games_played: 0 };
+    });
+
+  let recentActivityArr = Array.isArray((progressData as any).recentActivity) ? (progressData as any).recentActivity : last7;
+
+  if (!Array.isArray((progressData as any).recentActivity) && Array.isArray((progressData as any).progressRecords)) {
+    const mapByDate = new Map(last7.map(d => [d.activity_date, { ...d }]));
+    for (const rec of (progressData as any).progressRecords) {
+      if (!rec.last_accessed) continue;
+      const dateStr = new Date(rec.last_accessed).toISOString().split('T')[0];
+      if (mapByDate.has(dateStr)) {
+        const agg = mapByDate.get(dateStr)!;
+        agg.points_earned += (rec.points_earned || 0) as number;
+        if (rec.status === 'completed') agg.lessons_completed += 1;
+      }
+    }
+    recentActivityArr = Array.from(mapByDate.values()).sort((a, b) => a.activity_date.localeCompare(b.activity_date));
+  }
 
   // Calculate weekly stats
-  const weeklyStats = recentActivity.reduce(
+  const weeklyStats = recentActivityArr.reduce(
     (acc, day) => ({
       totalPoints: acc.totalPoints + day.points_earned,
       totalLessons: acc.totalLessons + day.lessons_completed,
@@ -166,7 +202,7 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-yellow-100 text-sm">Achievements</p>
-                <p className="text-2xl font-bold">{achievements.length}</p>
+                <p className="text-2xl font-bold">{achievementsArr.length}</p>
               </div>
               <Award className="h-8 w-8 text-yellow-200" />
             </div>
@@ -233,9 +269,9 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {achievements.length > 0 ? (
+            {achievementsArr.length > 0 ? (
               <div className="space-y-3">
-                {achievements.slice(0, 5).map((achievement) => (
+                {achievementsArr.slice(0, 5).map((achievement) => (
                   <div key={achievement.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                     <div className="text-2xl">{achievement.badge_icon}</div>
                     <div className="flex-1">
@@ -252,9 +288,9 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
                     </div>
                   </div>
                 ))}
-                {achievements.length > 5 && (
+                {achievementsArr.length > 5 && (
                   <p className="text-center text-sm text-gray-500">
-                    +{achievements.length - 5} more achievements
+                    +{achievementsArr.length - 5} more achievements
                   </p>
                 )}
               </div>
@@ -277,9 +313,9 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {recentTransactions.length > 0 ? (
+            {recentTransactionsArr.length > 0 ? (
               <div className="space-y-3">
-                {recentTransactions.slice(0, 8).map((transaction) => (
+                {recentTransactionsArr.slice(0, 8).map((transaction) => (
                   <div key={transaction.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{transaction.description}</p>
@@ -317,7 +353,7 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-7 gap-2">
-            {recentActivity.map((day, index) => {
+            {recentActivityArr.map((day, index) => {
               const isToday = day.activity_date === new Date().toISOString().split('T')[0];
               const hasActivity = day.points_earned > 0;
               
