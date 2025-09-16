@@ -194,7 +194,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
 
   // Determine overview card order (content, cultural, quizzes, games) from flow_order
   const getOverviewOrder = () => {
-    const order: Array<{ key: 'content' | 'cultural' | 'quizzes' | 'games'; index: number }> = [];
+    const order: Array<{ key: 'content' | 'cultural' | 'quizzes' | 'games' | 'vocab'; index: number }> = [];
     const items: Array<{ type: 'content' | 'cultural' | 'quiz' | 'game' }> = Array.isArray((lesson as any)?.flow_order)
       ? (lesson as any).flow_order
       : [];
