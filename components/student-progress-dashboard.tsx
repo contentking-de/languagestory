@@ -125,7 +125,23 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
       return { activity_date: iso, points_earned: 0, lessons_completed: 0, quizzes_completed: 0, vocabulary_practiced: 0, games_played: 0 };
     });
 
-  let recentActivityArr = Array.isArray((progressData as any).recentActivity) ? (progressData as any).recentActivity : last7;
+  let recentActivityArr: Array<{
+    activity_date: string;
+    points_earned: number;
+    lessons_completed: number;
+    quizzes_completed: number;
+    vocabulary_practiced: number;
+    games_played: number;
+  }> = Array.isArray((progressData as any).recentActivity)
+    ? ((progressData as any).recentActivity as Array<{
+        activity_date: string;
+        points_earned: number;
+        lessons_completed: number;
+        quizzes_completed: number;
+        vocabulary_practiced: number;
+        games_played: number;
+      }>)
+    : last7;
 
   if (!Array.isArray((progressData as any).recentActivity) && Array.isArray((progressData as any).progressRecords)) {
     const mapByDate = new Map(last7.map(d => [d.activity_date, { ...d }]));
@@ -142,7 +158,13 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
   }
 
   // Calculate weekly stats
-  const weeklyStats = recentActivityArr.reduce(
+  const weeklyStats = recentActivityArr.reduce<{
+    totalPoints: number;
+    totalLessons: number;
+    totalQuizzes: number;
+    totalVocabulary: number;
+    totalGames: number;
+  }>(
     (acc, day) => ({
       totalPoints: acc.totalPoints + day.points_earned,
       totalLessons: acc.totalLessons + day.lessons_completed,
@@ -163,7 +185,7 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm">Total Points</p>
-                <p className="text-2xl font-bold">{streak?.total_points || 0}</p>
+                <p className="text-2xl font-bold">{(progressData as any).totalPoints ?? (streak?.total_points || 0)}</p>
               </div>
               <Star className="h-8 w-8 text-blue-200" />
             </div>
