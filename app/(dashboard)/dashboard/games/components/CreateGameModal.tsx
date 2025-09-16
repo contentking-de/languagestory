@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CefrDifficultySelect from '@/components/ui/cefr-difficulty-select';
 import { Badge } from '@/components/ui/badge';
 import { 
   X, 
@@ -372,19 +373,13 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="difficulty">Difficulty Level</Label>
-                      <Select value={formData.difficulty_level.toString()} onValueChange={(value) => setFormData({ ...formData, difficulty_level: parseInt(value) })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">Beginner</SelectItem>
-                          <SelectItem value="2">Elementary</SelectItem>
-                          <SelectItem value="3">Intermediate</SelectItem>
-                          <SelectItem value="4">Advanced</SelectItem>
-                          <SelectItem value="5">Expert</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <CefrDifficultySelect
+                        id="difficulty"
+                        label="Difficulty Level"
+                        value={formData.difficulty_level}
+                        onChange={(val) => setFormData({ ...formData, difficulty_level: val })}
+                        placeholder="Select difficulty"
+                      />
                     </div>
                     <div>
                       <Label htmlFor="duration">Duration (minutes)</Label>

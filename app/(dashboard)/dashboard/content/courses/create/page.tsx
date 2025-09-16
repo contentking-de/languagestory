@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { FlagIcon } from '@/components/ui/flag-icon';
+import DifficultyLevelSelect from '@/components/ui/difficulty-level-select';
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -184,20 +185,14 @@ export default function CreateCoursePage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="level">Level *</Label>
-                  <Select 
-                    value={formData.level} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Beginner</SelectItem>
-                      <SelectItem value="intermediate">Intermediate</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <DifficultyLevelSelect
+                    id="level"
+                    label="Difficulty Level *"
+                    required
+                    value={formData.level as any}
+                    onChange={(dbLevel) => setFormData(prev => ({ ...prev, level: dbLevel }))}
+                    placeholder="Select level"
+                  />
                 </div>
               </div>
 

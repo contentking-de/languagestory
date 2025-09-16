@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import CefrDifficultySelect from '@/components/ui/cefr-difficulty-select';
 
 interface DatabaseGame {
   id: number;
@@ -315,22 +316,13 @@ export default function GameEditPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="difficulty_level">Difficulty Level</Label>
-                  <Select 
-                    value={formData.difficulty_level.toString()} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty_level: parseInt(value) }))}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select difficulty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Level 1 ★☆☆☆☆ (Beginner)</SelectItem>
-                      <SelectItem value="2">Level 2 ★★☆☆☆ (Elementary)</SelectItem>
-                      <SelectItem value="3">Level 3 ★★★☆☆ (Intermediate)</SelectItem>
-                      <SelectItem value="4">Level 4 ★★★★☆ (Advanced)</SelectItem>
-                      <SelectItem value="5">Level 5 ★★★★★ (Expert)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <CefrDifficultySelect
+                    id="difficulty_level"
+                    label="Difficulty Level"
+                    value={formData.difficulty_level}
+                    onChange={(val) => setFormData(prev => ({ ...prev, difficulty_level: val }))}
+                    placeholder="Select difficulty"
+                  />
                 </div>
 
                 <div>

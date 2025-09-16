@@ -18,7 +18,6 @@ import {
   BookOpen,
   Filter,
   Globe,
-  Target,
   Calendar,
   Eye,
   Edit,
@@ -97,9 +96,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [newGameUrl, setNewGameUrl] = useState('');
-  const [isAddingGame, setIsAddingGame] = useState(false);
-  const [isTestingUrl, setIsTestingUrl] = useState(false);
+  // Removed Wordwall creation states
   const [expandedGame, setExpandedGame] = useState<number | null>(null);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [lessonFilter, setLessonFilter] = useState('all');
@@ -109,13 +106,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
   // Check if user can create/edit games
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
 
-  // Sample Wordwall game URLs for different subjects and languages (verified working URLs)
-  const sampleGames = [
-    'https://wordwall.net/resource/3373786/animals-esl-kids', // Animals ESL Game - Quiz format
-    'https://wordwall.net/resource/11547408/reading/compound-words', // Compound Words - Spin the wheel
-    'https://wordwall.net/resource/10113660/byzantine-empire', // Byzantine Empire Quiz - Maze chase
-    'https://wordwall.net/resource/16556880/science/name-that-thing', // Name That Thing - Gameshow quiz
-  ];
+  // Removed sample games loader for production cleanliness
 
   // Load games from database on component mount
   useEffect(() => {
@@ -178,93 +169,13 @@ export function GamesClient({ userRole }: GamesClientProps) {
     }
   };
 
-  const loadSampleGames = async () => {
-    setLoading(true);
-    try {
-      for (const url of sampleGames) {
-        await addGameFromUrl(url);
-      }
-      await loadGamesFromDatabase();
-    } catch (error) {
-      console.error('Error loading sample games:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // loadSampleGames removed
 
-  const addGameFromUrl = async (url: string) => {
-    try {
-      const response = await fetch('/api/games/wordwall', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url }),
-      });
+  // addGameFromUrl removed
 
-      if (!response.ok) {
-        throw new Error('Failed to add game');
-      }
+  // addGame removed
 
-      return await response.json();
-    } catch (error) {
-      console.error('Error adding game:', error);
-      throw error;
-    }
-  };
-
-  const addGame = async () => {
-    if (!newGameUrl.trim()) {
-      alert('Please enter a Wordwall URL');
-      return;
-    }
-
-    setIsAddingGame(true);
-    try {
-      await addGameFromUrl(newGameUrl);
-      setNewGameUrl('');
-      await loadGamesFromDatabase();
-      alert('Game added successfully!');
-    } catch (error) {
-      alert('Failed to add game. Please check the URL and try again.');
-    } finally {
-      setIsAddingGame(false);
-    }
-  };
-
-  const testUrl = async () => {
-    if (!newGameUrl.trim()) {
-      alert('Please enter a Wordwall URL to test');
-      return;
-    }
-
-    setIsTestingUrl(true);
-    try {
-      const response = await fetch('/api/games/wordwall/test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: newGameUrl }),
-      });
-
-      if (response.ok) {
-        const gameData: WordwallGame = await response.json();
-        if (gameData.success) {
-          alert(`✅ URL is valid!\n\nTitle: ${gameData.title}\nType: ${gameData.type}\nDimensions: ${gameData.width}x${gameData.height}`);
-        } else {
-          alert(`❌ Invalid URL: ${gameData.error}`);
-        }
-      } else {
-        alert('❌ Failed to test URL. Please check the URL and try again.');
-      }
-    } catch (error) {
-      console.error('Error testing URL:', error);
-      alert('❌ Failed to test URL. Please check the URL and try again.');
-    } finally {
-      setIsTestingUrl(false);
-    }
-  };
+  // testUrl removed
 
   const incrementGameUsage = async (gameId: number) => {
     try {
@@ -400,27 +311,13 @@ export function GamesClient({ userRole }: GamesClientProps) {
             Refresh
           </Button>
           {canCreateEdit && (
-            <>
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Custom Game
-              </Button>
-              <Button
-                onClick={loadSampleGames}
-                disabled={loading}
-                className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto"
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Play className="h-4 w-4 mr-2" />
-                )}
-                Load Sample Games
-              </Button>
-            </>
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Custom Game
+            </Button>
           )}
         </div>
       </div>
@@ -543,66 +440,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
         </CardContent>
       </Card>
 
-      {/* Add New Game */}
-      {canCreateEdit && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Add Wordwall Game
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="game-url" className="text-sm font-medium text-gray-700 mb-1 block">
-                  Wordwall Game URL
-                </label>
-                <Input
-                  id="game-url"
-                  placeholder="e.g., https://wordwall.net/resource/12345"
-                  value={newGameUrl}
-                  onChange={(e) => setNewGameUrl(e.target.value)}
-                  className="w-full"
-                />
-                <div className="text-sm text-gray-500 mt-1 space-y-2">
-                  <p>• Enter a valid Wordwall game URL</p>
-                  <p>• The game will be embedded and playable directly on this platform</p>
-                  <p>• You can assign it to lessons and track usage statistics</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  onClick={testUrl}
-                  disabled={!newGameUrl.trim() || isTestingUrl}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  {isTestingUrl ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Target className="h-4 w-4 mr-2" />
-                  )}
-                  Test URL
-                </Button>
-                <Button
-                  onClick={addGame}
-                  disabled={!newGameUrl.trim() || isAddingGame}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-                >
-                  {isAddingGame ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Plus className="h-4 w-4 mr-2" />
-                  )}
-                  Add Game
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Wordwall creation removed */}
 
       {/* Games Grid */}
       {filteredGames.length > 0 ? (
@@ -859,27 +697,16 @@ export function GamesClient({ userRole }: GamesClientProps) {
                 ? canCreateEdit ? 'Add your first Wordwall game using the form above.' : 'No games are available yet.'
                 : 'Try adjusting your search or category filters.'}
             </p>
-            {games.length === 0 && canCreateEdit ? (
-              <Button onClick={loadGamesFromDatabase} disabled={loading}>
-                {loading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Play className="h-4 w-4 mr-2" />
-                )}
-                Load Sample Games
-              </Button>
-            ) : (
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  setSearchTerm('');
-                  setCategoryFilter('all');
-                  setLessonFilter('all');
-                }}
-              >
-                Clear All Filters
-              </Button>
-            )}
+            <Button 
+              variant="outline"
+              onClick={() => {
+                setSearchTerm('');
+                setCategoryFilter('all');
+                setLessonFilter('all');
+              }}
+            >
+              Clear All Filters
+            </Button>
           </CardContent>
         </Card>
       )}
