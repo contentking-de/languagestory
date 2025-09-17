@@ -11,6 +11,7 @@ import {
   Plus,
   Eye,
   Edit,
+  Trash2,
   Clock,
   Trophy,
   Play,
@@ -376,6 +377,28 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
                               </Button>
                             </Link>
                           )}
+                      {canCreateEdit && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={async () => {
+                            if (!confirm(`Delete lesson "${lesson.title}"? This cannot be undone.`)) return;
+                            try {
+                              const res = await fetch(`/api/lessons/${lesson.id}`, { method: 'DELETE' });
+                              if (res.ok) {
+                                setLessons(prev => prev.filter(l => l.id !== lesson.id));
+                              } else {
+                                const e = await res.json().catch(() => ({}));
+                                alert(e.error || 'Failed to delete lesson');
+                              }
+                            } catch (e) {
+                              alert('Failed to delete lesson');
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                         </div>
                       </td>
                     </tr>

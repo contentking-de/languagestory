@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { lessons, courses, vocabulary } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { lessons, courses, vocabulary, topics, quizzes, quiz_questions, cultural_content, games, student_progress, achievements } from '@/lib/db/schema';
+import { and, eq, inArray } from 'drizzle-orm';
+import { getUserWithTeamData } from '@/lib/db/queries';
 
 export async function GET(
   request: Request,
@@ -153,3 +154,72 @@ export async function PUT(
     );
   }
 } 
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getUserWithTeamData();
+    if (!user || (user.role !== 'super_admin' && user.role !== 'content_creator')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { id } = await params;
+    const lessonId = parseInt(id);
+
+    if (isNaN(lessonId)) {
+      return NextResponse.json(
+        { error: 'Invalid lesson ID' },
+        { status: 400 }
+      );
+    }
+
+    // Collect quizzes related to this lesson directly or via lesson topics
+    const lessonTopics = await db
+      .select({ id: topics.id })
+      .from(topics)
+      .where(eq(topics.lesson_id, lessonId));
+    const topicIds = lessonTopics.map(t => t.id);
+
+    const relatedQuizzes = await db
+      .select({ id: quizzes.id })
+      .from(quizzes)
+      .where(
+        topicIds.length > 0
+          ? inArray(quizzes.topic_id, topicIds)
+          : eq(quizzes.lesson_id, lessonId)
+      );
+    const quizIds = relatedQuizzes.map(q => q.id);
+
+    // Delete dependent records in safe order
+    if (quizIds.length > 0) {
+      await db.delete(quiz_questions).where(inArray(quiz_questions.quiz_id, quizIds));
+      await db.delete(quizzes).where(inArray(quizzes.id, quizIds));
+    }
+
+    if (topicIds.length > 0) {
+      await db.delete(topics).where(inArray(topics.id, topicIds));
+    }
+
+    await db.delete(vocabulary).where(eq(vocabulary.lesson_id, lessonId));
+    await db.delete(cultural_content).where(eq(cultural_content.lesson_id, lessonId));
+    await db.delete(games).where(eq(games.lesson_id, lessonId));
+    await db.delete(student_progress).where(eq(student_progress.lesson_id, lessonId));
+    await db.delete(achievements).where(eq(achievements.lesson_id, lessonId));
+
+    // Finally delete the lesson
+    const deleted = await db.delete(lessons).where(eq(lessons.id, lessonId)).returning();
+    if (!deleted || deleted.length === 0) {
+      return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting lesson:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete lesson' },
+      { status: 500 }
+    );
+  }
+}
