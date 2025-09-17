@@ -12,7 +12,8 @@ interface AudioPlayerProps {
   size?: 'sm' | 'md' | 'lg';
   vocabularyId?: number;
   lessonId?: number;
-  type?: 'cultural' | 'content';
+  type?: 'cultural' | 'content' | 'story';
+  topicId?: number;
   uniqueId?: string; // Add unique identifier for different audio instances
   showSpeedControl?: boolean; // Show speed control selector
 }
@@ -26,20 +27,21 @@ export function AudioPlayer({
   vocabularyId,
   lessonId,
   type,
+  topicId,
   uniqueId,
   showSpeedControl = false
 }: AudioPlayerProps) {
   // Version check to ensure we're using the latest code
-  console.log('AudioPlayer v2.1 loaded', { text, vocabularyId, lessonId, type });
+  console.log('AudioPlayer v2.2 loaded', { text, vocabularyId, lessonId, type, topicId });
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Reset audio state when key props change (text, type, lessonId, vocabularyId)
+  // Reset audio state when key props change (text, type, lessonId, vocabularyId, topicId)
   useEffect(() => {
-    console.log('AudioPlayer: Props changed, resetting audio state', { text: text?.slice(0, 50), type, lessonId, vocabularyId });
+    console.log('AudioPlayer: Props changed, resetting audio state', { text: text?.slice(0, 50), type, lessonId, vocabularyId, topicId });
     
     // Stop any currently playing audio
     if (audioRef.current) {
@@ -51,7 +53,7 @@ export function AudioPlayer({
     setAudioUrl(null);
     setIsPlaying(false);
     setIsLoading(false);
-  }, [text, type, lessonId, vocabularyId]);
+  }, [text, type, lessonId, vocabularyId, topicId]);
 
   const sizeClasses = {
     sm: 'h-6 w-6',
@@ -95,7 +97,8 @@ export function AudioPlayer({
           voice,
           vocabularyId,
           lessonId,
-          type
+          type,
+          topicId
         }),
       });
 

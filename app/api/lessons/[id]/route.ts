@@ -71,12 +71,13 @@ export async function GET(
       .from(vocabulary)
       .where(eq(vocabulary.lesson_id, lessonId));
 
-    // Fetch short stories (topics of type story_page) for this lesson
+    // Fetch short stories (ONLY topics of type 'story_page') for this lesson
     const stories = await db
-      .select({ id: topics.id, title: topics.title, content: topics.content })
+      .select({ id: topics.id, title: topics.title, content: topics.content, topic_type: topics.topic_type })
       .from(topics)
       .where(eq(topics.lesson_id, lessonId));
-    const storyTopics = stories.filter((t: any) => (t as any) && t);
+    const storyTopics = stories.filter((t: any) => t?.topic_type === 'story_page')
+      .map((t: any) => ({ id: t.id, title: t.title, content: t.content }));
 
     return NextResponse.json({ ...lessonData, vocabulary: vocab, stories: storyTopics });
   } catch (error) {

@@ -117,7 +117,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
       const [lessonResponse, quizzesResponse, gamesResponse] = await Promise.all([
         fetch(`/api/lessons/${lessonId}`),
         fetch(`/api/lessons/${lessonId}/quizzes`),
-        fetch(`/api/games?lessonId=${lessonId}`)
+        fetch(`/api/lessons/${lessonId}/games`)
       ]);
 
       if (lessonResponse.ok) {
@@ -411,6 +411,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                       size="md"
                       lessonId={lessonId}
                       type="story"
+                      topicId={story?.id}
                       uniqueId={story ? `story-${story.id}` : undefined}
                       showSpeedControl={true}
                     />
