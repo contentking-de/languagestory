@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { quizzes, quiz_questions, vocabulary } from '@/lib/db/content-schema';
+import { quizzes, quiz_questions, vocabulary, media_files } from '@/lib/db/content-schema';
 import { logQuizActivityServer, logVocabularyActivityServer } from '@/lib/activity-logger-server';
 import { put } from '@vercel/blob';
+import { getUserWithTeamData } from '@/lib/db/queries';
 
 export async function POST(request: Request) {
   try {
@@ -44,9 +45,32 @@ export async function POST(request: Request) {
         savedCount = await saveVocabularyContent(data, lessonId);
         break;
       case 'image': {
+        const user = await getUserWithTeamData();
         const saved = await saveImageToBlob(data, imagePrompt, imageMime);
         savedUrl = saved.url;
         savedFilename = saved.filename;
+        // Persist to media_files so it appears in Media Library
+        try {
+          const blobId = saved.url.split('/').pop()?.split('?')[0] || saved.filename;
+          const category = 'images';
+          await db.insert(media_files).values({
+            blob_id: blobId,
+            name: saved.filename,
+            url: saved.url,
+            size: saved.size,
+            type: saved.contentType,
+            category,
+            uploaded_by: user?.id || 0,
+            tags: [],
+            metadata: {
+              originalName: saved.filename,
+              uploadedAt: new Date().toISOString(),
+              source: 'ai-creator'
+            }
+          });
+        } catch (e) {
+          console.warn('Failed to insert media_files record for AI image:', e);
+        }
         savedCount = 1;
         break;
       }
@@ -244,7 +268,11 @@ function slugifyFilename(input: string, maxLen = 80): string {
   return base.slice(0, maxLen) || 'image';
 }
 
-async function saveImageToBlob(data: any, prompt?: string, imageMime?: string): Promise<{ url: string; filename: string; }> {
+async function saveImageToBlob(
+  data: any,
+  prompt?: string,
+  imageMime?: string
+): Promise<{ url: string; filename: string; size: number; contentType: string }> {
   try {
     const base64 = data?.base64 as string | undefined;
     if (!base64) throw new Error('Missing image base64');
@@ -271,7 +299,7 @@ async function saveImageToBlob(data: any, prompt?: string, imageMime?: string): 
     const random = Math.random().toString(36).slice(2, 8);
     const filename = `ai-images/${slug}-${random}.${extension}`;
     const { url } = await put(filename, processed, { access: 'public', contentType });
-    return { url, filename };
+    return { url, filename, size: processed.byteLength, contentType };
   } catch (err) {
     console.error('Error saving image to blob:', err);
     throw err;
