@@ -42,6 +42,7 @@ interface Lesson {
   course_title?: string;
   flow_order?: any;
   vocabulary?: LessonVocabularyItem[];
+  stories?: Array<{ id: number; title: string; content: string }>;
 }
 
 interface Quiz {
@@ -64,13 +65,14 @@ interface Game {
 
 interface ProgressItem {
   id: number;
-  type: 'content' | 'cultural' | 'quiz' | 'game';
+  type: 'content' | 'cultural' | 'quiz' | 'game' | 'story';
   title: string;
   status: 'not_started' | 'in_progress' | 'completed';
   score?: number;
   points_earned?: number;
   quizId?: number; // Store actual quiz ID for quiz steps
   gameId?: number; // Store actual game ID for game steps
+  storyId?: number;
 }
 
 interface LessonWorkflowClientProps {
@@ -180,6 +182,13 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         steps.push({ id: steps.length, type: 'content', title: 'Lesson Content', status: 'not_started' });
       }
     };
+    const addStories = () => {
+      if (lesson?.stories && lesson.stories.length > 0) {
+        for (const s of lesson.stories) {
+          steps.push({ id: steps.length, type: 'story', title: s.title || 'Short Story', status: 'not_started', storyId: s.id });
+        }
+      }
+    };
     const addCultural = () => {
       if (lesson?.cultural_information) {
         steps.push({ id: steps.length, type: 'cultural', title: 'Cultural Information', status: 'not_started' });
@@ -214,6 +223,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     // Fallback default order if no saved order exists
     addVocab();
     addContent();
+    addStories();
     addCultural();
     quizzes.forEach(q => addQuizById(q.id));
     games.forEach(g => addGameById(g.id));
@@ -370,6 +380,38 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                       size="md"
                       lessonId={lessonId}
                       type="cultural"
+                      showSpeedControl={true}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      case 'story':
+        const story = lesson?.stories?.find(s => s.id === currentStepData.storyId);
+        return (
+          <Card className="max-w-4xl mx-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                {story?.title || 'Short Story'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose max-w-none">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
+                      {story?.content}
+                    </div>
+                    <AudioPlayer 
+                      text={story?.content || ''} 
+                      language={lesson?.course_language || 'english'} 
+                      size="md"
+                      lessonId={lessonId}
+                      type="story"
+                      uniqueId={story ? `story-${story.id}` : undefined}
                       showSpeedControl={true}
                     />
                   </div>

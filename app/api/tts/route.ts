@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserWithTeamData } from '@/lib/db/queries';
 import { put } from '@vercel/blob';
 import { db } from '@/lib/db/drizzle';
-import { vocabulary, lessons } from '@/lib/db/content-schema';
+import { vocabulary, lessons, topics } from '@/lib/db/content-schema';
 import { eq } from 'drizzle-orm';
 
 // OpenAI TTS API configuration
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { text, language, voice, vocabularyId, lessonId, type } = body;
+    const { text, language, voice, vocabularyId, lessonId, type, topicId } = body;
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
@@ -61,6 +61,14 @@ export async function POST(request: NextRequest) {
         .limit(1);
       existingAudio = vocab?.audio_url;
       console.log(`TTS: Vocabulary cache check - found: ${existingAudio ? 'yes' : 'no'}`);
+    } else if (topicId && type === 'story') {
+      const [topic] = await db
+        .select({ audio_url: topics.audio_file })
+        .from(topics)
+        .where(eq(topics.id, topicId))
+        .limit(1);
+      existingAudio = (topic as any)?.audio_url || null;
+      console.log(`TTS: Story topic cache check - found: ${existingAudio ? 'yes' : 'no'}`);
     } else if (lessonId && type === 'cultural') {
       const [lesson] = await db
         .select({ cultural_audio_url: lessons.cultural_audio_url })
@@ -149,6 +157,14 @@ export async function POST(request: NextRequest) {
         })
         .where(eq(vocabulary.id, vocabularyId));
       console.log(`TTS: Stored vocabulary audio for ID: ${vocabularyId}`);
+    } else if (topicId && type === 'story') {
+      await db
+        .update(topics)
+        .set({
+          audio_file: blob.url,
+        })
+        .where(eq(topics.id, topicId));
+      console.log(`TTS: Stored story audio for topic: ${topicId}`);
     } else if (lessonId && type === 'cultural') {
       await db
         .update(lessons)

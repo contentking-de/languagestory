@@ -61,6 +61,7 @@ interface Lesson {
     difficulty_level: number;
     word_type?: string;
   }>;
+  stories?: Array<{ id: number; title: string; content: string }>;
 }
 
 interface Quiz {
@@ -649,6 +650,33 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
               </Card>
             );
 
+            const StoriesCard = (lesson as any)?.stories && (lesson as any).stories.length > 0 ? (
+              <Card key={`stories-${lesson.id}`} className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Short Stories ({(lesson as any).stories.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {(lesson as any).stories.map((s: any) => (
+                      <div key={s.id} className="p-3 border rounded-lg bg-gray-50">
+                        <h4 className="font-medium text-gray-900 mb-1">{s.title || 'Short Story'}</h4>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap line-clamp-3">{s.content}</p>
+                      </div>
+                    ))}
+                    <Link href={`/dashboard/content/lessons/${lesson.id}/work`}>
+                      <Button size="sm">
+                        <Play className="h-4 w-4 mr-2" />
+                        Read in Lesson
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null;
+
             const CulturalCard = lesson.cultural_information ? (
               <Card key={`cultural-${lesson.id}`} className="mt-6">
                 <CardHeader>
@@ -854,6 +882,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
             order.forEach((k, idx) => {
               if (k === 'vocab' && VocabTrainer) blocks.push(VocabTrainer);
               if (k === 'content') blocks.push(ContentCard);
+              if (k === 'content' && StoriesCard) blocks.push(StoriesCard);
               if (k === 'cultural' && CulturalCard) blocks.push(CulturalCard);
               if (k === 'quizzes') blocks.push(QuizzesCard);
               if (k === 'games') blocks.push(GamesCard);

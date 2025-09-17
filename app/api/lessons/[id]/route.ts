@@ -71,7 +71,14 @@ export async function GET(
       .from(vocabulary)
       .where(eq(vocabulary.lesson_id, lessonId));
 
-    return NextResponse.json({ ...lessonData, vocabulary: vocab });
+    // Fetch short stories (topics of type story_page) for this lesson
+    const stories = await db
+      .select({ id: topics.id, title: topics.title, content: topics.content })
+      .from(topics)
+      .where(eq(topics.lesson_id, lessonId));
+    const storyTopics = stories.filter((t: any) => (t as any) && t);
+
+    return NextResponse.json({ ...lessonData, vocabulary: vocab, stories: storyTopics });
   } catch (error) {
     console.error('Error fetching lesson:', error);
     return NextResponse.json(

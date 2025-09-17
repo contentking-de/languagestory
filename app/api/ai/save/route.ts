@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { quizzes, quiz_questions, vocabulary, media_files } from '@/lib/db/content-schema';
+import { quizzes, quiz_questions, vocabulary, media_files, topics } from '@/lib/db/content-schema';
 import { logQuizActivityServer, logVocabularyActivityServer } from '@/lib/activity-logger-server';
 import { put } from '@vercel/blob';
 import { getUserWithTeamData } from '@/lib/db/queries';
@@ -43,6 +43,9 @@ export async function POST(request: Request) {
       
       case 'vocabulary':
         savedCount = await saveVocabularyContent(data, lessonId);
+        break;
+      case 'story':
+        savedCount = await saveStoryContent(data, lessonId);
         break;
       case 'image': {
         const user = await getUserWithTeamData();
@@ -256,6 +259,37 @@ async function saveVocabularyContent(data: any, lessonId?: number): Promise<numb
   }
 
   return savedCount;
+}
+
+async function saveStoryContent(data: any, lessonId?: number): Promise<number> {
+  const story = data.story;
+  if (!story || !story.content) {
+    throw new Error('No story content found in data');
+  }
+
+  const title: string = story.title || 'AI Generated Story';
+  const slug: string = (title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-') || `story-${Date.now()}`).slice(0, 80);
+
+  const values = {
+    lesson_id: lessonId || null,
+    title,
+    slug,
+    content: story.content,
+    topic_type: 'story_page' as any,
+    topic_order: 0,
+    difficulty_level: story.difficulty_level || 3,
+    points_value: 10,
+    is_published: false,
+    interactive_data: {
+      vocabulary_highlights: story.vocabulary_highlights || [],
+      grammar_focus: story.grammar_focus || [],
+      estimated_reading_time: story.estimated_reading_time || null,
+      source: 'ai-creator'
+    },
+  };
+
+  await db.insert(topics).values(values);
+  return 1;
 }
 
 function slugifyFilename(input: string, maxLen = 80): string {
