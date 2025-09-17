@@ -267,11 +267,15 @@ async function saveStoryContent(data: any, lessonId?: number): Promise<number> {
     throw new Error('No story content found in data');
   }
 
+  if (typeof lessonId !== 'number') {
+    throw new Error('Lesson ID is required to save a story');
+  }
+
   const title: string = story.title || 'AI Generated Story';
   const slug: string = (title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-') || `story-${Date.now()}`).slice(0, 80);
 
   const values = {
-    lesson_id: lessonId || null,
+    lesson_id: lessonId,
     title,
     slug,
     content: story.content,
