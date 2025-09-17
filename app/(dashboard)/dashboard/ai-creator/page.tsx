@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { 
   Brain,
@@ -17,7 +18,8 @@ import {
   Wand2,
   Save,
   Eye,
-  RefreshCw
+  RefreshCw,
+  Image as ImageIcon
 } from 'lucide-react';
 import {
   Select,
@@ -39,6 +41,7 @@ interface GeneratedContent {
   type: string;
   data: any;
   preview: string;
+  usedPrompt?: string;
 }
 
 export default function AICreatorPage() {
@@ -55,6 +58,7 @@ export default function AICreatorPage() {
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [quizName, setQuizName] = useState('');
   const [error, setError] = useState('');
+  const isImage = contentType === 'image';
 
   useEffect(() => {
     fetchLessons();
@@ -73,9 +77,20 @@ export default function AICreatorPage() {
   };
 
   const handleGenerate = async () => {
-    if (!contentType || !language || !level || !topic.trim()) {
-      setError('Please fill in all required fields');
+    if (!contentType) {
+      setError('Please select a content type');
       return;
+    }
+    if (isImage) {
+      if (!topic.trim()) {
+        setError('Please enter an image prompt');
+        return;
+      }
+    } else {
+      if (!language || !level || !topic.trim()) {
+        setError('Please fill in all required fields');
+        return;
+      }
     }
 
     setIsGenerating(true);
@@ -88,14 +103,22 @@ export default function AICreatorPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          contentType,
-          aiProvider,
-          language,
-          level,
-          topic,
-          quantity,
-        }),
+        body: JSON.stringify(
+          isImage
+            ? {
+                contentType,
+                aiProvider,
+                topic,
+              }
+            : {
+                contentType,
+                aiProvider,
+                language,
+                level,
+                topic,
+                quantity,
+              }
+        ),
       });
 
       const contentTypeHeader = response.headers.get('content-type') || '';
@@ -147,6 +170,7 @@ export default function AICreatorPage() {
           data: generatedContent.data,
           lessonId: targetLessonId,
           customName: (generatedContent.type === 'quiz' || generatedContent.type === 'true_false_quiz') ? quizName.trim() : undefined,
+          imagePrompt: generatedContent.type === 'image' ? (generatedContent.usedPrompt || topic) : undefined,
         }),
       });
 
@@ -174,7 +198,8 @@ export default function AICreatorPage() {
       vocabulary: <Languages className="h-6 w-6" />,
       story: <BookOpen className="h-6 w-6" />,
       conversation: <MessageSquare className="h-6 w-6" />,
-      grammar: <FileText className="h-6 w-6" />
+      grammar: <FileText className="h-6 w-6" />,
+      image: <ImageIcon className="h-6 w-6" />
     };
     return icons[type as keyof typeof icons] || <Brain className="h-6 w-6" />;
   };
@@ -259,6 +284,12 @@ export default function AICreatorPage() {
                         Grammar Exercises
                       </div>
                     </SelectItem>
+                    <SelectItem value="image">
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="h-4 w-4" />
+                        Image
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -303,6 +334,7 @@ export default function AICreatorPage() {
               </div>
 
               {/* Language & Level */}
+              {!isImage && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="language">Target Language *</Label>
@@ -335,23 +367,38 @@ export default function AICreatorPage() {
                   </Select>
                 </div>
               </div>
+              )}
 
-              {/* Topic */}
+              {/* Topic / Image Prompt */}
               <div>
-                <Label htmlFor="topic">Topic or Theme *</Label>
-                <Input
-                  id="topic"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  placeholder="e.g., 'food and restaurants', 'travel and tourism', 'daily routines'"
-                  className="mt-1"
-                />
+                <Label htmlFor="topic">{isImage ? 'Image Prompt *' : 'Topic or Theme *'}</Label>
+                {isImage ? (
+                  <Textarea
+                    id="topic"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    placeholder="Describe the image you want. Style, mood, objects, colors..."
+                    className="mt-1"
+                    rows={4}
+                  />
+                ) : (
+                  <Input
+                    id="topic"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    placeholder="e.g., 'food and restaurants', 'travel and tourism', 'daily routines'"
+                    className="mt-1"
+                  />
+                )}
                 <p className="text-xs text-gray-500 mt-1">
-                  Be specific for better results (e.g., "ordering food at a restaurant" vs "food")
+                  {isImage
+                    ? 'We will use your prompt and our team image as a style reference.'
+                    : 'Be specific for better results (e.g., "ordering food at a restaurant" vs "food")'}
                 </p>
               </div>
 
               {/* Quantity */}
+              {!isImage && (
               <div>
                 <Label htmlFor="quantity">Quantity</Label>
                 <Select value={quantity.toString()} onValueChange={(value) => setQuantity(parseInt(value))}>
@@ -367,8 +414,10 @@ export default function AICreatorPage() {
                   </SelectContent>
                 </Select>
               </div>
+              )}
 
               {/* Target Lesson */}
+              {!isImage && (
               <div>
                 <Label htmlFor="targetLesson">Assign to Lesson (Optional)</Label>
                 <Select 
@@ -388,11 +437,12 @@ export default function AICreatorPage() {
                   </SelectContent>
                 </Select>
               </div>
+              )}
 
               {/* Generate Button */}
               <Button 
                 onClick={handleGenerate} 
-                disabled={isGenerating || !contentType || !language || !level || !topic.trim()}
+                disabled={isGenerating || !contentType || (isImage ? !topic.trim() : (!language || !level || !topic.trim()))}
                 className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
               >
                 {isGenerating ? (
@@ -449,9 +499,11 @@ export default function AICreatorPage() {
                     <div className="flex items-center gap-2">
                       {getContentTypeIcon(generatedContent.type)}
                       <span className="font-medium capitalize">{generatedContent.type}</span>
-                      <span className="text-sm text-gray-500">
-                        ({Array.isArray(generatedContent.data) ? generatedContent.data.length : 1} items)
-                      </span>
+                      {generatedContent.type !== 'image' && (
+                        <span className="text-sm text-gray-500">
+                          ({Array.isArray(generatedContent.data) ? generatedContent.data.length : 1} items)
+                        </span>
+                      )}
                     </div>
                     <Button
                       onClick={() => setGeneratedContent(null)}
@@ -481,16 +533,25 @@ export default function AICreatorPage() {
                   )}
 
                   {/* Preview Content */}
-                  <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-800">
-                      {generatedContent.preview}
-                    </pre>
-                  </div>
+                  {generatedContent.type === 'image' ? (
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+                      <img src={generatedContent.preview} alt="Generated" className="max-h-80 rounded-md" />
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap text-sm text-gray-800">
+                        {generatedContent.preview}
+                      </pre>
+                    </div>
+                  )}
 
                   {/* Save Button */}
                   <Button 
                     onClick={handleSave} 
-                    disabled={isSaving || ((generatedContent.type === 'quiz' || generatedContent.type === 'true_false_quiz') && !quizName.trim())}
+                    disabled={
+                      isSaving ||
+                      ((generatedContent.type === 'quiz' || generatedContent.type === 'true_false_quiz') && !quizName.trim())
+                    }
                     className="w-full"
                   >
                     {isSaving ? (
@@ -501,7 +562,9 @@ export default function AICreatorPage() {
                     ) : (
                       <>
                         <Save className="h-4 w-4 mr-2" />
-                        Save {generatedContent.type === 'true_false_quiz' ? 'Quiz' : generatedContent.type.charAt(0).toUpperCase() + generatedContent.type.slice(1)}{targetLessonId ? ' to Lesson' : ' to Library'}
+                        {generatedContent.type === 'image'
+                          ? 'Save Image'
+                          : `Save ${generatedContent.type === 'true_false_quiz' ? 'Quiz' : generatedContent.type.charAt(0).toUpperCase() + generatedContent.type.slice(1)}${targetLessonId ? ' to Lesson' : ' to Library'}`}
                       </>
                     )}
                   </Button>

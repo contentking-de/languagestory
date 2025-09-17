@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
+import fs from 'fs';
+import path from 'path';
 
 // Initialize AI clients
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  organization: process.env.OPENAI_ORG_ID,
 });
 
 const anthropic = new Anthropic({
@@ -162,7 +165,7 @@ Format as JSON:
     }
   ]
 }`
-  };
+  } as Record<string, string>;
 
   return prompts[contentType as keyof typeof prompts] || '';
 };
@@ -171,11 +174,86 @@ export async function POST(request: Request) {
   try {
     const { contentType, aiProvider, language, level, topic, quantity } = await request.json();
 
-    if (!contentType || !aiProvider || !language || !level || !topic) {
+    if (!contentType || !aiProvider || !topic) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
         { status: 400 }
       );
+    }
+    
+    // Handle image generation separately
+    if (contentType === 'image') {
+      if (aiProvider !== 'gpt5') {
+        return NextResponse.json(
+          { error: 'Image generation currently supported with GPT-5 only' },
+          { status: 400 }
+        );
+      }
+      if (!process.env.OPENAI_API_KEY) {
+        return NextResponse.json(
+          { error: 'OpenAI API key not configured' },
+          { status: 500 }
+        );
+      }
+
+      // Compose image prompt using blueprint reference
+      const userPrompt = topic as string;
+      // Reference image hosted publicly (exact URL as requested)
+      const referenceUrl = 'https://www.lingoletics.com/lingoletics-team.png';
+
+      try {
+        const model = process.env.OPENAI_GPT5_IMAGE_MODEL || 'gpt-image-1';
+        // Try image edit (image-to-image) first using blueprint file
+        const blueprintPath = path.join(process.cwd(), 'public', 'lingoletics-team.png');
+        const blueprintExists = fs.existsSync(blueprintPath);
+        if (blueprintExists && (openai as any).images?.edits) {
+          try {
+            const imageBuffer = fs.readFileSync(blueprintPath);
+            const blob = new Blob([imageBuffer], { type: 'image/png' });
+            // @ts-ignore - SDK typing for edits may vary by version
+            const edited = await (openai as any).images.edits({
+              model,
+              image: blob,
+              prompt: `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint.`,
+              size: '1024x1024'
+            });
+            const b64 = edited.data?.[0]?.b64_json;
+            if (b64) {
+              const preview = `data:image/png;base64,${b64}`;
+              const usedPrompt = `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint.`;
+              return NextResponse.json({ type: 'image', data: { base64: b64, referenceUrl }, preview, aiProvider, usedPrompt });
+            }
+          } catch (editErr: any) {
+            console.warn('Image edit failed, falling back to text-only generation:', editErr?.message || editErr);
+          }
+        }
+
+        // Fallback: text-only generation with reference mention
+        const img = await openai.images.generate({
+          model,
+          prompt: `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint.`,
+          size: '1024x1024'
+        });
+
+        const b64 = img.data?.[0]?.b64_json;
+        if (!b64) {
+          return NextResponse.json({ error: 'No image returned from model' }, { status: 500 });
+        }
+        const preview = `data:image/png;base64,${b64}`;
+        const usedPrompt = `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint.`;
+
+        return NextResponse.json({
+          type: 'image',
+          data: { base64: b64, referenceUrl },
+          preview,
+          aiProvider,
+          usedPrompt
+        });
+      } catch (err: any) {
+        console.error('OpenAI image generation error (GPT-5 image):', err?.response?.data || err?.message || err);
+        const message = err?.response?.data || err?.message || 'Unknown error';
+        return NextResponse.json({ error: `Failed to generate image with GPT-5: ${message}` }, { status: 500 });
+      }
     }
 
     const prompt = getPrompt(contentType, language, level, topic, quantity);

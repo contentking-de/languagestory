@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { quizzes, quiz_questions, vocabulary } from '@/lib/db/content-schema';
 import { logQuizActivityServer, logVocabularyActivityServer } from '@/lib/activity-logger-server';
+import { put } from '@vercel/blob';
 
 export async function POST(request: Request) {
   try {
-    const { contentType, data, lessonId, customName } = await request.json();
+    const { contentType, data, lessonId, customName, imagePrompt } = await request.json();
     
     console.log('Save API called with:');
     console.log('contentType:', contentType);
@@ -23,6 +24,9 @@ export async function POST(request: Request) {
 
     let savedCount = 0;
 
+    let savedUrl: string | undefined;
+    let savedFilename: string | undefined;
+
     switch (contentType) {
       case 'quiz':
         console.log('About to call saveQuizContent');
@@ -39,6 +43,13 @@ export async function POST(request: Request) {
       case 'vocabulary':
         savedCount = await saveVocabularyContent(data, lessonId);
         break;
+      case 'image': {
+        const saved = await saveImageToBlob(data, imagePrompt);
+        savedUrl = saved.url;
+        savedFilename = saved.filename;
+        savedCount = 1;
+        break;
+      }
       
       // TODO: Implement other content types
       case 'story':
@@ -59,7 +70,9 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       count: savedCount,
-      message: `Successfully saved ${savedCount} ${contentType} item(s)`
+      message: `Successfully saved ${savedCount} ${contentType} item(s)`,
+      savedUrl,
+      savedFilename
     });
 
   } catch (error) {
@@ -219,4 +232,30 @@ async function saveVocabularyContent(data: any, lessonId?: number): Promise<numb
   }
 
   return savedCount;
+}
+
+function slugifyFilename(input: string, maxLen = 80): string {
+  const base = input
+    .toLowerCase()
+    .replace(/https?:\/\/[^\s]+/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+  return base.slice(0, maxLen) || 'image';
+}
+
+async function saveImageToBlob(data: any, prompt?: string): Promise<{ url: string; filename: string; }> {
+  try {
+    const base64 = data?.base64 as string | undefined;
+    if (!base64) throw new Error('Missing image base64');
+    const buffer = Buffer.from(base64, 'base64');
+    const slug = prompt ? slugifyFilename(prompt) : `${Date.now()}`;
+    const random = Math.random().toString(36).slice(2, 8);
+    const filename = `ai-images/${slug}-${random}.png`;
+    const { url } = await put(filename, buffer, { access: 'public', contentType: 'image/png' });
+    return { url, filename };
+  } catch (err) {
+    console.error('Error saving image to blob:', err);
+    throw err;
+  }
 }
