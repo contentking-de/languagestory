@@ -60,6 +60,13 @@ export default function AICreatorPage() {
   const [error, setError] = useState('');
   const isImage = contentType === 'image';
 
+  // Enforce GPT-5 for image generation to avoid user confusion
+  useEffect(() => {
+    if (isImage && aiProvider !== 'gpt5') {
+      setAiProvider('gpt5');
+    }
+  }, [isImage, aiProvider]);
+
   useEffect(() => {
     fetchLessons();
   }, []);
@@ -160,6 +167,21 @@ export default function AICreatorPage() {
     setError('');
 
     try {
+      // For images: compress client-side to WebP (~quality 70) to ensure <200KB
+      let clientImage: { base64: string; mime: string } | undefined;
+      if (generatedContent.type === 'image') {
+        try {
+          const res = await fetch(generatedContent.preview);
+          const blob = await res.blob();
+          const webpBlob = await compressToWebp(blob, 0.7, 1024);
+          const arrayBuf = await webpBlob.arrayBuffer();
+          const b64 = Buffer.from(arrayBuf).toString('base64');
+          clientImage = { base64: b64, mime: webpBlob.type || 'image/webp' };
+        } catch (e) {
+          console.warn('Client-side image compression failed; sending original preview PNG.', e);
+        }
+      }
+
       const response = await fetch('/api/ai/save', {
         method: 'POST',
         headers: {
@@ -167,10 +189,13 @@ export default function AICreatorPage() {
         },
         body: JSON.stringify({
           contentType: generatedContent.type,
-          data: generatedContent.data,
+          data: generatedContent.type === 'image' && clientImage
+            ? { base64: clientImage.base64 }
+            : generatedContent.data,
           lessonId: targetLessonId,
           customName: (generatedContent.type === 'quiz' || generatedContent.type === 'true_false_quiz') ? quizName.trim() : undefined,
-          imagePrompt: generatedContent.type === 'image' ? (generatedContent.usedPrompt || topic) : undefined,
+          imagePrompt: generatedContent.type === 'image' ? topic : undefined,
+          imageMime: generatedContent.type === 'image' ? (clientImage?.mime || 'image/png') : undefined,
         }),
       });
 
@@ -213,6 +238,20 @@ export default function AICreatorPage() {
     };
     return providers[provider as keyof typeof providers] || { name: provider, description: '' };
   };
+
+  // Client-side WebP compression helper
+  async function compressToWebp(inputBlob: Blob, quality = 0.7, maxWidth = 1024): Promise<Blob> {
+    const bitmap = await createImageBitmap(inputBlob);
+    const canvas = document.createElement('canvas');
+    const ratio = Math.min(1, maxWidth / bitmap.width);
+    canvas.width = Math.round(bitmap.width * ratio);
+    canvas.height = Math.round(bitmap.height * ratio);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return inputBlob;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
+    return blob || inputBlob;
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -294,7 +333,8 @@ export default function AICreatorPage() {
                 </Select>
               </div>
 
-              {/* AI Provider */}
+              {/* AI Provider (hidden for Image type) */}
+              {!isImage && (
               <div>
                 <Label htmlFor="aiProvider">AI Provider</Label>
                 <Select value={aiProvider} onValueChange={setAiProvider}>
@@ -332,6 +372,7 @@ export default function AICreatorPage() {
                   {getAiProviderInfo(aiProvider).description}
                 </p>
               </div>
+              )}
 
               {/* Language & Level */}
               {!isImage && (

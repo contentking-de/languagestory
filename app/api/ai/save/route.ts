@@ -6,7 +6,7 @@ import { put } from '@vercel/blob';
 
 export async function POST(request: Request) {
   try {
-    const { contentType, data, lessonId, customName, imagePrompt } = await request.json();
+    const { contentType, data, lessonId, customName, imagePrompt, imageMime } = await request.json();
     
     console.log('Save API called with:');
     console.log('contentType:', contentType);
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         savedCount = await saveVocabularyContent(data, lessonId);
         break;
       case 'image': {
-        const saved = await saveImageToBlob(data, imagePrompt);
+        const saved = await saveImageToBlob(data, imagePrompt, imageMime);
         savedUrl = saved.url;
         savedFilename = saved.filename;
         savedCount = 1;
@@ -244,15 +244,33 @@ function slugifyFilename(input: string, maxLen = 80): string {
   return base.slice(0, maxLen) || 'image';
 }
 
-async function saveImageToBlob(data: any, prompt?: string): Promise<{ url: string; filename: string; }> {
+async function saveImageToBlob(data: any, prompt?: string, imageMime?: string): Promise<{ url: string; filename: string; }> {
   try {
     const base64 = data?.base64 as string | undefined;
     if (!base64) throw new Error('Missing image base64');
     const buffer = Buffer.from(base64, 'base64');
+    let processed: Buffer | null = null;
+    let contentType = imageMime || 'image/png';
+    let extension = contentType === 'image/jpeg' ? 'jpg' : contentType.split('/')[1] || 'png';
+
+    try {
+      const { optimizeImage } = await import('@/lib/image-opt');
+      const out = await optimizeImage(buffer, { maxWidth: 1024, format: 'webp', quality: 70 });
+      processed = out.buffer;
+      contentType = out.contentType;
+      extension = out.extension;
+    } catch (e) {
+      console.warn('Image compression unavailable, uploading original image. Reason:', e);
+      processed = buffer;
+      contentType = imageMime || 'image/png';
+      extension = contentType === 'image/jpeg' ? 'jpg' : contentType.split('/')[1] || 'png';
+    }
+
+    // Use only the user's short image description (topic) for filename
     const slug = prompt ? slugifyFilename(prompt) : `${Date.now()}`;
     const random = Math.random().toString(36).slice(2, 8);
-    const filename = `ai-images/${slug}-${random}.png`;
-    const { url } = await put(filename, buffer, { access: 'public', contentType: 'image/png' });
+    const filename = `ai-images/${slug}-${random}.${extension}`;
+    const { url } = await put(filename, processed, { access: 'public', contentType });
     return { url, filename };
   } catch (err) {
     console.error('Error saving image to blob:', err);

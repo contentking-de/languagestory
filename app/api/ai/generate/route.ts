@@ -211,6 +211,7 @@ export async function POST(request: Request) {
             const imageBuffer = fs.readFileSync(blueprintPath);
             const blob = new Blob([imageBuffer], { type: 'image/png' });
             // @ts-ignore - SDK typing for edits may vary by version
+            console.log('[AI][image.edit] model:', model, 'size:', '1024x1024');
             const edited = await (openai as any).images.edits({
               model,
               image: blob,
@@ -229,6 +230,7 @@ export async function POST(request: Request) {
         }
 
         // Fallback: text-only generation with reference mention
+        console.log('[AI][image.generate] model:', model, 'size:', '1024x1024');
         const img = await openai.images.generate({
           model,
           prompt: `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint.`,
