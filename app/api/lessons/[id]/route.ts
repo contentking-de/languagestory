@@ -71,15 +71,21 @@ export async function GET(
       .from(vocabulary)
       .where(eq(vocabulary.lesson_id, lessonId));
 
-    // Fetch short stories (ONLY topics of type 'story_page') for this lesson
-    const stories = await db
-      .select({ id: topics.id, title: topics.title, content: topics.content, topic_type: topics.topic_type })
+    // Fetch lesson topics (stories + grammar)
+    const lessonTopics = await db
+      .select({ id: topics.id, title: topics.title, content: topics.content, topic_type: topics.topic_type, interactive_data: topics.interactive_data })
       .from(topics)
       .where(eq(topics.lesson_id, lessonId));
-    const storyTopics = stories.filter((t: any) => t?.topic_type === 'story_page')
+
+    const storyTopics = lessonTopics
+      .filter((t: any) => t?.topic_type === 'story_page')
       .map((t: any) => ({ id: t.id, title: t.title, content: t.content }));
 
-    return NextResponse.json({ ...lessonData, vocabulary: vocab, stories: storyTopics });
+    const grammarTopics = lessonTopics
+      .filter((t: any) => t?.topic_type === 'grammar_exercise')
+      .map((t: any) => ({ id: t.id, title: t.title, exercises: (t?.interactive_data?.exercises || []) }));
+
+    return NextResponse.json({ ...lessonData, vocabulary: vocab, stories: storyTopics, grammar: grammarTopics });
   } catch (error) {
     console.error('Error fetching lesson:', error);
     return NextResponse.json(

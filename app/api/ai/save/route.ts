@@ -47,6 +47,10 @@ export async function POST(request: Request) {
       case 'story':
         savedCount = await saveStoryContent(data, lessonId);
         break;
+      case 'grammar':
+        // Save as a grammar topic with MC-style questions in interactive_data
+        savedCount = await saveGrammarContent({ ...data, title: customName || data?.title }, lessonId);
+        break;
       case 'image': {
         const user = await getUserWithTeamData();
         const saved = await saveImageToBlob(data, imagePrompt, imageMime);
@@ -79,9 +83,7 @@ export async function POST(request: Request) {
       }
       
       // TODO: Implement other content types
-      case 'story':
       case 'conversation':
-      case 'grammar':
         return NextResponse.json(
           { error: `Saving ${contentType} content is not yet implemented. Coming soon!` },
           { status: 501 }
@@ -293,6 +295,43 @@ async function saveStoryContent(data: any, lessonId?: number): Promise<number> {
   };
 
   await db.insert(topics).values(values);
+  return 1;
+}
+
+async function saveGrammarContent(data: any, lessonId?: number): Promise<number> {
+  // Accept both MC-style questions and legacy exercises
+  const mcQuestions = Array.isArray(data?.questions) ? data.questions : [];
+  const legacyExercises = Array.isArray(data?.exercises) ? data.exercises : [];
+  if (mcQuestions.length === 0 && legacyExercises.length === 0) {
+    throw new Error('No grammar content found in data');
+  }
+
+  const title = data.title || 'Grammar Exercises';
+  const slug = (title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-') || `grammar-${Date.now()}`).slice(0, 80);
+
+  const interactive = {
+    // Prefer MC questions for consistency; keep exercises for compatibility
+    questions: mcQuestions,
+    exercises: legacyExercises,
+    metadata: {
+      source: 'ai-creator',
+      generatedAt: new Date().toISOString(),
+    },
+  };
+
+  await db.insert(topics).values({
+    lesson_id: typeof lessonId === 'number' ? lessonId : null,
+    title,
+    slug,
+    content: null,
+    topic_type: 'grammar_exercise' as any,
+    topic_order: 0,
+    difficulty_level: 3,
+    points_value: 10,
+    is_published: false,
+    interactive_data: interactive,
+  });
+
   return 1;
 }
 

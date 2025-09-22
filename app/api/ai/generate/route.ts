@@ -148,23 +148,29 @@ Format as JSON:
   ]
 }`,
 
-    grammar: `Create ${quantity} grammar exercises about "${topic}" in ${language} for ${level} learners.
+    grammar: `Create ${quantity} multiple choice grammar questions about "${topic}" for ${level} ${language} learners.
 
 Requirements:
 - Use ${levelDesc}
-- Focus on specific grammar points relevant to the topic
-- Include fill-in-the-blank, transformation, and error correction exercises
-- Provide clear explanations
+- Focus on key grammar points (conjugation, articles, cases, word order, prepositions, etc.)
+- Question text must be in English and clearly describe the task
+- Options must be in ${language} and reflect realistic grammar variants
+- Each question has exactly 4 options (A, B, C, D) with ONE correct answer
+- Provide a short English explanation for the correct answer
 
 Format as JSON:
 {
-  "exercises": [
+  "questions": [
     {
-      "type": "fill-in-blank/transformation/error-correction",
-      "instruction": "Clear instruction in English",
-      "question": "Exercise question in ${language}",
-      "correct_answer": "Correct answer",
-      "explanation": "Grammar rule explanation",
+      "question": "Choose the correct ${language} form for ...",
+      "options": [
+        "A) ...",
+        "B) ...",
+        "C) ...",
+        "D) ..."
+      ],
+      "correct_answer": "A",
+      "explanation": "Brief grammar explanation in English",
       "difficulty_level": ${level === 'beginner' ? 1 : level === 'elementary' ? 2 : level === 'intermediate' ? 3 : level === 'upper-intermediate' ? 4 : 5}
     }
   ]
@@ -475,9 +481,10 @@ function createPreview(contentType: string, data: any): string {
       ).join('\n') || 'No conversations generated';
 
     case 'grammar':
-      return data.exercises?.map((e: any, i: number) => 
-        `${i + 1}. ${e.instruction}\n${e.question}\nAnswer: ${e.correct_answer}\n`
-      ).join('\n') || 'No exercises generated';
+      // Now grammar is multiple-choice styled like quizzes
+      return data.questions?.map((q: any, i: number) => 
+        `${i + 1}. ${q.question}\n${q.options?.join('\n')}\nCorrect: ${q.correct_answer}\n`
+      ).join('\n') || 'No questions generated';
 
     default:
       return JSON.stringify(data, null, 2);

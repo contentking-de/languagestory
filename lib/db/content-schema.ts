@@ -115,7 +115,7 @@ export const lessons = pgTable('lessons', {
 // Topics/Activities within lessons
 export const topics = pgTable('topics', {
   id: serial('id').primaryKey(),
-  lesson_id: integer('lesson_id').notNull(),
+  lesson_id: integer('lesson_id'),
   title: varchar('title', { length: 200 }).notNull(),
   slug: varchar('slug', { length: 200 }).notNull(),
   content: text('content'),

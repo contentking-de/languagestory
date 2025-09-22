@@ -57,6 +57,7 @@ export default function AICreatorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [quizName, setQuizName] = useState('');
+  const [grammarName, setGrammarName] = useState('');
   const [error, setError] = useState('');
   const isImage = contentType === 'image';
 
@@ -193,7 +194,9 @@ export default function AICreatorPage() {
             ? { base64: clientImage.base64 }
             : generatedContent.data,
           lessonId: targetLessonId,
-          customName: (generatedContent.type === 'quiz' || generatedContent.type === 'true_false_quiz') ? quizName.trim() : undefined,
+          customName: (generatedContent.type === 'quiz' || generatedContent.type === 'true_false_quiz')
+            ? quizName.trim()
+            : (generatedContent.type === 'grammar' ? grammarName.trim() : undefined),
           imagePrompt: generatedContent.type === 'image' ? topic : undefined,
           imageMime: generatedContent.type === 'image' ? (clientImage?.mime || 'image/png') : undefined,
         }),
@@ -204,7 +207,8 @@ export default function AICreatorPage() {
         alert(`Successfully saved ${result.count} ${generatedContent.type}(s)!`);
         setGeneratedContent(null);
         setTopic('');
-        setQuizName(''); // Clear the quiz name
+        setQuizName('');
+        setGrammarName('');
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to save content');
@@ -573,6 +577,23 @@ export default function AICreatorPage() {
                     </div>
                   )}
 
+                  {/* Grammar Title Input */}
+                  {generatedContent.type === 'grammar' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="grammarName">Title *</Label>
+                      <Input
+                        id="grammarName"
+                        value={grammarName}
+                        onChange={(e) => setGrammarName(e.target.value)}
+                        placeholder="Enter a title for this grammar exercise"
+                        className="w-full"
+                      />
+                      <p className="text-xs text-gray-500">
+                        This title will be used in lessons and listings.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Preview Content */}
                   {generatedContent.type === 'image' ? (
                     <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-center">
@@ -591,7 +612,8 @@ export default function AICreatorPage() {
                     onClick={handleSave} 
                     disabled={
                       isSaving ||
-                      ((generatedContent.type === 'quiz' || generatedContent.type === 'true_false_quiz') && !quizName.trim())
+                      ((generatedContent.type === 'quiz' || generatedContent.type === 'true_false_quiz') && !quizName.trim()) ||
+                      (generatedContent.type === 'grammar' && !grammarName.trim())
                     }
                     className="w-full"
                   >

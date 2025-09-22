@@ -27,6 +27,7 @@ import Link from 'next/link';
 import { AudioPlayer } from '@/components/ui/audio-player';
 import { InlineQuiz } from './InlineQuiz';
 import { InlineGame } from './InlineGame';
+import InlineGrammar from './InlineGrammar';
 import InlineVocabTrainer, { LessonVocabularyItem } from './InlineVocabTrainer';
 import { LessonCompletionModal } from '@/components/lesson-completion-modal';
 
@@ -43,6 +44,7 @@ interface Lesson {
   flow_order?: any;
   vocabulary?: LessonVocabularyItem[];
   stories?: Array<{ id: number; title: string; content: string }>;
+  grammar?: Array<{ id: number; title: string; exercises: any[] }>;
 }
 
 interface Quiz {
@@ -65,7 +67,7 @@ interface Game {
 
 interface ProgressItem {
   id: number;
-  type: 'content' | 'cultural' | 'quiz' | 'game' | 'story';
+  type: 'content' | 'cultural' | 'quiz' | 'game' | 'story' | 'grammar';
   title: string;
   status: 'not_started' | 'in_progress' | 'completed';
   score?: number;
@@ -73,6 +75,7 @@ interface ProgressItem {
   quizId?: number; // Store actual quiz ID for quiz steps
   gameId?: number; // Store actual game ID for game steps
   storyId?: number;
+  grammarId?: number;
 }
 
 interface LessonWorkflowClientProps {
@@ -127,7 +130,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
 
       if (quizzesResponse.ok) {
         const quizzesData = await quizzesResponse.json();
-        setQuizzes(quizzesData.filter((q: Quiz) => q.is_published));
+        // Include all quizzes; flow_order may reference drafts explicitly
+        setQuizzes(quizzesData);
       }
 
       if (gamesResponse.ok) {
@@ -189,6 +193,13 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         }
       }
     };
+    const addGrammar = () => {
+      if (lesson?.grammar && lesson.grammar.length > 0) {
+        for (const g of lesson.grammar) {
+          steps.push({ id: steps.length, type: 'grammar', title: g.title || 'Grammar', status: 'not_started', grammarId: g.id } as any);
+        }
+      }
+    };
     const addCultural = () => {
       if (lesson?.cultural_information) {
         steps.push({ id: steps.length, type: 'cultural', title: 'Cultural Information', status: 'not_started' });
@@ -208,6 +219,13 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         steps.push({ id: steps.length, type: 'game', title: game.title, status: 'not_started', gameId: game.id });
       }
     };
+    const addGrammarById = (gid?: number) => {
+      if (!gid) return;
+      const gram = lesson?.grammar?.find(g => g.id === gid);
+      if (gram) {
+        steps.push({ id: steps.length, type: 'grammar', title: gram.title || 'Grammar', status: 'not_started', grammarId: gram.id } as any);
+      }
+    };
 
     if (items.length > 0) {
       for (const it of items) {
@@ -216,6 +234,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         else if (it.type === 'cultural') addCultural();
         else if (it.type === 'quiz') addQuizById(it.id);
         else if (it.type === 'game') addGameById(it.id);
+        else if ((it as any).type === 'grammar') addGrammarById(it.id);
       }
       return steps;
     }
@@ -224,6 +243,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     addVocab();
     addContent();
     addStories();
+    addGrammar();
     addCultural();
     quizzes.forEach(q => addQuizById(q.id));
     games.forEach(g => addGameById(g.id));
@@ -451,6 +471,20 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
               // Move to next step when quiz is passed
               handleNext();
             }}
+          />
+        );
+
+      case 'grammar':
+        const gram = lesson?.grammar?.find(g => g.id === currentStepData.grammarId);
+        if (!gram) return null;
+        return (
+          <InlineGrammar
+            key={`grammar-${gram.id}`}
+            topicId={gram.id}
+            title={gram.title}
+            exercises={gram.exercises || []}
+            onComplete={(s, passed) => updateProgress(currentStep, 'completed', s)}
+            onNext={handleNext}
           />
         );
 

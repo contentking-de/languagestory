@@ -100,7 +100,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
-  const [flowItems, setFlowItems] = useState<Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game'; id?: number; title: string }>>([]);
+  const [flowItems, setFlowItems] = useState<Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game' | 'grammar'; id?: number; title: string }>>([]);
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
@@ -193,14 +193,14 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   };
 
-  // Determine overview card order (content, cultural, quizzes, games) from flow_order
+  // Determine overview card order (content, cultural, quizzes, games, grammar) from flow_order
   const getOverviewOrder = () => {
-    const order: Array<{ key: 'content' | 'cultural' | 'quizzes' | 'games' | 'vocab'; index: number }> = [];
-    const items: Array<{ type: 'content' | 'cultural' | 'quiz' | 'game' }> = Array.isArray((lesson as any)?.flow_order)
+    const order: Array<{ key: 'content' | 'cultural' | 'quizzes' | 'games' | 'vocab' | 'grammar'; index: number }> = [];
+    const items: Array<{ type: 'content' | 'cultural' | 'quiz' | 'game' | 'grammar' }> = Array.isArray((lesson as any)?.flow_order)
       ? (lesson as any).flow_order
       : [];
 
-    const findIndex = (type: 'content' | 'cultural' | 'quiz' | 'game') => items.findIndex((i) => i.type === type);
+    const findIndex = (type: 'content' | 'cultural' | 'quiz' | 'game' | 'grammar') => items.findIndex((i) => i.type === type);
     const firstQuizIndex = (() => {
       const idx = items.findIndex((i) => i.type === 'quiz');
       return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
@@ -224,6 +224,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
     if (lesson?.cultural_information) order.push({ key: 'cultural', index: culturalIdx });
     if (quizzes.length > 0) order.push({ key: 'quizzes', index: firstQuizIndex === Number.MAX_SAFE_INTEGER ? 2 : firstQuizIndex });
     if (games.length > 0) order.push({ key: 'games', index: firstGameIndex === Number.MAX_SAFE_INTEGER ? 3 : firstGameIndex });
+    if ((lesson as any)?.grammar && (lesson as any).grammar.length > 0) order.push({ key: 'grammar', index: items.findIndex(i => i.type === 'grammar') });
 
     order.sort((a, b) => a.index - b.index);
     return order.map((o) => o.key);
@@ -232,17 +233,18 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
   // Flow ordering (admin-only): build default list
   useEffect(() => {
     if (!lesson) return;
-    const base: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game'; id?: number; title: string }> = [];
+    const base: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game' | 'grammar'; id?: number; title: string }> = [];
     if (lesson.content) base.push({ key: 'content', type: 'content', title: 'Lesson Content' });
     if (lesson.cultural_information) base.push({ key: 'cultural', type: 'cultural', title: 'Cultural Information' });
     quizzes.forEach(q => base.push({ key: `quiz-${q.id}`, type: 'quiz', id: q.id, title: q.title }));
     games.forEach(g => base.push({ key: `game-${g.id}`, type: 'game', id: g.id, title: g.title }));
+    if ((lesson as any)?.grammar) (lesson as any).grammar.forEach((g: any) => base.push({ key: `grammar-${g.id}`, type: 'grammar', id: g.id, title: g.title }));
 
     // Load saved order from localStorage
     try {
       const saved = typeof window !== 'undefined' ? window.localStorage.getItem(`lesson_flow_order_${lesson.id}`) : null;
       if (saved) {
-        const parsed: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game'; id?: number; title: string }> = JSON.parse(saved);
+        const parsed: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game' | 'grammar'; id?: number; title: string }> = JSON.parse(saved);
         // Filter to only present items and keep saved order precedence
         const presentKeys = new Set(base.map(i => i.key));
         const fromSaved = parsed.filter(i => presentKeys.has(i.key));
@@ -288,11 +290,12 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
       window.localStorage.removeItem(`lesson_flow_order_${lesson.id}`);
     } catch {}
     // Rebuild from current data
-    const base: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game'; id?: number; title: string }> = [];
+    const base: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game' | 'grammar'; id?: number; title: string }> = [];
     if (lesson.content) base.push({ key: 'content', type: 'content', title: 'Lesson Content' });
     if (lesson.cultural_information) base.push({ key: 'cultural', type: 'cultural', title: 'Cultural Information' });
     quizzes.forEach(q => base.push({ key: `quiz-${q.id}`, type: 'quiz', id: q.id, title: q.title }));
     games.forEach(g => base.push({ key: `game-${g.id}`, type: 'game', id: g.id, title: g.title }));
+    if ((lesson as any)?.grammar) (lesson as any).grammar.forEach((g: any) => base.push({ key: `grammar-${g.id}`, type: 'grammar', id: g.id, title: g.title }));
     setFlowItems(base);
   };
 
@@ -787,6 +790,33 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
               </Card>
             );
 
+            const GrammarCard = ((lesson as any)?.grammar && (lesson as any).grammar.length > 0) ? (
+              <Card key={`grammar-${lesson.id}`} className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Languages className="h-5 w-5" />
+                    Grammar Exercises ({(lesson as any).grammar.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {(lesson as any).grammar.map((g: any) => (
+                      <div key={g.id} className="p-3 border rounded-lg bg-gray-50">
+                        <h4 className="font-medium text-gray-900 mb-1">{g.title || 'Grammar'}</h4>
+                        <p className="text-sm text-gray-600">Exercises: {Array.isArray(g.exercises) ? g.exercises.length : 0}</p>
+                      </div>
+                    ))}
+                    <Link href={`/dashboard/content/lessons/${lesson.id}/work`}>
+                      <Button size="sm">
+                        <Play className="h-4 w-4 mr-2" />
+                        Practice in Lesson
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null;
+
             const GamesCard = (
               <Card key={`games-${lesson.id}`} className="mt-6">
                 <CardHeader className="flex flex-row items-center justify-between">
@@ -886,6 +916,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
               if (k === 'cultural' && CulturalCard) blocks.push(CulturalCard);
               if (k === 'quizzes') blocks.push(QuizzesCard);
               if (k === 'games') blocks.push(GamesCard);
+              if (k === 'grammar' && GrammarCard) blocks.push(GrammarCard);
             });
 
             return <>{blocks}</>;
