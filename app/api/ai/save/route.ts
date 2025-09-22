@@ -130,11 +130,11 @@ async function saveQuizContent(data: any, lessonId?: number, customName?: string
   try {
     // Create ONE quiz with a descriptive title
     const firstQuestion = questions[0];
-    const quizTitle = customName || `AI Generated Quiz (${questions.length} questions)`;
+    const quizTitle = customName || `Quiz (${questions.length} questions)`;
     
     const quizValues = {
       title: quizTitle,
-      description: `AI generated ${quizType === 'true_false' ? 'true/false' : 'multiple choice'} quiz with ${questions.length} questions`,
+      description: '',
       quiz_type: quizType,
       lesson_id: lessonId || null,
       topic_id: null,
