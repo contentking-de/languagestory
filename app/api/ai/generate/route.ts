@@ -25,6 +25,8 @@ const getPrompt = (contentType: string, language: string, level: string, topic: 
   };
 
   const levelDesc = levelDescriptions[level as keyof typeof levelDescriptions] || 'appropriate for the specified level';
+  const langLower = (language || '').toLowerCase();
+  const isGerman = langLower === 'german' || langLower === 'de' || langLower === 'deutsch';
 
   const prompts = {
     quiz: `Create ${quantity} multiple choice quiz questions about "${topic}" for ${level} ${language} learners.
@@ -82,6 +84,7 @@ Requirements:
 - Provide a context sentence showing how to use the word
 - Add cultural notes where relevant
 - Include word type (noun, verb, adjective, etc.)
+${isGerman ? '- For German nouns, include the correct definite article (der/die/das). Prefix it directly to the German word (e.g., "die Lampe"). Also include a separate "article" field containing only der/die/das, or an empty string if not a noun.' : ''}
 
 Format as JSON:
 {
@@ -94,6 +97,7 @@ Format as JSON:
       "context_sentence": "Example sentence in ${language}",
       "cultural_note": "Cultural context or interesting facts",
       "word_type": "noun/verb/adjective/etc",
+      ${isGerman ? '"article": "der/die/das or empty string for non-nouns",' : ''}
       "difficulty_level": ${level === 'beginner' ? 1 : level === 'elementary' ? 2 : level === 'intermediate' ? 3 : level === 'upper-intermediate' ? 4 : 5}
     }
   ]
@@ -400,6 +404,30 @@ export async function POST(request: Request) {
         { error: 'Failed to parse AI response. Please try again.' },
         { status: 500 }
       );
+    }
+
+    // Normalize German vocabulary to ensure articles are included
+    const langLower = (language || '').toLowerCase();
+    const isGerman = langLower === 'german' || langLower === 'de' || langLower === 'deutsch';
+    if (contentType === 'vocabulary' && isGerman && Array.isArray(generatedContent?.words)) {
+      generatedContent.words = generatedContent.words.map((w: any) => {
+        // Find the German word key regardless of capitalization variants
+        const germanKey = ['word_german', 'word_German', 'german_word', 'word_de'].find(k => typeof w?.[k] === 'string');
+        const englishKey = 'word_english';
+        let germanWord: string = germanKey ? w[germanKey] : '';
+        const articleRaw: string = (w.article || w.german_article || '').toString().trim();
+        const article = ['der','die','das'].includes(articleRaw.toLowerCase()) ? articleRaw.toLowerCase() : '';
+        const hasArticlePrefix = /^(der|die|das)\s+/i.test(germanWord);
+        if (!hasArticlePrefix && article) {
+          germanWord = `${article} ${germanWord}`;
+        }
+        // Write back normalized fields
+        w.word_german = germanWord || w.word_german || w.word_German || w.german_word || w.word_de;
+        w.article = article || (hasArticlePrefix ? germanWord.split(/\s+/)[0].toLowerCase() : '');
+        // Clean up alternate keys to a single canonical one
+        if (germanKey && germanKey !== 'word_german') delete w[germanKey];
+        return w;
+      });
     }
 
     // Create a preview of the content
