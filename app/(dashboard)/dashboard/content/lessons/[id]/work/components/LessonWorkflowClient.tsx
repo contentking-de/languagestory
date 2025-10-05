@@ -228,6 +228,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     };
 
     if (items.length > 0) {
+      const hasVocabInOrder = items.some((it) => it.type === 'vocab');
       for (const it of items) {
         if (it.type === 'content') addContent();
         else if (it.type === 'vocab') addVocab();
@@ -236,7 +237,12 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         else if (it.type === 'game') addGameById(it.id);
         else if ((it as any).type === 'grammar') addGrammarById(it.id);
       }
-      return steps;
+      // Ensure vocab appears if the lesson has vocabulary but flow_order omitted it
+      if (!hasVocabInOrder && lesson?.vocabulary && lesson.vocabulary.length > 0) {
+        steps.unshift({ id: -1, type: 'content', title: 'Vocabulary Trainer', status: 'not_started' } as any);
+      }
+      // Normalize step IDs after potential unshift
+      return steps.map((s, idx) => ({ ...s, id: idx }));
     }
 
     // Fallback default order if no saved order exists
@@ -247,7 +253,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     addCultural();
     quizzes.forEach(q => addQuizById(q.id));
     games.forEach(g => addGameById(g.id));
-    return steps;
+    return steps.map((s, idx) => ({ ...s, id: idx }));
   };
 
   const updateProgress = async (stepIndex: number, status: 'in_progress' | 'completed', score?: number) => {
