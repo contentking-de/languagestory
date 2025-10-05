@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserWithTeamData } from '@/lib/db/queries';
 import { db } from '@/lib/db/drizzle';
 import { tickets, users } from '@/lib/db/schema';
-import { eq, desc, asc, like, and, or } from 'drizzle-orm';
+import { eq, desc, asc, like, and, or, sql } from 'drizzle-orm';
 
 // GET - Fetch all tickets with filtering and pagination
 export async function GET(request: NextRequest) {
@@ -25,23 +25,19 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    // Build where conditions
-    const whereConditions = [];
-    
-    if (status) {
-      whereConditions.push(eq(tickets.status, status));
-    }
+    // Build base where conditions (EXCLUDING status so we can compute counts across all statuses)
+    const baseWhereConditions = [] as any[];
     if (priority) {
-      whereConditions.push(eq(tickets.priority, priority));
+      baseWhereConditions.push(eq(tickets.priority, priority));
     }
     if (ticketType) {
-      whereConditions.push(eq(tickets.ticketType, ticketType));
+      baseWhereConditions.push(eq(tickets.ticketType, ticketType));
     }
     if (assignedTo) {
-      whereConditions.push(eq(tickets.assignedTo, parseInt(assignedTo)));
+      baseWhereConditions.push(eq(tickets.assignedTo, parseInt(assignedTo)));
     }
     if (search) {
-      whereConditions.push(
+      baseWhereConditions.push(
         or(
           like(tickets.title, `%${search}%`),
           like(tickets.description, `%${search}%`),
@@ -49,6 +45,12 @@ export async function GET(request: NextRequest) {
         )
       );
     }
+
+    // Full where conditions used for the ticket list (includes status if provided)
+    const listWhereConditions = [
+      ...baseWhereConditions,
+      ...(status ? [eq(tickets.status, status)] : []),
+    ] as any[];
 
     // Build order by
     let orderBy;
@@ -97,7 +99,7 @@ export async function GET(request: NextRequest) {
       })
       .from(tickets)
       .leftJoin(users, eq(tickets.createdBy, users.id))
-      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .where(listWhereConditions.length > 0 ? and(...listWhereConditions) : undefined)
       .orderBy(orderBy)
       .limit(limit)
       .offset(offset);
@@ -129,20 +131,33 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    // Get total count for pagination
-    const totalCount = await db
-      .select({ count: tickets.id })
+    // Get total count for pagination (respect status if provided, otherwise count all statuses)
+    const [{ totalCount }] = await db
+      .select({ totalCount: sql<number>`count(*)` })
       .from(tickets)
-      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
+      .where(listWhereConditions.length > 0 ? and(...listWhereConditions) : undefined);
+
+    // Compute precise status counts across ALL statuses (ignore status filter, respect other filters only)
+    const [countsRow] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        open: sql<number>`coalesce(sum(case when ${tickets.status} = 'open' then 1 else 0 end), 0)`,
+        in_progress: sql<number>`coalesce(sum(case when ${tickets.status} = 'in_progress' then 1 else 0 end), 0)`,
+        resolved: sql<number>`coalesce(sum(case when ${tickets.status} = 'resolved' then 1 else 0 end), 0)`,
+        closed: sql<number>`coalesce(sum(case when ${tickets.status} = 'closed' then 1 else 0 end), 0)`,
+      })
+      .from(tickets)
+      .where(baseWhereConditions.length > 0 ? and(...baseWhereConditions) : undefined);
 
     return NextResponse.json({
       tickets: ticketsWithAssignedUsers,
       pagination: {
         page,
         limit,
-        total: totalCount.length,
-        totalPages: Math.ceil(totalCount.length / limit),
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
       },
+      statusCounts: countsRow,
     });
 
   } catch (error) {

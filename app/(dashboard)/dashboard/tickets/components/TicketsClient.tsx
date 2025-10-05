@@ -68,6 +68,7 @@ export default function TicketsClient() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [statusCounts, setStatusCounts] = useState<{ total: number; open: number; in_progress: number; resolved: number; closed: number } | null>(null);
 
   // Fetch tickets
   const fetchTickets = async () => {
@@ -87,6 +88,7 @@ export default function TicketsClient() {
         const data = await response.json();
         setTickets(data.tickets);
         setPagination(data.pagination);
+        if (data.statusCounts) setStatusCounts(data.statusCounts);
       }
     } catch (error) {
       console.error('Error fetching tickets:', error);
@@ -154,8 +156,9 @@ export default function TicketsClient() {
     });
   };
 
-  // Get status count
-  const getStatusCount = (status: string) => {
+  // Get status count from API-provided global counts; fallback to local page counts
+  const getStatusCount = (status: 'open' | 'in_progress' | 'resolved' | 'closed') => {
+    if (statusCounts) return statusCounts[status];
     return tickets.filter(ticket => ticket.status === status).length;
   };
 
@@ -166,7 +169,7 @@ export default function TicketsClient() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-blue-50 text-blue-700">
-              {tickets.length} Total
+              {statusCounts ? statusCounts.total : tickets.length} Total
             </Badge>
             <Badge variant="outline" className="bg-red-50 text-red-700">
               {getStatusCount('open')} Open
@@ -176,6 +179,9 @@ export default function TicketsClient() {
             </Badge>
             <Badge variant="outline" className="bg-green-50 text-green-700">
               {getStatusCount('resolved')} Resolved
+            </Badge>
+            <Badge variant="outline" className="bg-gray-50 text-gray-700">
+              {getStatusCount('closed')} Closed
             </Badge>
           </div>
         </div>
