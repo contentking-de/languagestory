@@ -58,17 +58,20 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
   const [typeFilter, setTypeFilter] = useState('all');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [lessonFilter, setLessonFilter] = useState('all');
+  const [lessonIdFilter, setLessonIdFilter] = useState('all');
+  const [lessons, setLessons] = useState<Array<{ id: number; title: string; course_title?: string; course_language?: string }>>([]);
 
   // Check if user can create/edit vocabulary
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
 
   useEffect(() => {
     fetchVocabulary();
+    loadLessons();
   }, []);
 
   useEffect(() => {
     filterVocabulary();
-  }, [vocabulary, searchTerm, languageFilter, typeFilter, difficultyFilter, lessonFilter]);
+  }, [vocabulary, searchTerm, languageFilter, typeFilter, difficultyFilter, lessonFilter, lessonIdFilter]);
 
   const fetchVocabulary = async () => {
     try {
@@ -81,6 +84,18 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
       console.error('Error fetching vocabulary:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadLessons = async () => {
+    try {
+      const res = await fetch('/api/lessons');
+      if (res.ok) {
+        const data = await res.json();
+        setLessons(Array.isArray(data) ? data : []);
+      }
+    } catch (e) {
+      console.error('Error loading lessons for vocabulary filters:', e);
     }
   };
 
@@ -120,6 +135,14 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
         filtered = filtered.filter(word => word.lesson_id);
       } else if (lessonFilter === 'unassigned') {
         filtered = filtered.filter(word => !word.lesson_id);
+      }
+    }
+
+    // Specific lesson filter
+    if (lessonIdFilter !== 'all') {
+      const idNum = parseInt(lessonIdFilter);
+      if (!isNaN(idNum)) {
+        filtered = filtered.filter(word => word.lesson_id === idNum);
       }
     }
 
@@ -268,7 +291,7 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-600 mb-1 block">Search</label>
               <div className="relative">
@@ -348,6 +371,24 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
               </Select>
             </div>
 
+            <div>
+              <label className="text-sm font-medium text-gray-600 mb-1 block">Filter by Lesson</label>
+              <Select value={lessonIdFilter} onValueChange={setLessonIdFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All lessons" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All lessons</SelectItem>
+                  {lessons.map((l) => (
+                    <SelectItem key={l.id} value={l.id.toString()}>
+                      {l.course_language ? `${l.course_language === 'german' ? '🇩🇪' : l.course_language === 'french' ? '🇫🇷' : l.course_language === 'spanish' ? '🇪🇸' : '🌐'} ` : ''}
+                      {l.title} {l.course_title ? `(${l.course_title})` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-end">
               <Button 
                 variant="outline" 
@@ -357,6 +398,7 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                   setTypeFilter('all');
                   setDifficultyFilter('all');
                   setLessonFilter('all');
+                  setLessonIdFilter('all');
                 }}
                 className="w-full"
               >
