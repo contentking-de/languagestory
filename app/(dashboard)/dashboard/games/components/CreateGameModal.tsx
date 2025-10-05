@@ -168,6 +168,50 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGameType, formData.lesson_id, formData.language]);
 
+  // Auto-fill helpers for Word Search games from lesson vocabulary
+  const autoFillWordSearchFromLesson = async (selectedLessonId: string) => {
+    try {
+      if (!selectedLessonId) return;
+      const res = await fetch(`/api/lessons/${selectedLessonId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const vocab: Array<any> = Array.isArray(data?.vocabulary) ? data.vocabulary : [];
+      if (vocab.length === 0) return;
+
+      // Shuffle and take up to 4 words
+      const shuffled = [...vocab].sort(() => Math.random() - 0.5);
+      const sample = shuffled.slice(0, Math.min(4, shuffled.length));
+
+      const lang = (formData.language || '').toLowerCase();
+      const langKey = lang === 'german' ? 'word_german' : lang === 'french' ? 'word_french' : lang === 'spanish' ? 'word_spanish' : 'word_german';
+
+      const words = sample.map((v) => (v[langKey] || v.word_english || '').toString()).filter(Boolean);
+
+      setGameConfig(prev => ({
+        ...prev,
+        wordSearch: {
+          words,
+          gridSize: 15,
+          directions: ['horizontal', 'vertical', 'diagonal'],
+        },
+      }));
+    } catch (e) {
+      console.error('Failed to auto-fill word search from lesson vocabulary:', e);
+    }
+  };
+
+  // Auto fill when switching to word_search or when lesson/language changes and no words yet
+  useEffect(() => {
+    if (
+      selectedGameType === 'word_search' &&
+      formData.lesson_id &&
+      (!gameConfig.wordSearch || !gameConfig.wordSearch.words || gameConfig.wordSearch.words.length === 0)
+    ) {
+      autoFillWordSearchFromLesson(formData.lesson_id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGameType, formData.lesson_id, formData.language]);
+
   // Early return AFTER all hooks to keep hook order stable
   if (!isOpen) return null;
 
@@ -504,6 +548,14 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                   {selectedGameType === 'memory' && formData.lesson_id && (
                     <div>
                       <Button type="button" variant="outline" size="sm" onClick={() => autoFillMemoryFromLesson(formData.lesson_id)}>
+                        <Shuffle className="h-4 w-4 mr-2" />
+                        Auto-fill from Lesson Vocabulary
+                      </Button>
+                    </div>
+                  )}
+                  {selectedGameType === 'word_search' && formData.lesson_id && (
+                    <div>
+                      <Button type="button" variant="outline" size="sm" onClick={() => autoFillWordSearchFromLesson(formData.lesson_id)}>
                         <Shuffle className="h-4 w-4 mr-2" />
                         Auto-fill from Lesson Vocabulary
                       </Button>

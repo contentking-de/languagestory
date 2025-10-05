@@ -204,8 +204,17 @@ export function HangmanGameEditor({ config, onChange }: { config?: HangmanConfig
 export function WordSearchGameEditor({ config, onChange }: { config?: WordSearchConfig; onChange: (config: WordSearchConfig) => void }) {
   const [words, setWords] = useState<string[]>(config?.words || ['']);
 
+  // Sync in case parent auto-fills words (e.g., from lesson vocabulary)
+  useEffect(() => {
+    if (config?.words && config.words.length > 0) {
+      setWords(config.words);
+    }
+  }, [config?.words]);
+
   const addWord = () => {
-    setWords([...words, '']);
+    const newWords = [...words, ''];
+    setWords(newWords);
+    onChange({ words: newWords, gridSize: 15, directions: ['horizontal', 'vertical', 'diagonal'] });
   };
 
   const updateWord = (index: number, value: string) => {
