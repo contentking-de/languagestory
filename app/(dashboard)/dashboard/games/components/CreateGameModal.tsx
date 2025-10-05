@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -89,13 +89,36 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
     lesson_id: '',
   });
   const [gameConfig, setGameConfig] = useState<GameConfig>({});
-
-  if (!isOpen) return null;
+  const [lessons, setLessons] = useState<Array<{ id: number; title: string; course_title: string; course_language: string }>>([]);
 
   const handleGameTypeSelect = (gameType: string) => {
     setSelectedGameType(gameType);
     setStep('config');
   };
+
+  // Load lessons for assignment
+  useEffect(() => {
+    const loadLessons = async () => {
+      try {
+        const response = await fetch('/api/lessons');
+        if (response.ok) {
+          const data = await response.json();
+          setLessons(data || []);
+        }
+      } catch (err) {
+        console.error('Failed to load lessons for game creation:', err);
+      }
+    };
+    if (isOpen) loadLessons();
+  }, [isOpen]);
+
+  const getLanguageFlag = (language: string) => {
+    const flags: Record<string, string> = { french: '🇫🇷', german: '🇩🇪', spanish: '🇪🇸', english: '🇬🇧' };
+    return flags[language] || '🌐';
+  };
+
+  // Early return AFTER hooks are declared to keep hook order stable
+  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -386,6 +409,29 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                         value={formData.estimated_duration}
                         onChange={(e) => setFormData({ ...formData, estimated_duration: parseInt(e.target.value) || 5 })}
                       />
+                    </div>
+                  </div>
+
+                  {/* Lesson Assignment (optional) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="lesson">Assign to Lesson (optional)</Label>
+                      <Select
+                        value={formData.lesson_id || 'none'}
+                        onValueChange={(value) => setFormData({ ...formData, lesson_id: value === 'none' ? '' : value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="No lesson assigned" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No lesson</SelectItem>
+                          {lessons.map((lesson) => (
+                            <SelectItem key={lesson.id} value={lesson.id.toString()}>
+                              {getLanguageFlag(lesson.course_language)} {lesson.title} ({lesson.course_title})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </CardContent>
