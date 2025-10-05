@@ -715,8 +715,9 @@ export function GamesClient({ userRole }: GamesClientProps) {
       <CreateGameModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onGameCreated={(newGame) => {
-          setGames([newGame, ...games]);
+        onGameCreated={async () => {
+          // Reload from API to ensure we have joined fields like lesson_title
+          await loadGamesFromDatabase();
           setShowCreateModal(false);
         }}
       />

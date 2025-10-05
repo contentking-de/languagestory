@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -104,8 +104,17 @@ export function MemoryGameEditor({ config, onChange }: { config?: MemoryConfig; 
     config?.cards || [{ id: '1', word: '', translation: '' }]
   );
 
+  // Keep local state in sync with parent-provided config (e.g., auto-fill from lesson)
+  useEffect(() => {
+    if (config?.cards && config.cards.length > 0) {
+      setCards(config.cards);
+    }
+  }, [config?.cards]);
+
   const addCard = () => {
-    setCards([...cards, { id: Date.now().toString(), word: '', translation: '' }]);
+    const newCards = [...cards, { id: Date.now().toString(), word: '', translation: '' }];
+    setCards(newCards);
+    onChange({ cards: newCards, gridSize: Math.ceil(Math.sqrt(newCards.length * 2)), timeLimit: config?.timeLimit });
   };
 
   const updateCard = (index: number, field: string, value: string) => {

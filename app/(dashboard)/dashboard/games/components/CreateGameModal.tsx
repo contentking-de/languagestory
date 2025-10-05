@@ -117,7 +117,58 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
     return flags[language] || '🌐';
   };
 
-  // Early return AFTER hooks are declared to keep hook order stable
+  // Early return should be after all hooks; moved below
+
+  // Auto-fill helpers for Memory games from lesson vocabulary
+  const autoFillMemoryFromLesson = async (selectedLessonId: string) => {
+    try {
+      if (!selectedLessonId) return;
+      const res = await fetch(`/api/lessons/${selectedLessonId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const vocab: Array<any> = Array.isArray(data?.vocabulary) ? data.vocabulary : [];
+      if (vocab.length === 0) return;
+
+      // Shuffle and take up to 12
+      const shuffled = [...vocab].sort(() => Math.random() - 0.5);
+      const sample = shuffled.slice(0, Math.min(12, shuffled.length));
+
+      // Pick word in target language and translation in English
+      const lang = (formData.language || '').toLowerCase();
+      const langKey = lang === 'german' ? 'word_german' : lang === 'french' ? 'word_french' : lang === 'spanish' ? 'word_spanish' : 'word_german';
+
+      const cards = sample.map((v, idx) => ({
+        id: `${v.id || idx}`,
+        word: v[langKey] || v.word_english,
+        translation: v.word_english,
+      }));
+
+      setGameConfig(prev => ({
+        ...prev,
+        memory: {
+          cards,
+          gridSize: prev.memory?.gridSize || 4,
+          timeLimit: prev.memory?.timeLimit || 120,
+        },
+      }));
+    } catch (e) {
+      console.error('Failed to auto-fill memory from lesson vocabulary:', e);
+    }
+  };
+
+  // Auto fill when switching to memory or when lesson/language changes and no cards yet
+  useEffect(() => {
+    if (
+      selectedGameType === 'memory' &&
+      formData.lesson_id &&
+      (!gameConfig.memory || !gameConfig.memory.cards || gameConfig.memory.cards.length === 0)
+    ) {
+      autoFillMemoryFromLesson(formData.lesson_id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGameType, formData.lesson_id, formData.language]);
+
+  // Early return AFTER all hooks to keep hook order stable
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -418,7 +469,13 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                       <Label htmlFor="lesson">Assign to Lesson (optional)</Label>
                       <Select
                         value={formData.lesson_id || 'none'}
-                        onValueChange={(value) => setFormData({ ...formData, lesson_id: value === 'none' ? '' : value })}
+                        onValueChange={async (value) => {
+                          const lessonId = value === 'none' ? '' : value;
+                          setFormData({ ...formData, lesson_id: lessonId });
+                          if (selectedGameType === 'memory' && lessonId) {
+                            await autoFillMemoryFromLesson(lessonId);
+                          }
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="No lesson assigned" />
@@ -439,11 +496,19 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
 
               {/* Game-Specific Configuration */}
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-col gap-2">
                   <CardTitle className="flex items-center gap-2">
                     <Target className="h-5 w-5" />
                     Game Configuration
                   </CardTitle>
+                  {selectedGameType === 'memory' && formData.lesson_id && (
+                    <div>
+                      <Button type="button" variant="outline" size="sm" onClick={() => autoFillMemoryFromLesson(formData.lesson_id)}>
+                        <Shuffle className="h-4 w-4 mr-2" />
+                        Auto-fill from Lesson Vocabulary
+                      </Button>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {renderGameConfig()}
