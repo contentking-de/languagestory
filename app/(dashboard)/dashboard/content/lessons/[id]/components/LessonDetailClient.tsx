@@ -988,7 +988,7 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
                   <p className="text-sm text-gray-600">No steps available to order.</p>
                 ) : (
                   <div className="space-y-2">
-                    {flowItems.map(item => (
+                {flowItems.map(item => (
                       <div
                         key={item.key}
                         draggable
@@ -999,18 +999,18 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
                         className={`flex items-center justify-between p-2 border rounded-md bg-white ${dragOverKey === item.key ? 'border-blue-400 bg-blue-50' : 'border-gray-200'}`}
                         title="Drag to reorder"
                       >
-                        <div className="flex items-center gap-2">
+                    <div className="flex items-start gap-2 w-full">
                           <span className="cursor-move text-gray-400">⋮⋮</span>
                           <Badge variant="outline">
                             {item.type}
                           </Badge>
-                          <span className="text-sm text-gray-800 truncate max-w-[12rem]">{item.title}</span>
+                      <span className="text-sm text-gray-800 break-words whitespace-normal flex-1" title={item.title}>{item.title}</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-                <div className="flex items-center gap-3 mt-3">
+            <div className="flex flex-wrap items-center gap-3 mt-3">
                   <Button size="sm" onClick={saveFlowOrder} disabled={saveStatus === 'saving'}>
                     {saveStatus === 'saving' ? 'Saving…' : 'Save Order'}
                   </Button>
