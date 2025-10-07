@@ -136,17 +136,43 @@ export async function POST(request: NextRequest) {
       }, { status: response.status });
     }
 
-    // Get the audio data
+    // Get audio data
     const audioBuffer = await response.arrayBuffer();
-    
-    // Upload to Vercel Blob
+
+    // For conversation, return base64 directly to reduce latency (no upload/store)
+    if (type === 'conversation') {
+      // Convert ArrayBuffer to base64
+      let base64: string;
+      try {
+        // Node.js environment
+        // @ts-ignore
+        base64 = Buffer.from(audioBuffer).toString('base64');
+      } catch {
+        // Fallback for environments without Buffer
+        const bytes = new Uint8Array(audioBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+        // @ts-ignore
+        base64 = btoa(binary);
+      }
+
+      return NextResponse.json({
+        success: true,
+        audio_base64: base64,
+        cached: false,
+        format: 'mp3',
+        voice: selectedVoice,
+        text
+      });
+    }
+
+    // Otherwise upload to Vercel Blob and store for caching
     const filename = `tts-${Date.now()}-${Math.random().toString(36).substring(7)}.mp3`;
     const blob = await put(filename, audioBuffer, {
       access: 'public',
       addRandomSuffix: false,
     });
 
-    // Store in database
     if (vocabularyId) {
       await db
         .update(vocabulary)
@@ -187,8 +213,6 @@ export async function POST(request: NextRequest) {
       console.log(`TTS: Stored content audio for lesson: ${lessonId}`);
     }
 
-    // Audio is stored in database for all cases
-
     console.log(`TTS: Generated new audio for ${type}: ${blob.url}`);
     return NextResponse.json({
       success: true,
@@ -196,7 +220,7 @@ export async function POST(request: NextRequest) {
       cached: false,
       format: 'mp3',
       voice: selectedVoice,
-      text: text
+      text
     });
 
   } catch (error) {

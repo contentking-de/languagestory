@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserProgressSummary } from '@/components/user-progress-summary';
 import { 
   Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight,
-  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage, Ticket, FileText
+  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage, Ticket, FileText, MessageCircle
 } from 'lucide-react';
 
 interface NavItem {
@@ -40,6 +40,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
         { href: '/dashboard/content/quizzes', icon: FileQuestion, label: 'Quizzes' },
         { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' },
         { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
+        { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
       ]
     },
@@ -83,6 +84,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
         { href: '/dashboard/content/quizzes', icon: FileQuestion, label: 'Quizzes' },
         { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' },
         { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
+        { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
       ]
     },
@@ -110,6 +112,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
         { href: '/dashboard/content/quizzes', icon: FileQuestion, label: 'Quizzes' },
         { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' },
         { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
+        { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
       ]
     }
