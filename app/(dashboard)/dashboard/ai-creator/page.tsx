@@ -416,7 +416,7 @@ export default function AICreatorPage() {
 
               {/* Topic / Image Prompt */}
               <div>
-                <Label htmlFor="topic">{isImage ? 'Image Prompt *' : 'Topic or Theme *'}</Label>
+                <Label htmlFor="topic">{isImage ? 'Image Prompt *' : 'Keyword, Topic or Theme *'}</Label>
                 {isImage ? (
                   <Textarea
                     id="topic"
@@ -451,6 +451,7 @@ export default function AICreatorPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                  <SelectItem value="1">1 item</SelectItem>
                     <SelectItem value="3">3 items</SelectItem>
                     <SelectItem value="5">5 items</SelectItem>
                     <SelectItem value="10">10 items</SelectItem>
