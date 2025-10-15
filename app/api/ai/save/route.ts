@@ -145,7 +145,7 @@ async function saveQuizContent(data: any, lessonId?: number, customName?: string
       lesson_id: lessonId || null,
       topic_id: null,
       pass_percentage: 70,
-      points_value: questions.length * 5, // 5 points per question
+      points_value: 50, // default points for new quizzes
       is_published: true,
     };
     console.log('About to insert quiz with values:', quizValues);
