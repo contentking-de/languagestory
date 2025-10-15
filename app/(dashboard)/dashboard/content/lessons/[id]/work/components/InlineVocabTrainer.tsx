@@ -82,6 +82,9 @@ export function InlineVocabTrainer({
               <div>
                 <p className="text-gray-500 text-sm">Word (German)</p>
                 <p className="text-2xl font-semibold text-gray-900">{translation || '—'}</p>
+                {current.context_sentence && (
+                  <p className="text-sm text-gray-600 mt-2 italic">"{current.context_sentence}"</p>
+                )}
               </div>
               <Badge variant="outline">Lvl {current.difficulty_level}</Badge>
             </div>
@@ -108,9 +111,6 @@ export function InlineVocabTrainer({
               {showAnswer ? (
                 <div>
                   <p className="text-xl font-medium text-gray-900">{englishWord || '—'}</p>
-                  {current.context_sentence && (
-                    <p className="text-sm text-gray-600 mt-2 italic">"{current.context_sentence}"</p>
-                  )}
                 </div>
               ) : (
                 <p className="text-xl text-gray-300 select-none">•••••••</p>
