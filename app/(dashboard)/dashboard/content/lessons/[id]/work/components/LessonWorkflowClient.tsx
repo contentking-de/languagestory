@@ -365,6 +365,13 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="flex items-start gap-3">
                     <div className="flex-1">
+                      {lesson?.cover_image && (
+                        <img
+                          src={lesson.cover_image}
+                          alt="Lesson image"
+                          className="rounded-md mb-3 w-full max-h-56 object-cover"
+                        />
+                      )}
                       <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
                         {lesson?.content}
                       </pre>
@@ -481,6 +488,13 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                         <div className="bg-gray-50 p-4 rounded-lg h-full">
                           <div className="flex items-start gap-3">
                             <div className="flex-1">
+                              {lesson?.cover_image && (
+                                <img
+                                  src={lesson.cover_image}
+                                  alt="Lesson image"
+                                  className="rounded-md mb-3 w-full max-h-56 object-cover"
+                                />
+                              )}
                               <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
                                 {lesson?.content}
                               </pre>
