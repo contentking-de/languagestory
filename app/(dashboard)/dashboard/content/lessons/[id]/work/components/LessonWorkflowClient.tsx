@@ -465,19 +465,53 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         }
         
         return (
-          <InlineQuiz
-            key={`quiz-${quiz.id}`} // Force remount when quiz changes
-            quizId={quiz.id}
-            onComplete={(score, passed) => {
-              console.log(`Quiz completed: ${score}%, passed: ${passed}`);
-              // Update progress when quiz is completed
-              updateProgress(currentStep, 'completed', score);
-            }}
-            onNext={() => {
-              // Move to next step when quiz is passed
-              handleNext();
-            }}
-          />
+          <>
+            {lesson?.content && (
+              <Card className="max-w-4xl mx-auto mb-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Lesson Content
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="prose max-w-none">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1">
+                          <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
+                            {lesson?.content}
+                          </pre>
+                        </div>
+                        <AudioPlayer 
+                          text={lesson?.content || ''} 
+                          language={lesson?.course_language || 'english'} 
+                          size="md"
+                          lessonId={lessonId}
+                          type="content"
+                          showSpeedControl={true}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <InlineQuiz
+              key={`quiz-${quiz.id}`} // Force remount when quiz changes
+              quizId={quiz.id}
+              onComplete={(score, passed) => {
+                console.log(`Quiz completed: ${score}%, passed: ${passed}`);
+                // Update progress when quiz is completed
+                updateProgress(currentStep, 'completed', score);
+              }}
+              onNext={() => {
+                // Move to next step when quiz is passed
+                handleNext();
+              }}
+            />
+          </>
         );
 
       case 'grammar':
