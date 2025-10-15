@@ -57,6 +57,8 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
   const [languageFilter, setLanguageFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 25;
 
   // Check if user can create/edit lessons
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
@@ -91,6 +93,10 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
 
     return matchesSearch && matchesLanguage && matchesType && matchesStatus;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredLessons.length / perPage));
+  const pageStart = (currentPage - 1) * perPage;
+  const visibleLessons = filteredLessons.slice(pageStart, pageStart + perPage);
 
   const getLanguageFlag = (language: string) => {
     const flags = {
@@ -304,7 +310,7 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
                 </tr>
               </thead>
               <tbody>
-                {filteredLessons.map((lesson) => {
+                {visibleLessons.map((lesson) => {
                   const TypeIcon = getTypeIcon(lesson.lesson_type);
                   return (
                     <tr key={lesson.id} className="border-b border-gray-100 hover:bg-gray-50">
@@ -409,6 +415,15 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
           </div>
         </CardContent>
       </Card>
+
+    {/* Pagination */}
+    {filteredLessons.length > 0 && (
+      <div className="flex items-center justify-center gap-2 mt-4">
+        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</Button>
+        <span className="text-sm text-gray-600">Page {currentPage} of {totalPages}</span>
+        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</Button>
+      </div>
+    )}
 
       {filteredLessons.length === 0 && (
         <Card>

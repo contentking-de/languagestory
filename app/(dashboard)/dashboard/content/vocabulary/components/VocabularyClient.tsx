@@ -53,6 +53,8 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
   const [vocabulary, setVocabulary] = useState<VocabularyWord[]>([]);
   const [filteredVocabulary, setFilteredVocabulary] = useState<VocabularyWord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 30;
   const [searchTerm, setSearchTerm] = useState('');
   const [languageFilter, setLanguageFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -71,6 +73,7 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
 
   useEffect(() => {
     filterVocabulary();
+    setCurrentPage(1);
   }, [vocabulary, searchTerm, languageFilter, typeFilter, difficultyFilter, lessonFilter, lessonIdFilter]);
 
   const fetchVocabulary = async () => {
@@ -199,6 +202,9 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
   const uniqueLanguages = [...new Set(vocabulary.map(word => word.course_language).filter(Boolean))];
   const uniqueTypes = [...new Set(vocabulary.map(word => word.word_type).filter(Boolean))];
   const assignedWords = vocabulary.filter(word => word.lesson_id).length;
+  const totalPages = Math.max(1, Math.ceil(filteredVocabulary.length / perPage));
+  const pageStart = (currentPage - 1) * perPage;
+  const visibleVocabulary = filteredVocabulary.slice(pageStart, pageStart + perPage);
 
   if (loading) {
     return (
@@ -410,10 +416,10 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
         </CardContent>
       </Card>
 
-      {/* Vocabulary Grid */}
+      {/* Vocabulary Grid with pagination */}
       {filteredVocabulary.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredVocabulary.map((word) => (
+          {visibleVocabulary.map((word) => (
             <Card key={word.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -616,6 +622,15 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Pagination */}
+      {filteredVocabulary.length > 0 && (
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</Button>
+          <span className="text-sm text-gray-600">Page {currentPage} of {totalPages}</span>
+          <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</Button>
+        </div>
       )}
     </div>
   );

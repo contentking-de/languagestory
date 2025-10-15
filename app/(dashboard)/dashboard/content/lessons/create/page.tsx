@@ -53,7 +53,7 @@ function CreateLessonForm() {
     course_id: preselectedCourseId ? parseInt(preselectedCourseId) : 0,
   });
   const [lessonId, setLessonId] = useState<number | null>(null);
-  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Word Search, 5 MC Quiz, 6 True/False
+  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Word Search, 5 MC Quiz, 6 True/False, 7 Memory
   const [aiBusy, setAiBusy] = useState(false);
   const [vocabTopic, setVocabTopic] = useState('');
   const [vocabQuantity, setVocabQuantity] = useState(10);
@@ -206,6 +206,7 @@ function CreateLessonForm() {
             { key: 4, title: 'Word Search' },
             { key: 5, title: 'MC Quiz' },
             { key: 6, title: 'True/False' },
+            { key: 7, title: 'Memory' },
           ].map((s) => (
             <div key={s.key} className={`p-2 rounded-md border text-xs text-center ${currentStep === (s.key as any) ? 'border-orange-500 bg-orange-50 font-medium' : 'border-gray-200 bg-white'}`}>
               <span className="mr-1 text-[10px] align-middle">{(s.key as number) + 1}.</span>
@@ -225,6 +226,7 @@ function CreateLessonForm() {
               {currentStep === 4 && 'Word Search Game'}
               {currentStep === 5 && 'Multiple Choice Quiz'}
               {currentStep === 6 && 'True/False Quiz'}
+              {currentStep === 7 && 'Memory Game'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -444,11 +446,7 @@ function CreateLessonForm() {
                     </div>
                   </div>
                 )}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label>Topic</Label>
-                    <Input value={vocabTopic} onChange={(e) => setVocabTopic(e.target.value)} placeholder="e.g., travel, food, daily life" className="mt-1" />
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>Quantity</Label>
                     <Select value={vocabQuantity.toString()} onValueChange={(v)=>setVocabQuantity(parseInt(v))}>
@@ -459,12 +457,13 @@ function CreateLessonForm() {
                     </Select>
                   </div>
                   <div className="flex items-end">
-                    <Button disabled={!lessonId || aiBusy || !vocabTopic} onClick={async()=>{
+                    <Button disabled={!lessonId || aiBusy} onClick={async()=>{
                       if (!lessonId) return;
                       setAiBusy(true);
                       setLastMessage('');
                       try {
-                        const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'vocabulary',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:vocabTopic,quantity:vocabQuantity})});
+                        const topicBase = (formData.content || '').toString().slice(0, 800) || formData.title || 'lesson content';
+                        const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'vocabulary',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:topicBase,quantity:vocabQuantity})});
                         const g = await gen.json();
                         if (g?.data) {
                           setVocabPreview(Array.isArray(g.data.words) ? g.data.words : []);
@@ -479,6 +478,7 @@ function CreateLessonForm() {
                     </Button>
                   </div>
                 </div>
+                <p className="text-xs text-gray-600">Vocabulary is generated from your lesson content saved in Basics.</p>
 
                 {vocabPreview.length > 0 && (
                   <div className="bg-gray-50 rounded-md p-3 max-h-60 overflow-auto">
@@ -790,6 +790,61 @@ function CreateLessonForm() {
                 )}
                 <div className="flex justify-between pt-2">
                   <Button variant="outline" onClick={()=>setCurrentStep(5)}>Back</Button>
+                  <div className="text-sm text-gray-600">{lastMessage}</div>
+                  <Button onClick={()=>setCurrentStep(7)}>Next</Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 7 && (
+              <div className="space-y-4">
+                {aiBusy && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
+                    <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
+                    <div className="text-sm text-yellow-800">
+                      Creating... this might take some time! Grab a coffee and please wait for results and do not go to the next step!
+                    </div>
+                  </div>
+                )}
+                <div className="bg-gray-50 rounded-md p-3">
+                  <div className="text-sm text-gray-700 mb-2">Create a Memory game using up to 12 vocabulary words from this lesson.</div>
+                  <Button disabled={!lessonId || aiBusy} onClick={async()=>{
+                    if (!lessonId) return; setAiBusy(true); setLastMessage('');
+                    try{
+                      // Load lesson to get language
+                      const lessonRes = await fetch(`/api/lessons/${lessonId}`);
+                      const lessonData = await lessonRes.json();
+                      const language = (lessonData?.course_language || '').toLowerCase();
+                      // Fetch vocab
+                      const vocabRes = await fetch(`/api/lessons/${lessonId}`);
+                      const vocabData = await vocabRes.json();
+                      const vocab = Array.isArray(vocabData?.vocabulary) ? vocabData.vocabulary : [];
+                      if (vocab.length === 0) { setLastMessage('No vocabulary found for this lesson.'); setAiBusy(false); return; }
+                      const shuffled = [...vocab].sort(()=>Math.random()-0.5).slice(0, Math.min(12, vocab.length));
+                      const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
+                      const cards = shuffled.map((v:any, idx:number)=> ({ id: `${v.id || idx}`, word: (v?.[langKey] || v?.word_english || '').toString(), translation: (v?.word_english || '').toString() }));
+                      const requestBody = {
+                        title: `${lessonData?.title || 'Lesson'} - Memory`,
+                        description: `Auto-created memory game for lesson ${lessonId}`,
+                        language,
+                        category: 'vocabulary',
+                        difficulty_level: 1,
+                        estimated_duration: 5,
+                        lesson_id: lessonId.toString(),
+                        game_type: 'memory',
+                        game_config: { memory: { cards, gridSize: 4, timeLimit: 120 } },
+                        provider_name: 'Custom',
+                      };
+                      const res = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
+                      if (res.ok){ setLastMessage('Memory game created.'); } else { const err = await res.json(); setLastMessage(err?.error || 'Failed to create game'); }
+                    }catch(e){ console.error(e); setLastMessage('Failed to create memory game'); }
+                    finally{ setAiBusy(false); }
+                  }}>
+                    Create Memory Game
+                  </Button>
+                </div>
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={()=>setCurrentStep(6)}>Back</Button>
                   <div className="text-sm text-gray-600">{lastMessage}</div>
                   <Button onClick={()=>router.push(`/dashboard/content/lessons/${lessonId}`)}>Finish</Button>
                 </div>

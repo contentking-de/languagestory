@@ -474,77 +474,82 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         
         return (
           <>
-            {(lesson?.content || lesson?.cultural_information) && (
-              <div className="mx-auto mb-6 max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6">
-                {lesson?.content && (
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <BookOpen className="h-5 w-5" />
-                        Lesson Content
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="prose max-w-none">
-                        <div className="bg-gray-50 p-4 rounded-lg h-full">
-                          <div className="flex items-start gap-3">
-                            {lesson?.cover_image && (
-                              <img
-                                src={lesson.cover_image}
-                                alt="Lesson image"
-                                className="rounded-md w-56 h-56 md:w-64 md:h-64 object-cover flex-shrink-0"
+            {(() => {
+              const showContentPre = quiz?.quiz_type === 'multiple_choice' && !!lesson?.content;
+              const showCulturalPre = quiz?.quiz_type === 'true_false' && !!lesson?.cultural_information;
+              if (!showContentPre && !showCulturalPre) return null;
+              return (
+                <div className="mx-auto mb-6 max-w-4xl">
+                  {showContentPre && (
+                    <Card className="h-full">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <BookOpen className="h-5 w-5" />
+                          Lesson Content
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="prose max-w-none">
+                          <div className="bg-gray-50 p-4 rounded-lg h-full">
+                            <div className="flex items-start gap-3">
+                              {lesson?.cover_image && (
+                                <img
+                                  src={lesson.cover_image}
+                                  alt="Lesson image"
+                                  className="rounded-md w-56 h-56 md:w-64 md:h-64 object-cover flex-shrink-0"
+                                />
+                              )}
+                              <div className="flex-1">
+                                <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
+                                  {lesson?.content}
+                                </pre>
+                              </div>
+                              <AudioPlayer 
+                                text={lesson?.content || ''} 
+                                language={lesson?.course_language || 'english'} 
+                                size="md"
+                                lessonId={lessonId}
+                                type="content"
+                                showSpeedControl={true}
                               />
-                            )}
-                            <div className="flex-1">
-                              <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
-                                {lesson?.content}
-                              </pre>
                             </div>
-                            <AudioPlayer 
-                              text={lesson?.content || ''} 
-                              language={lesson?.course_language || 'english'} 
-                              size="md"
-                              lessonId={lessonId}
-                              type="content"
-                              showSpeedControl={true}
-                            />
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                {lesson?.cultural_information && (
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Languages className="h-5 w-5" />
-                        Cultural Information
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="prose max-w-none">
-                        <div className="bg-orange-50 p-4 rounded-lg border border-orange-200 h-full">
-                          <div className="flex items-start gap-3">
-                            <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
-                              {lesson?.cultural_information}
+                      </CardContent>
+                    </Card>
+                  )}
+                  {showCulturalPre && (
+                    <Card className="h-full">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Languages className="h-5 w-5" />
+                          Cultural Information
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="prose max-w-none">
+                          <div className="bg-orange-50 p-4 rounded-lg border border-orange-200 h-full">
+                            <div className="flex items-start gap-3">
+                              <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
+                                {lesson?.cultural_information}
+                              </div>
+                              <AudioPlayer 
+                                text={lesson?.cultural_information || ''} 
+                                language={lesson?.course_language || 'english'} 
+                                size="md"
+                                lessonId={lessonId}
+                                type="cultural"
+                                showSpeedControl={true}
+                              />
                             </div>
-                            <AudioPlayer 
-                              text={lesson?.cultural_information || ''} 
-                              language={lesson?.course_language || 'english'} 
-                              size="md"
-                              lessonId={lessonId}
-                              type="cultural"
-                              showSpeedControl={true}
-                            />
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              );
+            })()}
 
             <InlineQuiz
               key={`quiz-${quiz.id}`} // Force remount when quiz changes
