@@ -315,6 +315,12 @@ export default function AICreatorPage() {
                         Short Story
                       </div>
                     </SelectItem>
+                    <SelectItem value="cultural">
+                      <div className="flex items-center gap-2">
+                        <Languages className="h-4 w-4" />
+                        Cultural Information
+                      </div>
+                    </SelectItem>
                     <SelectItem value="conversation">
                       <div className="flex items-center gap-2">
                         <MessageSquare className="h-4 w-4" />
@@ -614,7 +620,8 @@ export default function AICreatorPage() {
                     disabled={
                       isSaving ||
                       ((generatedContent.type === 'quiz' || generatedContent.type === 'true_false_quiz') && !quizName.trim()) ||
-                      (generatedContent.type === 'grammar' && !grammarName.trim())
+                      (generatedContent.type === 'grammar' && !grammarName.trim()) ||
+                      (generatedContent.type === 'cultural' && !targetLessonId)
                     }
                     className="w-full"
                   >

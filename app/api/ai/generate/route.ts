@@ -128,6 +128,21 @@ Format as JSON:
   }
 }`,
 
+    cultural: `Create engaging cultural information about "${topic}" related to ${language}-speaking cultures for ${level} learners.
+
+Requirements:
+- Use ${levelDesc}
+- Focus on practical, interesting facts learners can discuss (customs, etiquette, festivals, food, daily life, dos & don'ts)
+- Keep tone friendly and motivating; avoid politics or sensitive topics
+- Structure as short paragraphs (3-5), optionally with bullet points
+ - IMPORTANT: Write the full output text in ${language} only (not English)
+ - IMPORTANT: Plain text only. Do NOT use any Markdown formatting (no headings, no bold/italics). Do NOT output symbols like **, __, #, *, backticks. Use simple sentences and optional dash bullets ("- ") only.
+
+Format as JSON:
+{
+  "cultural_information": "Well-formatted markdown/plain text suitable to show in a lesson card"
+}`,
+
     conversation: `Create ${quantity} conversation starters/dialogues about "${topic}" in ${language} for ${level} learners.
 
 Requirements:
@@ -526,6 +541,9 @@ function createPreview(contentType: string, data: any): string {
       return data.questions?.map((q: any, i: number) => 
         `${i + 1}. ${q.question}\n${q.options?.join('\n')}\nCorrect: ${q.correct_answer}\n`
       ).join('\n') || 'No questions generated';
+
+    case 'cultural':
+      return data.cultural_information || 'No cultural information generated';
 
     default:
       return JSON.stringify(data, null, 2);

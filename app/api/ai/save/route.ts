@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { quizzes, quiz_questions, vocabulary, media_files, topics } from '@/lib/db/content-schema';
+import { eq } from 'drizzle-orm';
+import { quizzes, quiz_questions, vocabulary, media_files, topics, lessons } from '@/lib/db/content-schema';
 import { logQuizActivityServer, logVocabularyActivityServer } from '@/lib/activity-logger-server';
 import { put } from '@vercel/blob';
 import { getUserWithTeamData } from '@/lib/db/queries';
@@ -46,6 +47,9 @@ export async function POST(request: Request) {
         break;
       case 'story':
         savedCount = await saveStoryContent(data, lessonId);
+        break;
+      case 'cultural':
+        savedCount = await saveCulturalInformation(data, lessonId);
         break;
       case 'grammar':
         // Save as a grammar topic with MC-style questions in interactive_data
@@ -295,6 +299,23 @@ async function saveStoryContent(data: any, lessonId?: number): Promise<number> {
   };
 
   await db.insert(topics).values(values);
+  return 1;
+}
+
+async function saveCulturalInformation(data: any, lessonId?: number): Promise<number> {
+  const culturalText: string | undefined = data?.cultural_information || data?.content;
+  if (!culturalText || !culturalText.trim()) {
+    throw new Error('No cultural information found in data');
+  }
+  if (typeof lessonId !== 'number') {
+    throw new Error('Lesson ID is required to save cultural information');
+  }
+
+  await db
+    .update(lessons)
+    .set({ cultural_information: culturalText })
+    .where(eq(lessons.id, lessonId));
+
   return 1;
 }
 
