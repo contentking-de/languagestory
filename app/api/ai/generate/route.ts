@@ -27,6 +27,8 @@ const getPrompt = (contentType: string, language: string, level: string, topic: 
   const levelDesc = levelDescriptions[level as keyof typeof levelDescriptions] || 'appropriate for the specified level';
   const langLower = (language || '').toLowerCase();
   const isGerman = langLower === 'german' || langLower === 'de' || langLower === 'deutsch';
+  const isFrench = langLower === 'french' || langLower === 'fr' || langLower === 'français' || langLower === 'francais';
+  const isSpanish = langLower === 'spanish' || langLower === 'es' || langLower === 'español' || langLower === 'espanol';
 
   const prompts = {
     quiz: `Create ${quantity} multiple choice quiz questions about "${topic}" for ${level} ${language} learners.
@@ -85,6 +87,8 @@ Requirements:
 - Add cultural notes where relevant
 - Include word type (noun, verb, adjective, etc.)
 ${isGerman ? '- For German nouns, include the correct definite article (der/die/das). Prefix it directly to the German word (e.g., "die Lampe"). Also include a separate "article" field containing only der/die/das, or an empty string if not a noun.' : ''}
+${isFrench ? '- For French nouns, include the correct definite article (le/la/l\'/les). Prefix it directly to the French word (e.g., "la table", "l\'hôtel"). Also include a separate "article" field containing only le/la/l\'/les, or an empty string if not a noun.' : ''}
+${isSpanish ? '- For Spanish nouns, include the correct definite article (el/la/los/las). Prefix it directly to the Spanish word (e.g., "la mesa"). Also include a separate "article" field containing only el/la/los/las, or an empty string if not a noun.' : ''}
 
 Format as JSON:
 {
@@ -97,7 +101,7 @@ Format as JSON:
       "context_sentence": "Example sentence in ${language}",
       "cultural_note": "Cultural context or interesting facts",
       "word_type": "noun/verb/adjective/etc",
-      ${isGerman ? '"article": "der/die/das or empty string for non-nouns",' : ''}
+      ${isGerman || isFrench || isSpanish ? '"article": "language-appropriate article for nouns (e.g., der/die/das, le/la/l\'/les, el/la/los/las); empty string for non-nouns",' : ''}
       "difficulty_level": ${level === 'beginner' ? 1 : level === 'elementary' ? 2 : level === 'intermediate' ? 3 : level === 'upper-intermediate' ? 4 : 5}
     }
   ]
@@ -412,26 +416,63 @@ export async function POST(request: Request) {
       );
     }
 
-    // Normalize German vocabulary to ensure articles are included
+    // Normalize vocabulary to ensure articles are included for DE/FR/ES
     const langLower = (language || '').toLowerCase();
     const isGerman = langLower === 'german' || langLower === 'de' || langLower === 'deutsch';
-    if (contentType === 'vocabulary' && isGerman && Array.isArray(generatedContent?.words)) {
+    const isFrench = langLower === 'french' || langLower === 'fr' || langLower === 'français' || langLower === 'francais';
+    const isSpanish = langLower === 'spanish' || langLower === 'es' || langLower === 'español' || langLower === 'espanol';
+    if (contentType === 'vocabulary' && Array.isArray(generatedContent?.words)) {
       generatedContent.words = generatedContent.words.map((w: any) => {
-        // Find the German word key regardless of capitalization variants
-        const germanKey = ['word_german', 'word_German', 'german_word', 'word_de'].find(k => typeof w?.[k] === 'string');
-        const englishKey = 'word_english';
-        let germanWord: string = germanKey ? w[germanKey] : '';
-        const articleRaw: string = (w.article || w.german_article || '').toString().trim();
-        const article = ['der','die','das'].includes(articleRaw.toLowerCase()) ? articleRaw.toLowerCase() : '';
-        const hasArticlePrefix = /^(der|die|das)\s+/i.test(germanWord);
-        if (!hasArticlePrefix && article) {
-          germanWord = `${article} ${germanWord}`;
+        if (isGerman) {
+          const germanKey = ['word_german', 'word_German', 'german_word', 'word_de'].find(k => typeof w?.[k] === 'string');
+          let germanWord: string = germanKey ? w[germanKey] : '';
+          const articleRaw: string = (w.article || w.german_article || '').toString().trim();
+          const article = ['der','die','das'].includes(articleRaw.toLowerCase()) ? articleRaw.toLowerCase() : '';
+          const hasArticlePrefix = /^(der|die|das)\s+/i.test(germanWord);
+          if (!hasArticlePrefix && article) {
+            germanWord = `${article} ${germanWord}`;
+          }
+          w.word_german = germanWord || w.word_german || w.word_German || w.german_word || w.word_de;
+          w.article = article || (hasArticlePrefix ? germanWord.split(/\s+/)[0].toLowerCase() : (w.article || ''));
+          if (germanKey && germanKey !== 'word_german') delete w[germanKey];
+        } else if (isFrench) {
+          const frenchKey = ['word_french', 'word_French', 'french_word', 'word_fr'].find(k => typeof w?.[k] === 'string');
+          let frenchWord: string = frenchKey ? w[frenchKey] : '';
+          const articleRaw: string = (w.article || w.french_article || '').toString().trim();
+          const articleLc = articleRaw.toLowerCase();
+          const isAllowed = ['le','la','les', "l'", 'l’'].includes(articleLc);
+          // Normalize fancy apostrophe to straight for consistency
+          const normalizedArticle = articleLc === 'l’' ? "l'" : (isAllowed ? articleLc : '');
+          const hasPrefix = /^(le|la|les)\s+/i.test(frenchWord) || /^l['’]/i.test(frenchWord);
+          if (!hasPrefix && normalizedArticle) {
+            if (normalizedArticle === "l'") {
+              frenchWord = `${normalizedArticle}${frenchWord}`;
+            } else {
+              frenchWord = `${normalizedArticle} ${frenchWord}`;
+            }
+          }
+          w.word_french = frenchWord || w.word_french || w.word_French || w.french_word || w.word_fr;
+          // Derive article from prefix if needed
+          if (!normalizedArticle) {
+            const m = frenchWord.match(/^(le|la|les)\s+/i) || frenchWord.match(/^l['’]/i);
+            w.article = m ? (m[0].toLowerCase().startsWith('l') ? "l'" : m[0].trim().toLowerCase()) : '';
+          } else {
+            w.article = normalizedArticle;
+          }
+          if (frenchKey && frenchKey !== 'word_french') delete w[frenchKey];
+        } else if (isSpanish) {
+          const spanishKey = ['word_spanish', 'word_Spanish', 'spanish_word', 'word_es'].find(k => typeof w?.[k] === 'string');
+          let spanishWord: string = spanishKey ? w[spanishKey] : '';
+          const articleRaw: string = (w.article || w.spanish_article || '').toString().trim();
+          const article = ['el','la','los','las'].includes(articleRaw.toLowerCase()) ? articleRaw.toLowerCase() : '';
+          const hasPrefix = /^(el|la|los|las)\s+/i.test(spanishWord);
+          if (!hasPrefix && article) {
+            spanishWord = `${article} ${spanishWord}`;
+          }
+          w.word_spanish = spanishWord || w.word_spanish || w.word_Spanish || w.spanish_word || w.word_es;
+          w.article = article || (hasPrefix ? spanishWord.split(/\s+/)[0].toLowerCase() : (w.article || ''));
+          if (spanishKey && spanishKey !== 'word_spanish') delete w[spanishKey];
         }
-        // Write back normalized fields
-        w.word_german = germanWord || w.word_german || w.word_German || w.german_word || w.word_de;
-        w.article = article || (hasArticlePrefix ? germanWord.split(/\s+/)[0].toLowerCase() : '');
-        // Clean up alternate keys to a single canonical one
-        if (germanKey && germanKey !== 'word_german') delete w[germanKey];
         return w;
       });
     }
