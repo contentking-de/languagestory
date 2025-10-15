@@ -36,6 +36,7 @@ interface Lesson {
   title: string;
   content: string;
   cultural_information?: string;
+  cover_image?: string;
   course_language: string;
   points_value: number;
   course_id?: number;
