@@ -142,7 +142,7 @@ async function saveQuizContent(data: any, lessonId?: number, customName?: string
       topic_id: null,
       pass_percentage: 70,
       points_value: questions.length * 5, // 5 points per question
-      is_published: false,
+      is_published: true,
     };
     console.log('About to insert quiz with values:', quizValues);
     
@@ -285,7 +285,7 @@ async function saveStoryContent(data: any, lessonId?: number): Promise<number> {
     topic_order: 0,
     difficulty_level: story.difficulty_level || 3,
     points_value: 10,
-    is_published: false,
+    is_published: true,
     interactive_data: {
       vocabulary_highlights: story.vocabulary_highlights || [],
       grammar_focus: story.grammar_focus || [],
@@ -328,7 +328,7 @@ async function saveGrammarContent(data: any, lessonId?: number): Promise<number>
     topic_order: 0,
     difficulty_level: 3,
     points_value: 10,
-    is_published: false,
+    is_published: true,
     interactive_data: interactive,
   });
 
