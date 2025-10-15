@@ -61,6 +61,8 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
   const [languageFilter, setLanguageFilter] = useState('all');
   const [lessonFilter, setLessonFilter] = useState('all');
   const [deletingQuizId, setDeletingQuizId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 24;
 
   // Check if user can create/edit quizzes
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
@@ -70,6 +72,11 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
   useEffect(() => {
     fetchQuizzes();
   }, []);
+
+  // Reset to first page whenever filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, typeFilter, statusFilter, languageFilter, lessonFilter]);
 
   const fetchQuizzes = async () => {
     try {
@@ -162,6 +169,11 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
 
     return matchesSearch && matchesType && matchesStatus && matchesLanguage && matchesLesson;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredQuizzes.length / perPage));
+  const pageStart = (currentPage - 1) * perPage;
+  const pageEnd = pageStart + perPage;
+  const visibleQuizzes = filteredQuizzes.slice(pageStart, pageEnd);
 
   // Removed getLanguageFlag function - now using FlagIcon component
 
@@ -361,9 +373,9 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
         </CardContent>
       </Card>
 
-      {/* Quizzes Grid */}
+      {/* Quizzes Grid (paginated) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredQuizzes.map((quiz) => {
+        {visibleQuizzes.map((quiz) => {
           const TypeIcon = getTypeIcon(quiz.quiz_type);
           return (
             <Card key={quiz.id} className="hover:shadow-lg transition-shadow">
@@ -491,6 +503,31 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
           );
         })}
       </div>
+
+      {/* Pagination Controls */}
+      {filteredQuizzes.length > 0 && (
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            Prev
+          </Button>
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       {filteredQuizzes.length === 0 && (
         <Card>
