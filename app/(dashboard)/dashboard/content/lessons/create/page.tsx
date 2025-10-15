@@ -45,10 +45,10 @@ function CreateLessonForm() {
     slug: '',
     description: '',
     content: '',
-    lesson_type: '',
+    lesson_type: 'story',
     lesson_order: 1,
     estimated_duration: 30,
-    points_value: 10,
+    points_value: 350,
     is_published: false,
     course_id: preselectedCourseId ? parseInt(preselectedCourseId) : 0,
   });
@@ -232,6 +232,14 @@ function CreateLessonForm() {
           <CardContent>
             {currentStep === 0 && (
               <form onSubmit={handleSubmit} className="space-y-6">
+              {aiBusy && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
+                  <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
+                  <div className="text-sm text-yellow-800">
+                    Creating... this might take some time! Grab a coffee and please wait for results.
+                  </div>
+                </div>
+              )}
               {/* Course Selection */}
               <div>
                 <Label htmlFor="course">Course *</Label>
@@ -317,6 +325,56 @@ function CreateLessonForm() {
                 <p className="text-sm text-gray-500 mt-1">
                   The main content that students will see during the lesson
                 </p>
+                <div className="mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={aiBusy || !formData.title || !selectedCourse}
+                    onClick={async () => {
+                      if (!selectedCourse || !formData.title) return;
+                      setAiBusy(true);
+                      setLastMessage('');
+                      try {
+                        const topicBase = formData.description || formData.title;
+                        const gen = await fetch('/api/ai/generate', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            contentType: 'story',
+                            aiProvider: 'openai',
+                            language: selectedCourse.language,
+                            level: selectedCourse.level,
+                            topic: topicBase,
+                            quantity: 1,
+                          }),
+                        });
+                        const g = await gen.json();
+                        const storyText = g?.data?.story?.content || '';
+                        const storyTitle = g?.data?.story?.title || '';
+                        if (storyText) {
+                          setFormData(prev => ({
+                            ...prev,
+                            content: storyText,
+                            description: prev.description || storyTitle,
+                          }));
+                          setLastMessage('Story content generated and inserted based on title, language and level.');
+                        } else {
+                          setLastMessage('No story content returned.');
+                        }
+                      } catch (e) {
+                        console.error(e);
+                        setLastMessage('Failed to generate story content');
+                      } finally {
+                        setAiBusy(false);
+                      }
+                    }}
+                  >
+                    <Wand2 className="h-4 w-4 mr-2" /> Generate Story from Title (AI)
+                  </Button>
+                  {lastMessage && (
+                    <div className="text-xs text-gray-600 mt-1">{lastMessage}</div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -675,7 +733,6 @@ function CreateLessonForm() {
                 <div className="flex justify-between pt-2">
                   <Button variant="outline" onClick={()=>setCurrentStep(3)}>Back</Button>
                   <div className="text-sm text-gray-600">{lastMessage}</div>
-                  <Button onClick={()=>setCurrentStep(5)}>Next</Button>
                   <Button onClick={()=>setCurrentStep(5)}>Next</Button>
                 </div>
               </div>
