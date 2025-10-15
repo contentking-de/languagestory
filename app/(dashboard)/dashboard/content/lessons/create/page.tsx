@@ -11,7 +11,10 @@ import {
   Save,
   Loader2,
   BookOpen,
-  Info
+  Info,
+  Wand2,
+  Image as ImageIcon,
+  Languages,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -49,6 +52,28 @@ function CreateLessonForm() {
     is_published: false,
     course_id: preselectedCourseId ? parseInt(preselectedCourseId) : 0,
   });
+  const [lessonId, setLessonId] = useState<number | null>(null);
+  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Word Search, 5 MC Quiz, 6 True/False
+  const [aiBusy, setAiBusy] = useState(false);
+  const [vocabTopic, setVocabTopic] = useState('');
+  const [vocabQuantity, setVocabQuantity] = useState(10);
+  const [culturalTopic, setCulturalTopic] = useState('');
+  const [manualVocab, setManualVocab] = useState<{target:string; english:string; context?:string; type?:string}[]>([]);
+  const addEmptyVocab = () => setManualVocab(prev => [...prev, {target:'', english:'', context:'', type:''}]);
+  const updateManualVocab = (idx:number, key:'target'|'english'|'context'|'type', val:string) => {
+    setManualVocab(prev => prev.map((v,i)=> i===idx ? {...v, [key]: val} : v));
+  };
+  const [imagePrompt, setImagePrompt] = useState('');
+  const [lastMessage, setLastMessage] = useState('');
+  const [vocabPreview, setVocabPreview] = useState<any[]>([]);
+  const [culturalPreview, setCulturalPreview] = useState<string>('');
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [quizQuantity, setQuizQuantity] = useState(5);
+  const [quizName, setQuizName] = useState('');
+  const [quizPreview, setQuizPreview] = useState<string>('');
+  const [tfQuantity, setTfQuantity] = useState(10);
+  const [tfName, setTfName] = useState('');
+  const [tfPreview, setTfPreview] = useState<string>('');
 
   useEffect(() => {
     fetchCourses();
@@ -99,7 +124,9 @@ function CreateLessonForm() {
 
       if (response.ok) {
         const newLesson = await response.json();
-        router.push(`/dashboard/content/lessons/${newLesson.id}`);
+        setLessonId(newLesson.id);
+        setCurrentStep(1);
+        setLastMessage('Basics saved. Continue with Vocabulary.');
       } else {
         console.error('Failed to create lesson');
       }
@@ -110,6 +137,24 @@ function CreateLessonForm() {
     }
   };
 
+  // Incremental save of basics when moving forward (PUT)
+  const saveBasicsIfDraftExists = async () => {
+    if (!lessonId) return;
+    try {
+      await fetch(`/api/lessons/${lessonId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+    } catch (e) {
+      console.error('Autosave basics failed', e);
+    }
+  };
+
+  const selectedCourse = courses.find(c => c.id === formData.course_id);
+  const courseLanguage = selectedCourse?.language || '';
+  const courseLevel = selectedCourse?.level || '';
+
   const getLanguageFlag = (language: string) => {
     const flags = {
       french: '🇫🇷',
@@ -119,7 +164,6 @@ function CreateLessonForm() {
     return flags[language as keyof typeof flags] || '🌐';
   };
 
-  const selectedCourse = courses.find(c => c.id === formData.course_id);
   const isFormValid = formData.title && formData.slug && formData.lesson_type && formData.course_id > 0;
 
   if (loading) {
@@ -150,17 +194,42 @@ function CreateLessonForm() {
         </div>
       </div>
 
-      {/* Creation Form */}
-      <div className="max-w-4xl">
+      {/* Builder */}
+      <div className="max-w-6xl">
+        {/* Stepper */}
+        <div className="grid gap-2 mb-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+          {[
+            { key: 0, title: 'Basics' },
+            { key: 1, title: 'Vocabulary' },
+            { key: 2, title: 'Cultural' },
+            { key: 3, title: 'Images' },
+            { key: 4, title: 'Word Search' },
+            { key: 5, title: 'MC Quiz' },
+            { key: 6, title: 'True/False' },
+          ].map((s) => (
+            <div key={s.key} className={`p-2 rounded-md border text-xs text-center ${currentStep === (s.key as any) ? 'border-orange-500 bg-orange-50 font-medium' : 'border-gray-200 bg-white'}`}>
+              <span className="mr-1 text-[10px] align-middle">{(s.key as number) + 1}.</span>
+              <span className="align-middle">{s.title}</span>
+            </div>
+          ))}
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5" />
-              Lesson Information
+              {currentStep === 0 && 'Lesson Information'}
+              {currentStep === 1 && 'Vocabulary'}
+              {currentStep === 2 && 'Cultural Information'}
+              {currentStep === 3 && 'Images'}
+              {currentStep === 4 && 'Word Search Game'}
+              {currentStep === 5 && 'Multiple Choice Quiz'}
+              {currentStep === 6 && 'True/False Quiz'}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            {currentStep === 0 && (
+              <form onSubmit={handleSubmit} className="space-y-6">
               {/* Course Selection */}
               <div>
                 <Label htmlFor="course">Course *</Label>
@@ -352,7 +421,7 @@ function CreateLessonForm() {
                   ) : (
                     <>
                       <Save className="h-4 w-4 mr-2" />
-                      Create Lesson
+                      Save & Continue
                     </>
                   )}
                 </Button>
@@ -363,6 +432,369 @@ function CreateLessonForm() {
                 </Link>
               </div>
             </form>
+            )}
+
+            {currentStep === 1 && (
+              <div className="space-y-4">
+                {aiBusy && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
+                    <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
+                    <div className="text-sm text-yellow-800">
+                      Creating... this might take some time! Grab a coffee and please wait for results and do not go to the next step!
+                    </div>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Topic</Label>
+                    <Input value={vocabTopic} onChange={(e) => setVocabTopic(e.target.value)} placeholder="e.g., travel, food, daily life" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label>Quantity</Label>
+                    <Select value={vocabQuantity.toString()} onValueChange={(v)=>setVocabQuantity(parseInt(v))}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {[5,10,15,20].map(n => (<SelectItem key={n} value={n.toString()}>{n}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button disabled={!lessonId || aiBusy || !vocabTopic} onClick={async()=>{
+                      if (!lessonId) return;
+                      setAiBusy(true);
+                      setLastMessage('');
+                      try {
+                        const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'vocabulary',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:vocabTopic,quantity:vocabQuantity})});
+                        const g = await gen.json();
+                        if (g?.data) {
+                          setVocabPreview(Array.isArray(g.data.words) ? g.data.words : []);
+                          const save = await fetch('/api/ai/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'vocabulary',data:g.data,lessonId})});
+                          const s = await save.json();
+                          setLastMessage(`Saved ${s?.count ?? 0} vocabulary items.`);
+                        }
+                      } catch(e){ console.error(e); setLastMessage('Failed to generate/save vocabulary'); }
+                      finally{ setAiBusy(false); }
+                    }} className="w-full">
+                      <Wand2 className="h-4 w-4 mr-2"/>Generate & Save
+                    </Button>
+                  </div>
+                </div>
+
+                {vocabPreview.length > 0 && (
+                  <div className="bg-gray-50 rounded-md p-3 max-h-60 overflow-auto">
+                    <div className="text-sm font-medium mb-2">Preview</div>
+                    <ul className="text-sm list-disc pl-5 space-y-1">
+                      {vocabPreview.slice(0,50).map((w:any, i:number)=>{
+                        const target = w.word_german || w.word_french || w.word_spanish || w.word_english || '';
+                        return (
+                          <li key={i}>{target} {w.word_english ? `- ${w.word_english}` : ''}</li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Manual add */}
+                <div className="border rounded-md p-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="font-medium">Add vocabulary manually</div>
+                    <Button type="button" variant="outline" size="sm" onClick={addEmptyVocab}>Add Row</Button>
+                  </div>
+                  <div className="space-y-3">
+                    {manualVocab.map((item, idx) => (
+                      <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                        <Input placeholder={`${courseLanguage || 'target'} word`} value={item.target} onChange={(e)=>updateManualVocab(idx,'target',e.target.value)} />
+                        <Input placeholder="English" value={item.english} onChange={(e)=>updateManualVocab(idx,'english',e.target.value)} />
+                        <Input placeholder="Context sentence (optional)" value={item.context} onChange={(e)=>updateManualVocab(idx,'context',e.target.value)} />
+                        <Input placeholder="Type (noun/verb/...)" value={item.type} onChange={(e)=>updateManualVocab(idx,'type',e.target.value)} />
+                      </div>
+                    ))}
+                  </div>
+                  {manualVocab.length > 0 && (
+                    <div className="mt-3">
+                      <Button type="button" onClick={async()=>{
+                        if (!lessonId) return;
+                        const payloads = manualVocab.filter(v=>v.english || v.target);
+                        if (payloads.length === 0) return;
+                        try{
+                          let saved = 0;
+                          for (const v of payloads){
+                            const body:any = { word_english: v.english, word_type: v.type || null, context_sentence: v.context || null, lesson_id: lessonId };
+                            // map target to proper field
+                            if (courseLanguage === 'german') body.word_german = v.target; else if (courseLanguage === 'french') body.word_french = v.target; else if (courseLanguage === 'spanish') body.word_spanish = v.target; else body.word_english = v.english || v.target;
+                            const res = await fetch('/api/vocabulary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+                            if (res.ok) saved++;
+                          }
+                          setManualVocab([]);
+                          setLastMessage(`Saved ${saved} manual vocabulary items.`);
+                        }catch(e){ console.error(e); setLastMessage('Failed to save manual vocabulary'); }
+                      }}>Save Manual Vocabulary</Button>
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={async()=>{ await saveBasicsIfDraftExists(); setCurrentStep(0);}}>Back</Button>
+                  <div className="text-sm text-gray-600">{lastMessage}</div>
+                  <Button onClick={()=>setCurrentStep(2)}>Next</Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="space-y-4">
+                {aiBusy && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
+                    <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
+                    <div className="text-sm text-yellow-800">
+                      Creating... this might take some time! Grab a coffee and please wait for results and do not go to the next step!
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <Label>Keyword, Topic or Theme</Label>
+                  <Input value={culturalTopic} onChange={(e)=>setCulturalTopic(e.target.value)} className="mt-1" placeholder="e.g., Berlin etiquette" />
+                </div>
+                <Button disabled={!lessonId || aiBusy || !culturalTopic} onClick={async()=>{
+                  if (!lessonId) return; setAiBusy(true); setLastMessage('');
+                  try{
+                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'cultural',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:culturalTopic,quantity:1})});
+                    const g = await gen.json();
+                    if (g?.data) {
+                      setCulturalPreview(g.data.cultural_information || '');
+                      const save = await fetch('/api/ai/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'cultural',data:g.data,lessonId})});
+                      const s = await save.json();
+                      setLastMessage('Cultural information saved.');
+                    }
+                  }catch(e){console.error(e); setLastMessage('Failed to generate/save cultural info');}
+                  finally{setAiBusy(false);} }}>
+                  <Wand2 className="h-4 w-4 mr-2"/>Generate & Save
+                </Button>
+                {culturalPreview && (
+                  <div className="bg-gray-50 rounded-md p-3 max-h-60 overflow-auto">
+                    <div className="text-sm font-medium mb-2">Preview</div>
+                    <pre className="whitespace-pre-wrap text-sm text-gray-800">{culturalPreview}</pre>
+                  </div>
+                )}
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={()=>setCurrentStep(1)}>Back</Button>
+                  <div className="text-sm text-gray-600">{lastMessage}</div>
+                  <Button onClick={()=>setCurrentStep(3)}>Next</Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div className="space-y-4">
+                {aiBusy && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
+                    <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
+                    <div className="text-sm text-yellow-800">
+                      Creating... this might take some time! Grab a coffee and please wait for results and do not go to the next step!
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <Label>Image Prompt</Label>
+                  <Input value={imagePrompt} onChange={(e)=>setImagePrompt(e.target.value)} className="mt-1" placeholder="Describe the image to generate" />
+                </div>
+                <Button disabled={!lessonId || aiBusy || !imagePrompt} onClick={async()=>{
+                  if (!lessonId) return; setAiBusy(true); setLastMessage('');
+                  try{
+                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'image',aiProvider:'gpt5',topic:imagePrompt})});
+                    const g = await gen.json();
+                    if (g?.preview) {
+                      setImagePreview(g.preview);
+                      const base64 = (g.preview as string).split(',')[1] || '';
+                      const save = await fetch('/api/ai/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'image',data:{base64},imagePrompt,lessonId})});
+                      const s = await save.json();
+                      // set as cover image
+                      if (s?.savedUrl) {
+                        await fetch(`/api/lessons/${lessonId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({cover_image:s.savedUrl})});
+                        setLastMessage('Image saved and set as cover.');
+                      } else {
+                        setLastMessage('Image saved. You can set it as cover later.');
+                      }
+                    }
+                  }catch(e){console.error(e); setLastMessage('Failed to generate/save image');}
+                  finally{setAiBusy(false);} }}>
+                  <ImageIcon className="h-4 w-4 mr-2"/>Generate & Save
+                </Button>
+                {imagePreview && (
+                  <div className="bg-gray-50 rounded-md p-3">
+                    <div className="text-sm font-medium mb-2">Preview</div>
+                    <img src={imagePreview} alt="Generated" className="rounded-md max-h-72" />
+                  </div>
+                )}
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={()=>setCurrentStep(2)}>Back</Button>
+                  <div className="text-sm text-gray-600">{lastMessage}</div>
+                  <Button onClick={()=>setCurrentStep(4)}>Next</Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 4 && (
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-md p-3">
+                  <div className="text-sm text-gray-700 mb-2">Create a Word Search game using 4 random words from this lesson's vocabulary.</div>
+                  <Button disabled={!lessonId || aiBusy} onClick={async()=>{
+                    if (!lessonId) return; setAiBusy(true); setLastMessage('');
+                    try{
+                      // Load lesson to get language
+                      const lessonRes = await fetch(`/api/lessons/${lessonId}`);
+                      const lessonData = await lessonRes.json();
+                      const language = (lessonData?.course_language || '').toLowerCase();
+                      // Fetch vocab
+                      const vocabRes = await fetch(`/api/lessons/${lessonId}`);
+                      const vocabData = await vocabRes.json();
+                      const vocab = Array.isArray(vocabData?.vocabulary) ? vocabData.vocabulary : [];
+                      if (vocab.length === 0) { setLastMessage('No vocabulary found for this lesson.'); setAiBusy(false); return; }
+                      const shuffled = [...vocab].sort(()=>Math.random()-0.5).slice(0, Math.min(4, vocab.length));
+                      const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
+                      const words = shuffled.map((v:any)=> (v?.[langKey] || v?.word_english || '').toString()).filter(Boolean);
+                      const requestBody = {
+                        title: `${lessonData?.title || 'Lesson'} - Word Search`,
+                        description: `Auto-created word search for lesson ${lessonId}`,
+                        language,
+                        category: 'vocabulary',
+                        difficulty_level: 1,
+                        estimated_duration: 5,
+                        lesson_id: lessonId.toString(),
+                        game_type: 'word_search',
+                        game_config: { wordSearch: { words, gridSize: 15, directions: ['horizontal','vertical','diagonal'] } },
+                        provider_name: 'Custom',
+                      };
+                      const res = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
+                      if (res.ok){ setLastMessage('Word Search game created.'); } else { const err = await res.json(); setLastMessage(err?.error || 'Failed to create game'); }
+                    }catch(e){ console.error(e); setLastMessage('Failed to create word search'); }
+                    finally{ setAiBusy(false); }
+                  }}>
+                    Create Word Search
+                  </Button>
+                </div>
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={()=>setCurrentStep(3)}>Back</Button>
+                  <div className="text-sm text-gray-600">{lastMessage}</div>
+                  <Button onClick={()=>setCurrentStep(5)}>Next</Button>
+                  <Button onClick={()=>setCurrentStep(5)}>Next</Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 5 && (
+              <div className="space-y-4">
+                {aiBusy && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
+                    <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
+                    <div className="text-sm text-yellow-800">
+                      Creating... this might take some time! Grab a coffee and please wait for results and do not go to the next step!
+                    </div>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2">
+                    <Label>Quiz Name (optional)</Label>
+                    <Input value={quizName} onChange={(e)=>setQuizName(e.target.value)} className="mt-1" placeholder={`${formData.title || 'Lesson'} - Quiz`} />
+                  </div>
+                  <div>
+                    <Label>Questions</Label>
+                    <Select value={quizQuantity.toString()} onValueChange={(v)=>setQuizQuantity(parseInt(v))}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {[5,10,15].map(n => (<SelectItem key={n} value={n.toString()}>{n}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button disabled={!lessonId || aiBusy} onClick={async()=>{
+                  if (!lessonId) return; setAiBusy(true); setLastMessage(''); setQuizPreview('');
+                  try{
+                    // Use lesson content (trim) as topic basis
+                    const topicBase = (formData.content || '').toString().slice(0, 800) || formData.title || 'lesson content';
+                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'quiz',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:topicBase,quantity:quizQuantity})});
+                    const g = await gen.json();
+                    if (g?.data) {
+                      setQuizPreview(g.preview || '');
+                      const save = await fetch('/api/ai/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'quiz',data:g.data,lessonId,customName: quizName || `${formData.title || 'Lesson'} - Quiz`})});
+                      const s = await save.json();
+                      setLastMessage(`Quiz created with ${quizQuantity} questions.`);
+                    }
+                  }catch(e){ console.error(e); setLastMessage('Failed to generate/save quiz'); }
+                  finally{ setAiBusy(false); }
+                }}>
+                  <Wand2 className="h-4 w-4 mr-2"/>Generate & Save Quiz
+                </Button>
+                {quizPreview && (
+                  <div className="bg-gray-50 rounded-md p-3 max-h-72 overflow-auto">
+                    <div className="text-sm font-medium mb-2">Preview</div>
+                    <pre className="whitespace-pre-wrap text-sm text-gray-800">{quizPreview}</pre>
+                  </div>
+                )}
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={()=>setCurrentStep(4)}>Back</Button>
+                  <div className="text-sm text-gray-600">{lastMessage}</div>
+                  <Button onClick={()=>setCurrentStep(6)}>Next</Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 6 && (
+              <div className="space-y-4">
+                {aiBusy && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
+                    <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
+                    <div className="text-sm text-yellow-800">
+                      Creating... this might take some time! Grab a coffee and please wait for results and do not go to the next step!
+                    </div>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2">
+                    <Label>Quiz Name (optional)</Label>
+                    <Input value={tfName} onChange={(e)=>setTfName(e.target.value)} className="mt-1" placeholder={`${formData.title || 'Lesson'} - True/False`} />
+                  </div>
+                  <div>
+                    <Label>Statements</Label>
+                    <Select value={tfQuantity.toString()} onValueChange={(v)=>setTfQuantity(parseInt(v))}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {[6,10,14].map(n => (<SelectItem key={n} value={n.toString()}>{n}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button disabled={!lessonId || aiBusy} onClick={async()=>{
+                  if (!lessonId) return; setAiBusy(true); setLastMessage(''); setTfPreview('');
+                  try{
+                    const lessonRes = await fetch(`/api/lessons/${lessonId}`);
+                    const lessonData = await lessonRes.json();
+                    const basis = (lessonData?.cultural_information || '').toString().slice(0, 1200) || formData.title || 'culture';
+                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'true_false_quiz',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:basis,quantity:tfQuantity})});
+                    const g = await gen.json();
+                    if (g?.data) {
+                      setTfPreview(g.preview || '');
+                      const save = await fetch('/api/ai/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'true_false_quiz',data:g.data,lessonId,customName: tfName || `${formData.title || 'Lesson'} - True/False`})});
+                      const s = await save.json();
+                      setLastMessage(`True/False quiz created with ${tfQuantity} statements.`);
+                    }
+                  }catch(e){ console.error(e); setLastMessage('Failed to generate/save true/false quiz'); }
+                  finally{ setAiBusy(false); }
+                }}>
+                  <Wand2 className="h-4 w-4 mr-2"/>Generate & Save True/False Quiz
+                </Button>
+                {tfPreview && (
+                  <div className="bg-gray-50 rounded-md p-3 max-h-72 overflow-auto">
+                    <div className="text-sm font-medium mb-2">Preview</div>
+                    <pre className="whitespace-pre-wrap text-sm text-gray-800">{tfPreview}</pre>
+                  </div>
+                )}
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={()=>setCurrentStep(5)}>Back</Button>
+                  <div className="text-sm text-gray-600">{lastMessage}</div>
+                  <Button onClick={()=>router.push(`/dashboard/content/lessons/${lessonId}`)}>Finish</Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
