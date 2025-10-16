@@ -8,12 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, AlertCircle, Trophy, RotateCcw, BookOpen } from 'lucide-react';
 
 interface Exercise {
-  type: 'fill-in-the-blank' | 'transformation' | 'error-correction' | string;
+  type: 'fill-in-the-blank' | 'transformation' | 'error-correction' | 'multiple_choice' | string;
   instruction: string;
   question: string;
   correct_answer: string;
   explanation?: string;
   difficulty_level?: number;
+  options?: string[];
 }
 
 interface InlineGrammarProps {
@@ -93,25 +94,56 @@ export default function InlineGrammar({ topicId, title, exercises, onComplete, o
                 <div className="text-xs text-gray-500">{ex.type}</div>
                 <div className="font-medium">{ex.instruction}</div>
                 <div className="text-sm text-gray-700">{ex.question}</div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    placeholder="Your answer"
-                    value={answers[idx]}
-                    onChange={(e) => {
-                      const next = [...answers];
-                      next[idx] = e.target.value;
-                      setAnswers(next);
-                    }}
-                    disabled={isCompleted}
-                  />
-                  {checked[idx] && (
-                    isCorrect ? (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <AlertCircle className="h-5 w-5 text-red-600" />
-                    )
-                  )}
-                </div>
+                {ex.type === 'multiple_choice' && Array.isArray(ex.options) && ex.options.length > 0 ? (
+                  <div className="space-y-2">
+                    {ex.options.map((opt, oi) => {
+                      const selected = answers[idx] === opt;
+                      return (
+                        <button
+                          key={oi}
+                          type="button"
+                          onClick={() => {
+                            if (isCompleted) return;
+                            const next = [...answers];
+                            next[idx] = opt;
+                            setAnswers(next);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-md border ${selected ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}
+                          disabled={isCompleted}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
+                    {checked[idx] && (
+                      isCorrect ? (
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      placeholder="Your answer"
+                      value={answers[idx]}
+                      onChange={(e) => {
+                        const next = [...answers];
+                        next[idx] = e.target.value;
+                        setAnswers(next);
+                      }}
+                      disabled={isCompleted}
+                    />
+                    {checked[idx] && (
+                      isCorrect ? (
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                      )
+                    )}
+                  </div>
+                )}
                 {checked[idx] && !isCorrect && (
                   <div className="text-sm text-gray-600">Correct: {expected}</div>
                 )}

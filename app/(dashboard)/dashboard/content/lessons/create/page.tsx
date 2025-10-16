@@ -53,7 +53,7 @@ function CreateLessonForm() {
     course_id: preselectedCourseId ? parseInt(preselectedCourseId) : 0,
   });
   const [lessonId, setLessonId] = useState<number | null>(null);
-  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Word Search, 5 MC Quiz, 6 True/False, 7 Memory, 8 Gap Fill
+  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Word Search, 5 MC Quiz, 6 True/False, 7 Memory, 8 Gap Fill, 9 Hangman
   const [aiBusy, setAiBusy] = useState(false);
   const [vocabTopic, setVocabTopic] = useState('');
   const [vocabQuantity, setVocabQuantity] = useState(10);
@@ -76,6 +76,8 @@ function CreateLessonForm() {
   const [tfPreview, setTfPreview] = useState<string>('');
   const [gfNumGaps, setGfNumGaps] = useState(8);
   const [gfPreview, setGfPreview] = useState<string>('');
+  const [hangmanWord, setHangmanWord] = useState<string>('');
+  const [hangmanHint, setHangmanHint] = useState<string>('');
 
   useEffect(() => {
     fetchCourses();
@@ -199,7 +201,7 @@ function CreateLessonForm() {
       {/* Builder */}
       <div className="max-w-6xl">
         {/* Stepper */}
-        <div className="grid gap-2 mb-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+        <div className="grid gap-2 mb-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-9">
           {[
             { key: 0, title: 'Basics' },
             { key: 1, title: 'Vocabulary' },
@@ -210,6 +212,7 @@ function CreateLessonForm() {
             { key: 6, title: 'True/False' },
             { key: 7, title: 'Memory' },
             { key: 8, title: 'Gap Fill' },
+            { key: 9, title: 'Hangman' },
           ].map((s) => (
             <div key={s.key} className={`p-2 rounded-md border text-xs text-center ${currentStep === (s.key as any) ? 'border-orange-500 bg-orange-50 font-medium' : 'border-gray-200 bg-white'}`}>
               <span className="mr-1 text-[10px] align-middle">{(s.key as number) + 1}.</span>
@@ -231,6 +234,7 @@ function CreateLessonForm() {
               {currentStep === 6 && 'True/False Quiz'}
               {currentStep === 7 && 'Memory Game'}
               {currentStep === 8 && 'Gap Fill Quiz'}
+              {currentStep === 9 && 'Hangman Game'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -989,6 +993,80 @@ function CreateLessonForm() {
                 )}
                 <div className="flex justify-between pt-2">
                   <Button variant="outline" onClick={()=>setCurrentStep(7)}>Back</Button>
+                  <div className="text-sm text-gray-600">{lastMessage}</div>
+                  <Button onClick={()=>setCurrentStep(9)}>Next</Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 9 && (
+              <div className="space-y-4">
+                {aiBusy && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
+                    <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
+                    <div className="text-sm text-yellow-800">
+                      Creating... this might take some time! Grab a coffee and please wait for results and do not go to the next step!
+                    </div>
+                  </div>
+                )}
+                <div className="bg-gray-50 rounded-md p-3 space-y-3">
+                  <div className="text-sm text-gray-700">Create a Hangman game from your lesson vocabulary. We'll pick one saved word and ask AI for a hint.</div>
+                  <Button disabled={!lessonId || aiBusy} onClick={async()=>{
+                    if (!lessonId) return; setAiBusy(true); setLastMessage('');
+                    try{
+                      const lessonRes = await fetch(`/api/lessons/${lessonId}`);
+                      const lessonData = await lessonRes.json();
+                      const language = (lessonData?.course_language || '').toLowerCase();
+                      const vocab = Array.isArray(lessonData?.vocabulary) ? lessonData.vocabulary : [];
+                      if (vocab.length === 0){ setLastMessage('No vocabulary found for this lesson.'); setAiBusy(false); return; }
+                      const choice = vocab[Math.floor(Math.random()*vocab.length)];
+                      const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
+                      const word = (choice?.[langKey] || choice?.word_english || '').toString();
+                      if (!word){ setLastMessage('Selected word is empty.'); setAiBusy(false); return; }
+                      setHangmanWord(word);
+                      // Ask AI for a short hint using lesson description/content
+                      const basis = ((formData.description || '') + '\n' + (formData.content || '')).slice(0, 1200);
+                      const hintPrompt = `Create a short, clear hint (max 12 words) for the hangman word in ${language}. The hint must not include the word itself. Context: ${basis}`;
+                      const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'story',aiProvider:'openai',language:language || 'english',level:courseLevel || 'beginner',topic:hintPrompt,quantity:1})});
+                      const g = await gen.json();
+                      const hint = (g?.data?.story?.title || '').toString().slice(0, 80) || 'Guess the word!';
+                      setHangmanHint(hint);
+                      const requestBody = {
+                        title: `${lessonData?.title || 'Lesson'} - Hangman`,
+                        description: `Auto-created hangman for lesson ${lessonId}`,
+                        language,
+                        category: 'vocabulary',
+                        difficulty_level: 1,
+                        estimated_duration: 5,
+                        lesson_id: lessonId.toString(),
+                        game_type: 'hangman',
+                        game_config: { hangman: { words: [word], hints: [hint], maxAttempts: 6, categories: ['lesson'] } },
+                        provider_name: 'Custom',
+                      };
+                      const res = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
+                      if (res.ok){
+                        const created = await res.json();
+                        // Append to lesson flow_order to ensure it appears in the workflow
+                        const currentFlow = Array.isArray(lessonData?.flow_order) ? lessonData.flow_order : [];
+                        const alreadyInFlow = currentFlow.some((it:any)=> it?.type === 'game' && it?.id === created?.id);
+                        const newFlow = alreadyInFlow ? currentFlow : [...currentFlow, { type: 'game', id: created.id }];
+                        await fetch(`/api/lessons/${lessonId}`,{ method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ flow_order: newFlow })});
+                        setLastMessage('Hangman game created and added to lesson flow.');
+                      } else {
+                        const err = await res.json().catch(()=>({}));
+                        setLastMessage(err?.error || 'Failed to create hangman');
+                      }
+                    }catch(e){ console.error(e); setLastMessage('Failed to create hangman'); }
+                    finally{ setAiBusy(false); }
+                  }}>
+                    Create Hangman Game
+                  </Button>
+                  {(hangmanWord || hangmanHint) && (
+                    <div className="text-sm text-gray-700">Word: <span className="font-medium">{hangmanWord}</span> • Hint: <span className="italic">{hangmanHint}</span></div>
+                  )}
+                </div>
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={()=>setCurrentStep(8)}>Back</Button>
                   <div className="text-sm text-gray-600">{lastMessage}</div>
                   <Button onClick={()=>router.push(`/dashboard/content/lessons/${lessonId}`)}>Finish</Button>
                 </div>

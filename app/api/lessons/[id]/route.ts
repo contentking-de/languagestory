@@ -83,7 +83,48 @@ export async function GET(
 
     const grammarTopics = lessonTopics
       .filter((t: any) => t?.topic_type === 'grammar_exercise')
-      .map((t: any) => ({ id: t.id, title: t.title, exercises: (t?.interactive_data?.exercises || []) }));
+      .map((t: any) => {
+        const rawQuestions = Array.isArray(t?.interactive_data?.questions) ? t.interactive_data.questions : [];
+        const rawExercises = Array.isArray(t?.interactive_data?.exercises) ? t.interactive_data.exercises : [];
+        const base = rawQuestions.length > 0 ? rawQuestions : rawExercises;
+        const normalized = base.map((q: any) => {
+          const options: string[] | undefined = Array.isArray(q?.options) ? q.options : undefined;
+          let correctAnswer: string = (q?.correct_answer || q?.answer || '').toString();
+          if (options && options.length > 0 && correctAnswer) {
+            const key = correctAnswer.trim().toUpperCase();
+            // Map letter keys like A/B/C/D to option text
+            const letterIndex = key.length === 1 && key >= 'A' && key <= 'Z' ? key.charCodeAt(0) - 'A'.charCodeAt(0) : -1;
+            if (letterIndex >= 0 && letterIndex < options.length) {
+              correctAnswer = options[letterIndex];
+            } else {
+              // Try numeric index (1-based or 0-based)
+              const asNum = parseInt(key, 10);
+              if (!isNaN(asNum)) {
+                const idx = asNum >= 1 && asNum <= options.length ? asNum - 1 : (asNum >= 0 && asNum < options.length ? asNum : -1);
+                if (idx >= 0) correctAnswer = options[idx];
+              } else {
+                // If correctAnswer matches an option ignoring case or matches prefix like 'A)'
+                const found = options.find(o => o.trim().toLowerCase() === correctAnswer.trim().toLowerCase());
+                if (found) correctAnswer = found;
+                else {
+                  // If options have prefixes like 'A) ', try to match by startsWith
+                  const prefFound = options.find(o => o.trim().toUpperCase().startsWith(key));
+                  if (prefFound) correctAnswer = prefFound;
+                }
+              }
+            }
+          }
+          return {
+            type: q?.type || (options ? 'multiple_choice' : 'exercise'),
+            instruction: q?.instruction || (options ? 'Choose the correct answer' : 'Answer the question'),
+            question: q?.question || q?.prompt || '',
+            correct_answer: correctAnswer,
+            explanation: q?.explanation || '',
+            options,
+          };
+        });
+        return { id: t.id, title: t.title, exercises: normalized };
+      });
 
     return NextResponse.json({ ...lessonData, vocabulary: vocab, stories: storyTopics, grammar: grammarTopics });
   } catch (error) {
