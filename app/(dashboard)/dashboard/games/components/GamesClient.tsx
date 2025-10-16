@@ -102,6 +102,8 @@ export function GamesClient({ userRole }: GamesClientProps) {
   const [lessonFilter, setLessonFilter] = useState('all');
   const [assigningLesson, setAssigningLesson] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  // Render-Optimierung: Nur das geöffnete Select rendert sein Content-Portals
+  const [openSelectForGameId, setOpenSelectForGameId] = useState<number | null>(null);
 
   // Check if user can create/edit games
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
@@ -291,8 +293,8 @@ export function GamesClient({ userRole }: GamesClientProps) {
           </h1>
           <p className="text-gray-600 mt-1 text-sm sm:text-base">
             {canCreateEdit 
-              ? 'Manage and organize interactive games from Wordwall'
-              : 'Browse and play interactive games from Wordwall'
+              ? 'Manage and organize interactive learning games'
+              : 'Browse and play interactive learning games'
             }
           </p>
         </div>
@@ -561,19 +563,23 @@ export function GamesClient({ userRole }: GamesClientProps) {
                               const lessonId = value === 'none' ? null : parseInt(value);
                               assignLessonToGame(game.id, lessonId);
                             }}
+                            open={openSelectForGameId === game.id}
+                            onOpenChange={(isOpen) => setOpenSelectForGameId(isOpen ? game.id : null)}
                             disabled={assigningLesson === game.id}
                           >
                             <SelectTrigger className="flex-1">
                               <SelectValue placeholder="Select a lesson..." />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">No lesson assigned</SelectItem>
-                              {lessons.map((lesson) => (
-                                <SelectItem key={lesson.id} value={lesson.id.toString()}>
-                                  {getLanguageFlag(lesson.course_language)} {lesson.title} ({lesson.course_title})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
+                            {openSelectForGameId === game.id && (
+                              <SelectContent>
+                                <SelectItem value="none">No lesson assigned</SelectItem>
+                                {lessons.map((lesson) => (
+                                  <SelectItem key={lesson.id} value={lesson.id.toString()}>
+                                    {getLanguageFlag(lesson.course_language)} {lesson.title} ({lesson.course_title})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            )}
                           </Select>
                           {assigningLesson === game.id && (
                             <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
