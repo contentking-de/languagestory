@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { AudioPlayer } from '@/components/ui/audio-player';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -48,9 +49,10 @@ interface InlineQuizProps {
   quizId: number;
   onComplete: (score: number, passed: boolean) => void;
   onNext: () => void;
+  lessonLanguage?: string;
 }
 
-export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
+export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: InlineQuizProps) {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,42 +97,24 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
       if (quizResponse.ok) {
         const quizData = await quizResponse.json();
         
-        // Parse quiz description if it's JSON
-        let processedQuizData = { ...quizData };
+        // Parse quiz description JSON once; keep human description and config separate
+        let processedQuizData = { ...quizData } as any;
+        let parsedDescJson: any = null;
         if (quizData.description && typeof quizData.description === 'string') {
           try {
-            const parsedDescription = JSON.parse(quizData.description);
-            if (parsedDescription.description) {
-              processedQuizData.description = parsedDescription.description;
-            } else if (parsedDescription.config) {
-              // If no description, use title or a default
-              processedQuizData.description = quizData.title || 'Quiz';
+            parsedDescJson = JSON.parse(quizData.description);
+            if (parsedDescJson?.description) {
+              processedQuizData.description = parsedDescJson.description;
             }
           } catch (e) {
-            // Description is already a plain string, keep as is
             processedQuizData.description = quizData.description;
           }
         }
-        
         setQuiz(processedQuizData);
         
-        // Parse gap fill configuration if this is a gap fill quiz
-        if (quizData.quiz_type === 'gap_fill' && processedQuizData.description) {
-          console.log('Quiz description:', processedQuizData.description);
-          try {
-            const parsedDescription = JSON.parse(processedQuizData.description);
-            console.log('Parsed description:', parsedDescription);
-            if (parsedDescription.config?.gap_fill) {
-              setGapFillConfig(parsedDescription.config.gap_fill);
-              console.log('Gap fill config loaded:', parsedDescription.config.gap_fill);
-            } else {
-              console.log('No gap_fill config found in parsed description');
-            }
-          } catch (e) {
-            console.log('Description is not JSON, checking for gap fill questions instead');
-            console.log('Description content:', processedQuizData.description);
-            // If description is not JSON, we'll check the questions for gap fill content
-          }
+        // If gap_fill and config present in JSON, use it directly
+        if (quizData.quiz_type === 'gap_fill' && parsedDescJson?.config?.gap_fill) {
+          setGapFillConfig(parsedDescJson.config.gap_fill);
         }
         
         // Set time limit if specified
@@ -151,9 +135,9 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
      }
    };
 
-   // Handle gap fill config building from questions after both quiz and questions are loaded
+   // Handle gap fill config building from questions after both quiz and questions are loaded (fallback when JSON didn't include config)
    useEffect(() => {
-     if (quiz?.quiz_type === 'gap_fill' && !gapFillConfig && questions.length > 0) {
+    if (quiz?.quiz_type === 'gap_fill' && !gapFillConfig && questions.length > 0) {
        console.log('Building gap fill config from questions');
        console.log('All questions:', questions);
        // Look for gap fill questions and build config (try both gap_fill and fill_blank)
@@ -304,13 +288,29 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
 
     // Handle gap fill quiz scoring
     if (quiz?.quiz_type === 'gap_fill' && gapFillConfig) {
-      const blankGaps = gapFillConfig.text_with_gaps.match(/\[BLANK\]/g) || [];
-      const wordGaps = gapFillConfig.text_with_gaps.match(/\{([^}]+)\}/g) || [];
+      const cfgAny: any = gapFillConfig as any;
+      const textWithGaps: string =
+        gapFillConfig.text_with_gaps || cfgAny?.gf_text_content || cfgAny?.text_content || '';
+      const wordBankArr: string[] = Array.isArray(gapFillConfig.word_bank)
+        ? (gapFillConfig.word_bank as string[])
+        : typeof gapFillConfig.word_bank === 'string'
+          ? (gapFillConfig.word_bank as string)
+              .split(/[\n,]/)
+              .map((w) => w.trim())
+              .filter(Boolean)
+        : Array.isArray(cfgAny?.gf_word_bank)
+          ? (cfgAny.gf_word_bank as string[])
+          : typeof cfgAny?.gf_word_bank === 'string'
+            ? (cfgAny.gf_word_bank as string).split(/[\n,]/).map((w) => w.trim()).filter(Boolean)
+            : [];
+
+      const blankGaps = (textWithGaps.match(/\[BLANK\]/g) || []);
+      const wordGaps = (textWithGaps.match(/\{([^}]+)\}/g) || []);
       const gaps = blankGaps.length > 0 ? blankGaps : wordGaps;
       const useWordFormat = wordGaps.length > 0;
       
       // Count actual gaps by iterating through text parts
-      const textParts = gapFillConfig.text_with_gaps.split(useWordFormat ? /(\{[^}]+\})/ : /(\[BLANK\])/);
+      const textParts = textWithGaps.split(useWordFormat ? /(\{[^}]+\})/ : /(\[BLANK\])/);
       let actualGapCount = 0;
       textParts.forEach((part) => {
         const isGap = useWordFormat ? part.match(/\{[^}]+\}/) : part === '[BLANK]';
@@ -343,7 +343,7 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
               earnedPoints++;
             }
           } else {
-            const isCorrect = userAnswer && gapFillConfig.word_bank.includes(userAnswer);
+            const isCorrect = userAnswer && wordBankArr.includes(userAnswer);
             if (isCorrect) {
               earnedPoints++;
             }
@@ -396,9 +396,28 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
   const renderGapFillContent = () => {
     if (!gapFillConfig) return null;
 
+    // Normalize fields from different shapes (new and legacy)
+    const cfgAny: any = gapFillConfig as any;
+    const textWithGaps: string =
+      gapFillConfig.text_with_gaps || cfgAny?.gf_text_content || cfgAny?.text_content || '';
+    const wordBankArr: string[] = Array.isArray(gapFillConfig.word_bank)
+      ? (gapFillConfig.word_bank as string[])
+      : typeof gapFillConfig.word_bank === 'string'
+        ? (gapFillConfig.word_bank as string)
+            .split(/[\n,]/)
+            .map((w) => w.trim())
+            .filter(Boolean)
+      : typeof cfgAny?.gf_word_bank === 'string'
+        ? (cfgAny.gf_word_bank as string).split(/[\n,]/).map((w) => w.trim()).filter(Boolean)
+        : Array.isArray(cfgAny?.gf_word_bank)
+          ? (cfgAny.gf_word_bank as string[])
+          : Array.isArray(cfgAny?.word_bank)
+            ? (cfgAny.word_bank as string[])
+            : [];
+
     // Check if we're using [BLANK] format or {word} format
-    const blankGaps = gapFillConfig.text_with_gaps.match(/\[BLANK\]/g) || [];
-    const wordGaps = gapFillConfig.text_with_gaps.match(/\{([^}]+)\}/g) || [];
+    const blankGaps = (textWithGaps.match(/\[BLANK\]/g) || []);
+    const wordGaps = (textWithGaps.match(/\{([^}]+)\}/g) || []);
     const gaps = blankGaps.length > 0 ? blankGaps : wordGaps;
     const useWordFormat = wordGaps.length > 0;
     
@@ -408,7 +427,7 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-medium mb-3">Word Bank</h3>
           <div className="flex flex-wrap gap-2">
-            {gapFillConfig.word_bank.map((word, index) => (
+            {wordBankArr.map((word, index) => (
               <span
                 key={index}
                 draggable
@@ -429,7 +448,7 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
           <h3 className="text-lg font-medium mb-4">Fill in the gaps:</h3>
           <div className="text-gray-700 leading-relaxed">
             {useWordFormat 
-              ? gapFillConfig.text_with_gaps.split(/(\{[^}]+\})/).map((part, partIndex) => {
+              ? textWithGaps.split(/(\{[^}]+\})/).map((part, partIndex) => {
                   if (part.match(/\{[^}]+\}/)) {
                     // Use partIndex instead of finding the gap index to ensure unique keys
                     const gapKey = `gap-${partIndex}`;
@@ -457,7 +476,7 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
                   }
                   return <span key={partIndex}>{part}</span>;
                 })
-              : gapFillConfig.text_with_gaps.split(/(\[BLANK\])/).map((part, partIndex) => {
+              : textWithGaps.split(/(\[BLANK\])/).map((part, partIndex) => {
                   if (part === '[BLANK]') {
                     // Use partIndex instead of finding the gap index to ensure unique keys
                     const gapKey = `gap-${partIndex}`;
@@ -468,7 +487,7 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
                         <span
                           className={`inline-block min-w-[100px] px-2 py-1 mx-1 border-b-2 font-medium cursor-pointer transition-colors ${
                             quizCompleted 
-                              ? userAnswer && gapFillConfig.word_bank.includes(userAnswer)
+                              ? userAnswer && wordBankArr.includes(userAnswer)
                                 ? 'border-green-500 text-green-700 bg-gray-50' 
                                 : 'border-red-500 text-red-700 bg-red-50'
                               : 'border-gray-400 bg-gray-50 hover:bg-gray-100'
@@ -692,7 +711,63 @@ export function InlineQuiz({ quizId, onComplete, onNext }: InlineQuizProps) {
             
             {quiz?.quiz_type === 'gap_fill' ? (
               gapFillConfig ? (
-                renderGapFillContent()
+                <>
+                  {/* Pre-Card: Original Complete Text with Audio */}
+                  <div className="mb-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <FileQuestion className="h-5 w-5" />
+                          Original Complete Text
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-start gap-3 bg-gray-50 p-4 rounded-lg">
+                          {(() => {
+                            const cfgAny: any = gapFillConfig as any;
+                            const sourceText =
+                              gapFillConfig.original_text ||
+                              cfgAny?.gf_original_text ||
+                              gapFillConfig.text_with_gaps ||
+                              cfgAny?.gf_text_content ||
+                              '';
+                            // If original is missing, derive by removing placeholders
+                            const derived = (sourceText || '')
+                              .replace(/\{([^}]+)\}/g, '$1')
+                              .replace(/\[BLANK\]/g, '');
+                            const displayText = gapFillConfig.original_text || cfgAny?.gf_original_text ? sourceText : derived;
+                            return (
+                              <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">{displayText}</div>
+                            );
+                          })()}
+                          {(() => {
+                            const cfgAny: any = gapFillConfig as any;
+                            const sourceText =
+                              gapFillConfig.original_text ||
+                              cfgAny?.gf_original_text ||
+                              gapFillConfig.text_with_gaps ||
+                              cfgAny?.gf_text_content ||
+                              '';
+                            const derived = (sourceText || '')
+                              .replace(/\{([^}]+)\}/g, '$1')
+                              .replace(/\[BLANK\]/g, '');
+                            const audioText = gapFillConfig.original_text || cfgAny?.gf_original_text ? sourceText : derived;
+                            return (
+                              <AudioPlayer
+                                text={audioText}
+                                language={lessonLanguage || 'english'}
+                                size="md"
+                                type="content"
+                              />
+                            );
+                          })()}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {renderGapFillContent()}
+                </>
               ) : (
                 <div className="text-center py-8">
                   <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />

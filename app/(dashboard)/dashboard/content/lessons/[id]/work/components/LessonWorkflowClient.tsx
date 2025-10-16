@@ -554,6 +554,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
             <InlineQuiz
               key={`quiz-${quiz.id}`} // Force remount when quiz changes
               quizId={quiz.id}
+              lessonLanguage={lesson?.course_language}
               onComplete={(score, passed) => {
                 console.log(`Quiz completed: ${score}%, passed: ${passed}`);
                 // Update progress when quiz is completed
