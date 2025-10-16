@@ -1458,6 +1458,130 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
   const [revealedRows, setRevealedRows] = useState<Set<number>>(new Set());
   const [frogLeftPx, setFrogLeftPx] = useState<number | null>(null);
   const fieldRef = useRef<HTMLDivElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const getAudioCtx = () => {
+    if (typeof window === 'undefined') return null;
+    if (!audioCtxRef.current) {
+      const Ctx: any = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) return null;
+      audioCtxRef.current = new Ctx();
+    }
+    return audioCtxRef.current;
+  };
+
+  const playQuack = () => {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const duration = 0.35;
+    const now = ctx.currentTime;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    // Two oscillators to imitate a short "quack"
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    osc1.type = 'square';
+    osc2.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(440, now);
+    osc1.frequency.exponentialRampToValueAtTime(220, now + duration);
+    osc2.frequency.setValueAtTime(660, now);
+    osc2.frequency.exponentialRampToValueAtTime(300, now + duration);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + duration);
+    osc2.stop(now + duration);
+  };
+
+  const playSplash = () => {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const duration = 0.45;
+    const now = ctx.currentTime;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    // White noise buffer
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize); // quick decay
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    // Slight filtering for watery feel
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1800, now);
+    filter.Q.setValueAtTime(0.7, now);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + duration);
+  };
+
+  const playClap = () => {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const makeBurst = (startOffset: number) => {
+      const duration = 0.18;
+      const start = now + startOffset;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.001, start);
+      gain.gain.linearRampToValueAtTime(0.35, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+      // Noise source
+      const bufferSize = Math.floor(ctx.sampleRate * duration);
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      // Bandpass for clap
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.setValueAtTime(1500, start);
+      bp.Q.setValueAtTime(1.2, start);
+
+      noise.connect(bp);
+      bp.connect(gain);
+      gain.connect(ctx.destination);
+      noise.start(start);
+      noise.stop(start + duration);
+    };
+
+    // 2-3 short bursts to simulate clapping
+    makeBurst(0);
+    makeBurst(0.06);
+    makeBurst(0.12);
+  };
+
+  const resetVocabRun = () => {
+    setCurrentIndex(0);
+    setGameOver(false);
+    setStartTime(Date.now());
+    setEndTime(null);
+    setFrogLevel(-1);
+    setFrogXPct(50);
+    setFrogLeftPx(null);
+    setRevealedRows(new Set());
+  };
 
   const total = config?.questions?.length || 0;
   const finished = currentIndex >= total;
@@ -1482,10 +1606,12 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
     const isCorrect = optionIndex === config.questions[currentIndex].correctIndex;
     setRevealedRows((prev) => new Set(prev).add(currentIndex));
     if (isCorrect) {
+      const isFinal = currentIndex + 1 >= total;
+      if (isFinal) playClap(); else playQuack();
       // place frog on the row that was just answered (currentIndex)
       setFrogLevel(() => currentIndex);
       setCurrentIndex((prev) => prev + 1);
-      if (currentIndex + 1 >= total) {
+      if (isFinal) {
         setEndTime(Date.now());
       }
       // keep frogXPct aligned to chosen pad column (0,50,100)
@@ -1498,6 +1624,7 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
         setFrogLeftPx(center - fieldRect.left);
       }
     } else {
+      playSplash();
       setGameOver(true);
       setEndTime(Date.now());
     }
@@ -1657,10 +1784,15 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
 
       {gameOver && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="bg-white/95 backdrop-blur rounded-lg p-6 text-center shadow">
-            <X className="h-10 w-10 text-red-600 mx-auto mb-2" />
-            <div className="font-semibold mb-1">Game Over</div>
+          <div className="bg-white/95 backdrop-blur rounded-lg p-6 text-center shadow space-y-3">
+            <X className="h-10 w-10 text-red-600 mx-auto" />
+            <div className="font-semibold">Game Over</div>
             {durationSec !== null && <div className="text-sm text-gray-700">Time: {durationSec}s</div>}
+            <div>
+              <Button onClick={resetVocabRun} className="bg-blue-600 hover:bg-blue-700 text-white">
+                Try again
+              </Button>
+            </div>
           </div>
         </div>
       )}

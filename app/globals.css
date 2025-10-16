@@ -178,6 +178,30 @@
 /*
   ---break---
 */
+/* Water animation and color for Vocab Run */
+.water-animated {
+  position: relative;
+  background: linear-gradient(180deg, #8fd3fe 0%, #bde7ff 40%, #dff5ff 100%);
+}
+.water-animated::before,
+.water-animated::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.6) 0, rgba(255,255,255,0) 60%),
+              radial-gradient(circle at 60% 50%, rgba(255,255,255,0.6) 0, rgba(255,255,255,0) 60%);
+  opacity: 0.4;
+  animation: waveSlide 8s linear infinite;
+}
+.water-animated::before { top: 30%; }
+.water-animated::after { top: 65%; animation-duration: 11s; opacity: 0.3; }
+
+@keyframes waveSlide {
+  0% { transform: translateX(-30%); }
+  100% { transform: translateX(30%); }
+}
 
 :root {
   --background: hsl(0 0% 100%);
