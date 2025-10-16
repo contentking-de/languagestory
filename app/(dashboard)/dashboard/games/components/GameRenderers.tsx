@@ -1650,9 +1650,22 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
         </div>
       )}
 
-      <div className="relative w-full" ref={fieldRef} style={{ height: fieldHeight }}>
+      <div
+        className="relative w-full"
+        ref={fieldRef}
+        style={{
+          height: fieldHeight,
+          background: 'linear-gradient(180deg, #6ecbff 0%, #8fd3fe 35%, #bfe9ff 70%, #e6f7ff 100%)'
+        }}
+      >
       {/* Water background */}
-      <div className="absolute inset-0 water-animated" style={{ zIndex: 0 }} />
+      <div
+        className="absolute inset-0 water-animated"
+        style={{
+          zIndex: 0,
+          background: 'linear-gradient(180deg, #6ecbff 0%, #8fd3fe 35%, #bfe9ff 70%, #e6f7ff 100%)'
+        }}
+      />
 
       {/* Beach at top */}
       <div className="absolute left-0 right-0" style={{ top: 16, height: beachHeight, zIndex: 2 }}>

@@ -596,7 +596,11 @@ export function GamesClient({ userRole }: GamesClientProps) {
 
                     {/* Embedded Game */}
                     {isExpanded && (
-                      <div className="border rounded-lg overflow-hidden bg-gray-50 p-4">
+                      <div className={
+                        game.game_type === 'vocab_run'
+                          ? 'border rounded-lg overflow-hidden bg-transparent p-0'
+                          : 'border rounded-lg overflow-hidden bg-gray-50 p-4'
+                      }>
                         {game.game_type === 'wordwall' && game.embed_html ? (
                           <div 
                             className="w-full"
