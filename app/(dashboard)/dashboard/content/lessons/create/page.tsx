@@ -53,7 +53,7 @@ function CreateLessonForm() {
     course_id: preselectedCourseId ? parseInt(preselectedCourseId) : 0,
   });
   const [lessonId, setLessonId] = useState<number | null>(null);
-  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Word Search, 5 MC Quiz, 6 True/False, 7 Memory
+  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Word Search, 5 MC Quiz, 6 True/False, 7 Memory, 8 Gap Fill
   const [aiBusy, setAiBusy] = useState(false);
   const [vocabTopic, setVocabTopic] = useState('');
   const [vocabQuantity, setVocabQuantity] = useState(10);
@@ -74,6 +74,8 @@ function CreateLessonForm() {
   const [tfQuantity, setTfQuantity] = useState(10);
   const [tfName, setTfName] = useState('');
   const [tfPreview, setTfPreview] = useState<string>('');
+  const [gfNumGaps, setGfNumGaps] = useState(8);
+  const [gfPreview, setGfPreview] = useState<string>('');
 
   useEffect(() => {
     fetchCourses();
@@ -197,7 +199,7 @@ function CreateLessonForm() {
       {/* Builder */}
       <div className="max-w-6xl">
         {/* Stepper */}
-        <div className="grid gap-2 mb-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+        <div className="grid gap-2 mb-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
           {[
             { key: 0, title: 'Basics' },
             { key: 1, title: 'Vocabulary' },
@@ -207,6 +209,7 @@ function CreateLessonForm() {
             { key: 5, title: 'MC Quiz' },
             { key: 6, title: 'True/False' },
             { key: 7, title: 'Memory' },
+            { key: 8, title: 'Gap Fill' },
           ].map((s) => (
             <div key={s.key} className={`p-2 rounded-md border text-xs text-center ${currentStep === (s.key as any) ? 'border-orange-500 bg-orange-50 font-medium' : 'border-gray-200 bg-white'}`}>
               <span className="mr-1 text-[10px] align-middle">{(s.key as number) + 1}.</span>
@@ -227,6 +230,7 @@ function CreateLessonForm() {
               {currentStep === 5 && 'Multiple Choice Quiz'}
               {currentStep === 6 && 'True/False Quiz'}
               {currentStep === 7 && 'Memory Game'}
+              {currentStep === 8 && 'Gap Fill Quiz'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -902,6 +906,89 @@ function CreateLessonForm() {
                 </div>
                 <div className="flex justify-between pt-2">
                   <Button variant="outline" onClick={()=>setCurrentStep(6)}>Back</Button>
+                  <div className="text-sm text-gray-600">{lastMessage}</div>
+                  <Button onClick={()=>setCurrentStep(8)}>Next</Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 8 && (
+              <div className="space-y-4">
+                {aiBusy && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
+                    <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
+                    <div className="text-sm text-yellow-800">
+                      Creating... this might take some time! Grab a coffee and please wait for results and do not go to the next step!
+                    </div>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Number of Gaps</Label>
+                    <Select value={gfNumGaps.toString()} onValueChange={(v)=>setGfNumGaps(parseInt(v))}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {[6,8,10,12].map(n => (<SelectItem key={n} value={n.toString()}>{n}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="md:col-span-2 flex items-end">
+                    <Button disabled={!lessonId || aiBusy || !formData.content} onClick={async()=>{
+                      if (!lessonId) return; setAiBusy(true); setLastMessage(''); setGfPreview('');
+                      try{
+                        const text = (formData.content || '').toString();
+                        const words = Array.from(new Set(text
+                          .replace(/[^A-Za-zÀ-ÿäöüÄÖÜß\s]/g,'')
+                          .split(/\s+/)
+                          .map(w=>w.trim())
+                          .filter(w=>w.length>3 && !['the','and','der','die','das','und','les','des','que','para','with','that'].includes(w.toLowerCase()))));
+                        const selected = words.sort(()=>Math.random()-0.5).slice(0, Math.min(gfNumGaps, words.length));
+                        let updated = text;
+                        const correctOrder: string[] = [];
+                        selected.forEach((w)=>{
+                          const re = new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i');
+                          const m = updated.match(re);
+                          if (m){
+                            updated = updated.replace(re,'[BLANK]');
+                            correctOrder.push(m[0]);
+                          }
+                        });
+                        setGfPreview(updated);
+                        const requestBody = {
+                          title: `${formData.title || 'Lesson'} - Gap Fill`,
+                          description: 'Auto-created gap fill from lesson content',
+                          quiz_type: 'gap_fill',
+                          pass_percentage: 70,
+                          time_limit: 0,
+                          max_attempts: 0,
+                          points_value: 50,
+                          is_published: true,
+                          lesson_id: lessonId,
+                          gf_original_text: text,
+                          gf_text_content: updated,
+                          gf_num_gaps: selected.length,
+                          gf_word_bank: selected.join(', '),
+                          gf_correct_order: correctOrder.join('|'),
+                          gf_difficulty: 'medium',
+                          gf_allow_hints: true,
+                        };
+                        const res = await fetch('/api/quizzes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
+                        if (res.ok){ setLastMessage('Gap Fill quiz created.'); } else { const err = await res.json().catch(()=>({})); setLastMessage(err?.error || 'Failed to create gap fill'); }
+                      }catch(e){ console.error(e); setLastMessage('Failed to generate gap fill'); }
+                      finally{ setAiBusy(false); }
+                    }} className="w-full">
+                      <Wand2 className="h-4 w-4 mr-2"/>Generate & Save Gap Fill
+                    </Button>
+                  </div>
+                </div>
+                {gfPreview && (
+                  <div className="bg-gray-50 rounded-md p-3 max-h-72 overflow-auto">
+                    <div className="text-sm font-medium mb-2">Preview</div>
+                    <pre className="whitespace-pre-wrap text-sm text-gray-800">{gfPreview}</pre>
+                  </div>
+                )}
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={()=>setCurrentStep(7)}>Back</Button>
                   <div className="text-sm text-gray-600">{lastMessage}</div>
                   <Button onClick={()=>router.push(`/dashboard/content/lessons/${lessonId}`)}>Finish</Button>
                 </div>
