@@ -73,6 +73,7 @@ const gameTypes = [
   { value: 'word_mixup', label: 'Word Mixup', icon: Shuffle, description: 'Reorder scrambled words to form correct sentences' },
   { value: 'word_association', label: 'Word Association', icon: Link, description: 'Match related word pairs to build vocabulary connections' },
   { value: 'flashcards', label: 'Flashcards', icon: Star, description: 'Interactive flashcards for vocabulary practice' },
+  { value: 'vocab_run', label: 'Vocab Run', icon: Target, description: 'Answer 12 quick MC questions with a frog jumping on lily pads' },
 ];
 
 export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameModalProps) {
@@ -90,6 +91,8 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
   });
   const [gameConfig, setGameConfig] = useState<GameConfig>({});
   const [lessons, setLessons] = useState<Array<{ id: number; title: string; course_title: string; course_language: string }>>([]);
+  const [autoGenBusy, setAutoGenBusy] = useState(false);
+  const [autoGenPreview, setAutoGenPreview] = useState<Array<{ question: string; options: string[]; correctIndex: number }>>([]);
 
   const handleGameTypeSelect = (gameType: string) => {
     setSelectedGameType(gameType);
@@ -211,6 +214,55 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGameType, formData.lesson_id, formData.language]);
+
+  // Auto-generate Vocab Run questions from lesson vocabulary (12 questions, 3 options each)
+  const autoFillVocabRunFromLesson = async (selectedLessonId: string) => {
+    try {
+      if (!selectedLessonId) return;
+      setAutoGenBusy(true);
+      setAutoGenPreview([]);
+      const res = await fetch(`/api/lessons/${selectedLessonId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const vocab: Array<any> = Array.isArray(data?.vocabulary) ? data.vocabulary : [];
+      if (vocab.length < 4) {
+        setAutoGenBusy(false);
+        return;
+      }
+
+      const lang = (formData.language || '').toLowerCase();
+      const langKey = lang === 'german' ? 'word_german' : lang === 'french' ? 'word_french' : lang === 'spanish' ? 'word_spanish' : 'word_german';
+
+      // Build Q/A from vocab locally (no API): pick 12 items with 2 distractors each
+      const pool = [...vocab].filter(v => (v[langKey] || v.word_english));
+      const shuffled = [...pool].sort(() => Math.random() - 0.5);
+      const take = Math.min(12, shuffled.length);
+      const selected = shuffled.slice(0, take);
+
+      const questions = selected.map((item, idx) => {
+        const correct = (item[langKey] || item.word_english || '').toString();
+        // pick 2 distractors different from correct
+        const others = pool.filter(v => (v[langKey] || v.word_english) && (v[langKey] || v.word_english) !== correct);
+        const dShuffled = [...others].sort(() => Math.random() - 0.5).slice(0, 2);
+        const distractors = dShuffled.map(v => (v[langKey] || v.word_english).toString());
+        const optionsRaw = [correct, ...distractors];
+        const randomized = optionsRaw.sort(() => Math.random() - 0.5);
+        const correctIndex = randomized.findIndex(o => o === correct);
+        return {
+          question: `Choose the correct word for: ${item.word_english}`,
+          options: randomized,
+          correctIndex,
+        };
+      });
+
+      setGameConfig(prev => ({ ...prev, vocabRun: { questions } }));
+      setAutoGenPreview(questions);
+    } catch (e) {
+      console.error('Failed to auto-generate Vocab Run questions:', e);
+    } finally {
+      setAutoGenBusy(false);
+    }
+  };
 
   // Early return AFTER all hooks to keep hook order stable
   if (!isOpen) return null;
@@ -561,9 +613,52 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                       </Button>
                     </div>
                   )}
+                  {selectedGameType === 'vocab_run' && (
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => formData.lesson_id && autoFillVocabRunFromLesson(formData.lesson_id)}
+                        disabled={!formData.lesson_id || autoGenBusy}
+                      >
+                        {autoGenBusy ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Shuffle className="h-4 w-4 mr-2" />
+                            Auto-generate 12 questions from Lesson Vocabulary
+                          </>
+                        )}
+                      </Button>
+                      {!formData.lesson_id && (
+                        <span className="text-xs text-gray-500">Select a lesson first to enable auto-generation</span>
+                      )}
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {renderGameConfig()}
+                  {selectedGameType === 'vocab_run' && autoGenPreview.length > 0 && (
+                    <div className="mt-4 border rounded p-3 bg-gray-50">
+                      <div className="font-semibold mb-2 text-sm">Preview (first 5):</div>
+                      <ul className="space-y-2 text-sm">
+                        {autoGenPreview.slice(0,5).map((q, i) => (
+                          <li key={i} className="bg-white rounded border p-2">
+                            <div className="font-medium">Q{i+1}. {q.question}</div>
+                            <div className="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                              {q.options.map((opt, idx) => (
+                                <div key={idx} className={`px-2 py-1 rounded ${idx === q.correctIndex ? 'bg-green-100 text-green-800' : 'bg-gray-100'}`}>{opt}</div>
+                              ))}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

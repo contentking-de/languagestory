@@ -1440,3 +1440,231 @@ export function WordAssociationGame({ config, onComplete }: WordAssociationGameP
     </div>
   );
 } 
+
+// Vocab Run Game
+interface VocabRunGameProps {
+  config: {
+    questions: Array<{ id: string; question: string; options: string[]; correctIndex: number }>;
+  };
+}
+
+export function VocabRunGame({ config }: VocabRunGameProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [endTime, setEndTime] = useState<number | null>(null);
+  const [frogXPct, setFrogXPct] = useState(50);
+  const [frogLevel, setFrogLevel] = useState(-1); // start below first lily pad
+  const [revealedRows, setRevealedRows] = useState<Set<number>>(new Set());
+  const [frogLeftPx, setFrogLeftPx] = useState<number | null>(null);
+  const fieldRef = useRef<HTMLDivElement | null>(null);
+
+  const total = config?.questions?.length || 0;
+  const finished = currentIndex >= total;
+
+  useEffect(() => {
+    if (startTime === null) setStartTime(Date.now());
+  }, [startTime]);
+
+  if (!config || !Array.isArray(config.questions) || config.questions.length === 0) {
+    return (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500">Invalid game configuration</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleAnswer = (optionIndex: number, target?: HTMLElement) => {
+    if (finished || gameOver) return;
+    const isCorrect = optionIndex === config.questions[currentIndex].correctIndex;
+    setRevealedRows((prev) => new Set(prev).add(currentIndex));
+    if (isCorrect) {
+      // place frog on the row that was just answered (currentIndex)
+      setFrogLevel(() => currentIndex);
+      setCurrentIndex((prev) => prev + 1);
+      if (currentIndex + 1 >= total) {
+        setEndTime(Date.now());
+      }
+      // keep frogXPct aligned to chosen pad column (0,50,100)
+      setFrogXPct(optionIndex === 0 ? 16 : optionIndex === 1 ? 50 : 84);
+      // Pixel-exakte Zentrierung relativ zum Spielfeld
+      if (target && fieldRef.current) {
+        const btnRect = target.getBoundingClientRect();
+        const fieldRect = fieldRef.current.getBoundingClientRect();
+        const center = btnRect.left + btnRect.width / 2;
+        setFrogLeftPx(center - fieldRect.left);
+      }
+    } else {
+      setGameOver(true);
+      setEndTime(Date.now());
+    }
+  };
+
+  const durationSec = startTime && endTime ? Math.round((endTime - startTime) / 1000) : null;
+
+  // Layout constants
+  const padHeight = 90; // px between levels (bigger pads)
+  const beachHeight = 110; // px (slightly taller beach)
+  const fieldHeight = Math.max(500, total * padHeight + beachHeight + 30);
+
+  const question = config.questions[Math.min(currentIndex, total - 1)];
+
+  return (
+    <>
+      {/* Question above the playfield */}
+      {!finished && !gameOver && (
+        <div className="w-full flex justify-center mb-3">
+          <div className="bg-white/90 backdrop-blur px-4 py-2 rounded shadow text-center max-w-xl">
+            {question?.question}
+          </div>
+        </div>
+      )}
+
+      <div className="relative w-full" ref={fieldRef} style={{ height: fieldHeight }}>
+      {/* Water background */}
+      <div className="absolute inset-0 water-animated" style={{ zIndex: 0 }} />
+
+      {/* Beach at top */}
+      <div className="absolute left-0 right-0" style={{ top: 16, height: beachHeight, zIndex: 2 }}>
+        <div className="relative w-full h-full bg-yellow-200 rounded-b-xl flex items-center justify-center border-b border-yellow-300 overflow-hidden">
+          {/* Parasol decoration */}
+          <div className="absolute right-3 bottom-1 opacity-90 select-none pointer-events-none" aria-hidden="true">
+            <svg width="56" height="56" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              {/* pole */}
+              <rect x="30" y="18" width="4" height="38" fill="#7c3f00" />
+              {/* canopy */}
+              <path d="M8 20 C20 6, 44 6, 56 20 L8 20 Z" fill="#ef4444" />
+              <path d="M8 20 C16 12, 24 12, 32 20 L8 20 Z" fill="#fde68a" opacity="0.9" />
+              <path d="M32 20 C40 12, 48 12, 56 20 L32 20 Z" fill="#fde68a" opacity="0.9" />
+              {/* shadow base */}
+              <ellipse cx="32" cy="58" rx="12" ry="3" fill="#d97706" opacity="0.25" />
+            </svg>
+          </div>
+          {/* Beachball */}
+          <div className="absolute left-3 bottom-3 opacity-95 select-none pointer-events-none" aria-hidden="true">
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="19" fill="#ffffff" stroke="#0f172a" strokeWidth="0.5" opacity="0.15" />
+              <path d="M20 20 L20 1 A19 19 0 0 1 36.5 11 Z" fill="#3b82f6" />
+              <path d="M20 20 L36.5 11 A19 19 0 0 1 31 36 Z" fill="#ef4444" />
+              <path d="M20 20 L31 36 A19 19 0 0 1 4 28 Z" fill="#22c55e" />
+              <path d="M20 20 L4 28 A19 19 0 0 1 20 1 Z" fill="#f59e0b" />
+              <circle cx="20" cy="20" r="3.2" fill="#ffffff" stroke="#0f172a" strokeWidth="0.5" />
+            </svg>
+          </div>
+          {/* Beach towels */}
+          <div className="absolute left-14 bottom-2 rotate-2 opacity-95 select-none pointer-events-none z-0" aria-hidden="true">
+            <svg width="72" height="24" viewBox="0 0 72 24" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="70" height="22" rx="3" fill="#93c5fd" stroke="#1d4ed8" strokeWidth="1" />
+              <rect x="6" y="1" width="6" height="22" fill="#bfdbfe" />
+              <rect x="20" y="1" width="6" height="22" fill="#bfdbfe" />
+              <rect x="34" y="1" width="6" height="22" fill="#bfdbfe" />
+              <rect x="48" y="1" width="6" height="22" fill="#bfdbfe" />
+              <rect x="62" y="1" width="6" height="22" fill="#bfdbfe" />
+            </svg>
+          </div>
+          <div className="absolute left-36 bottom-3 -rotate-3 opacity-95 select-none pointer-events-none z-0" aria-hidden="true">
+            <svg width="72" height="24" viewBox="0 0 72 24" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="70" height="22" rx="3" fill="#fecaca" stroke="#b91c1c" strokeWidth="1" />
+              <rect x="6" y="1" width="6" height="22" fill="#fee2e2" />
+              <rect x="20" y="1" width="6" height="22" fill="#fee2e2" />
+              <rect x="34" y="1" width="6" height="22" fill="#fee2e2" />
+              <rect x="48" y="1" width="6" height="22" fill="#fee2e2" />
+              <rect x="62" y="1" width="6" height="22" fill="#fee2e2" />
+            </svg>
+          </div>
+          {finished && !gameOver ? (
+            <div className="relative z-10 text-center">
+              <Trophy className="h-10 w-10 text-yellow-700 mx-auto mb-1" />
+              <div className="font-semibold">Beach reached!</div>
+              {durationSec !== null && <div className="text-sm text-gray-700">Time: {durationSec}s</div>}
+            </div>
+          ) : (
+            <div className="relative z-10 text-base md:text-lg text-gray-700 font-medium">reach the Beach</div>
+          )}
+        </div>
+      </div>
+
+      {/* Lilypads (three per level) */}
+      <div className="absolute left-0 right-0" style={{ bottom: 12, top: beachHeight - 18, zIndex: 1 }}>
+        {Array.from({ length: total }).map((_, i) => {
+          const y = i * padHeight; // build from bottom upwards towards the beach
+          const isCurrent = i === currentIndex;
+          const isRevealed = revealedRows.has(i);
+          const opts = config.questions[i]?.options || ['', '', ''];
+          return (
+            <div key={i} className="absolute left-0 right-0" style={{ bottom: y }}>
+              <div className="mx-auto max-w-4xl grid grid-cols-3 gap-5 px-6">
+                {[0,1,2].map((col) => {
+                  const isCorrect = col === (config.questions[i]?.correctIndex ?? -1);
+                  const base = 'h-20 md:h-24 rounded-full flex items-center justify-center text-sm md:text-base font-semibold transition-colors shadow-lg';
+                  const color = isRevealed
+                    ? (isCorrect ? 'bg-green-500 text-white' : 'bg-red-500 text-white')
+                    : (isCurrent ? 'bg-green-300 hover:bg-green-400 cursor-pointer' : 'bg-green-100 text-gray-500');
+                  const label = isCurrent ? (opts[col] || '') : '';
+                  return (
+                    <button
+                      key={col}
+                      className={`${base} ${color}`}
+                      onClick={(e) => isCurrent && handleAnswer(col, e.currentTarget)}
+                      disabled={!isCurrent}
+                    >
+                      <span className={`${finished && i === total - 1 ? 'opacity-0' : ''} px-3 text-center leading-snug whitespace-normal break-words`}>{label}</span>
+                      {isRevealed && isCorrect && (
+                        <Check className="h-4 w-4 ml-2" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Frog */}
+      {!gameOver && (
+        <div
+          className="absolute transition-all duration-300 ease-out"
+          style={{
+            left: frogLeftPx != null ? `${frogLeftPx}px` : `${frogXPct}%`,
+            bottom: 16 + Math.max(frogLevel, -1) * padHeight + Math.floor(padHeight / 2) - 36,
+            zIndex: 3,
+            transform: 'translateX(-50%)'
+          }}
+        >
+          <div className="w-12 h-12 md:w-16 md:h-16">
+            {/* Simple frog SVG icon */}
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="frogGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#34d399" />
+                  <stop offset="100%" stopColor="#059669" />
+                </radialGradient>
+              </defs>
+              <circle cx="32" cy="36" r="18" fill="url(#frogGrad)" stroke="#065f46" strokeWidth="2" />
+              <circle cx="24" cy="24" r="8" fill="#10b981" stroke="#065f46" strokeWidth="2" />
+              <circle cx="40" cy="24" r="8" fill="#10b981" stroke="#065f46" strokeWidth="2" />
+              <circle cx="24" cy="24" r="3" fill="#111827" />
+              <circle cx="40" cy="24" r="3" fill="#111827" />
+              <path d="M24 42 C32 48, 32 48, 40 42" stroke="#064e3b" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {gameOver && (
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <div className="bg-white/95 backdrop-blur rounded-lg p-6 text-center shadow">
+            <X className="h-10 w-10 text-red-600 mx-auto mb-2" />
+            <div className="font-semibold mb-1">Game Over</div>
+            {durationSec !== null && <div className="text-sm text-gray-700">Time: {durationSec}s</div>}
+          </div>
+        </div>
+      )}
+    </div>
+    </>
+  );
+}

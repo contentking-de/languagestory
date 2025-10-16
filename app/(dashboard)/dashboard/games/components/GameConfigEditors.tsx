@@ -44,6 +44,17 @@ export type FlashcardsConfig = {
   shuffle: boolean;
 };
 
+export type VocabRunQuestion = {
+  id: string;
+  question: string;
+  options: string[]; // length 3
+  correctIndex: number; // 0..2
+};
+
+export type VocabRunConfig = {
+  questions: VocabRunQuestion[];
+};
+
 export type GameConfig = {
   memory?: MemoryConfig;
   hangman?: HangmanConfig;
@@ -51,6 +62,7 @@ export type GameConfig = {
   wordMixup?: WordMixupConfig;
   wordAssociation?: WordAssociationConfig;
   flashcards?: FlashcardsConfig;
+  vocabRun?: VocabRunConfig;
 };
 
 export function getConfigKeyForType(gameType: string): keyof GameConfig | undefined {
@@ -67,6 +79,8 @@ export function getConfigKeyForType(gameType: string): keyof GameConfig | undefi
       return 'wordAssociation';
     case 'flashcards':
       return 'flashcards';
+    case 'vocab_run':
+      return 'vocabRun';
     default:
       return undefined;
   }
@@ -94,9 +108,83 @@ export function GameConfigEditor({
       return <WordAssociationGameEditor config={config} onChange={onChange} />;
     case 'flashcards':
       return <FlashcardsGameEditor config={config} onChange={onChange} />;
+    case 'vocab_run':
+      return <VocabRunGameEditor config={config} onChange={onChange} />;
     default:
       return <div>Select a supported game type to edit its configuration.</div>;
   }
+}
+
+export function VocabRunGameEditor({ config, onChange }: { config?: VocabRunConfig; onChange: (config: VocabRunConfig) => void }) {
+  const [questions, setQuestions] = useState<VocabRunQuestion[]>(config?.questions || [
+    { id: '1', question: '', options: ['', '', ''], correctIndex: 0 }
+  ]);
+
+  const addQuestion = () => {
+    const newQuestions = [...questions, { id: Date.now().toString(), question: '', options: ['', '', ''], correctIndex: 0 }];
+    setQuestions(newQuestions);
+    onChange({ questions: newQuestions });
+  };
+
+  const updateQuestionField = (index: number, field: keyof VocabRunQuestion, value: any) => {
+    const newQuestions = [...questions];
+    (newQuestions[index] as any)[field] = value;
+    setQuestions(newQuestions);
+    onChange({ questions: newQuestions });
+  };
+
+  const updateOption = (qIndex: number, optIndex: number, value: string) => {
+    const newQuestions = [...questions];
+    const q = { ...newQuestions[qIndex] };
+    const opts = [...q.options];
+    opts[optIndex] = value;
+    q.options = opts;
+    newQuestions[qIndex] = q;
+    setQuestions(newQuestions);
+    onChange({ questions: newQuestions });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold">Vocab Run Questions</h4>
+        <Button type="button" variant="outline" size="sm" onClick={addQuestion}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Question
+        </Button>
+      </div>
+      <div className="space-y-4">
+        {questions.map((q, qIndex) => (
+          <div key={q.id} className="border rounded-lg p-3 space-y-3">
+            <div>
+              <Label>Question {qIndex + 1}</Label>
+              <Input value={q.question} onChange={(e) => updateQuestionField(qIndex, 'question', e.target.value)} placeholder="Enter question text" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {[0,1,2].map((i) => (
+                <div key={i}>
+                  <Label>Option {i + 1}</Label>
+                  <Input value={q.options[i] || ''} onChange={(e) => updateOption(qIndex, i, e.target.value)} placeholder={`Answer option ${i + 1}`} />
+                </div>
+              ))}
+            </div>
+            <div>
+              <Label>Correct Option</Label>
+              <select
+                value={q.correctIndex}
+                onChange={(e) => updateQuestionField(qIndex, 'correctIndex', parseInt(e.target.value) || 0)}
+                className="border rounded px-2 py-1"
+              >
+                <option value={0}>Option 1</option>
+                <option value={1}>Option 2</option>
+                <option value={2}>Option 3</option>
+              </select>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function MemoryGameEditor({ config, onChange }: { config?: MemoryConfig; onChange: (config: MemoryConfig) => void }) {

@@ -55,7 +55,8 @@ export const gameCategoryEnum = pgEnum('game_category', [
 
 export const gameTypeEnum = pgEnum('game_type', [
   'wordwall', 'memory', 'hangman', 'word_search', 'crossword', 'flashcards',
-  'fill_blank', 'multiple_choice', 'drag_drop', 'word_mixup', 'word_association', 'custom'
+  'fill_blank', 'multiple_choice', 'drag_drop', 'word_mixup', 'word_association', 'custom',
+  'vocab_run'
 ]);
 
 // Main Courses table
