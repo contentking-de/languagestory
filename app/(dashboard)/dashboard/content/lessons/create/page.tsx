@@ -1052,15 +1052,16 @@ function CreateLessonForm() {
                       if (vocab.length < 4){ setLastMessage('Not enough vocabulary for Vocab Run (need at least 4).'); setAiBusy(false); return; }
                       const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
                       // Build pairs of { target: word in lesson language, english: translation }
-                      const pairs = vocab
+                      type Pair = { target: string; english: string };
+                      const pairs: Pair[] = vocab
                         .map((v:any)=> ({ 
                           target: (v?.[langKey] || v?.word_english || '').toString(),
                           english: (v?.word_english || '').toString()
                         }))
-                        .filter((p:any)=> !!p.target);
+                        .filter((p: Pair)=> !!p.target);
                       const pick = <T,>(arr:T[], n:number): T[] => [...arr].sort(()=>Math.random()-0.5).slice(0, n);
-                      const base = pick(pairs, Math.min(12, pairs.length));
-                      const questions = base.map((item: { target: string; english: string; })=>{
+                      const base: Pair[] = pick<Pair>(pairs, Math.min(12, pairs.length));
+                      const questions = base.map((item: Pair)=>{
                         const correct = item.target;
                         const distractors = pick(
                           pairs.filter((p:any)=> p.target !== correct),
