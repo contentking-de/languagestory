@@ -442,13 +442,16 @@ export async function POST(request: Request) {
           const germanKey = ['word_german', 'word_German', 'german_word', 'word_de'].find(k => typeof w?.[k] === 'string');
           let germanWord: string = germanKey ? w[germanKey] : '';
           const articleRaw: string = (w.article || w.german_article || '').toString().trim();
-          const article = ['der','die','das'].includes(articleRaw.toLowerCase()) ? articleRaw.toLowerCase() : '';
-          const hasArticlePrefix = /^(der|die|das)\s+/i.test(germanWord);
-          if (!hasArticlePrefix && article) {
-            germanWord = `${article} ${germanWord}`;
+          const articleFromRaw = ['der','die','das'].includes(articleRaw.toLowerCase()) ? articleRaw.toLowerCase() : '';
+          // Strip any leading article (with or without space), e.g., "dasSegelboot", "der Hafen"
+          const leadingMatch = germanWord.match(/^(der|die|das)(?:\s+)?/i);
+          if (leadingMatch) {
+            germanWord = germanWord.replace(/^(der|die|das)(?:\s+)?/i, '');
           }
-          w.word_german = germanWord || w.word_german || w.word_German || w.german_word || w.word_de;
-          w.article = article || (hasArticlePrefix ? germanWord.split(/\s+/)[0].toLowerCase() : (w.article || ''));
+          const finalArticle = articleFromRaw || (leadingMatch ? leadingMatch[1].toLowerCase() : '');
+          const finalWord = finalArticle ? `${finalArticle} ${germanWord}`.trim() : germanWord.trim();
+          w.word_german = finalWord || w.word_german || w.word_German || w.german_word || w.word_de;
+          w.article = finalArticle;
           if (germanKey && germanKey !== 'word_german') delete w[germanKey];
         } else if (isFrench) {
           const frenchKey = ['word_french', 'word_French', 'french_word', 'word_fr'].find(k => typeof w?.[k] === 'string');
@@ -457,35 +460,34 @@ export async function POST(request: Request) {
           const articleLc = articleRaw.toLowerCase();
           const isAllowed = ['le','la','les', "l'", 'l’'].includes(articleLc);
           // Normalize fancy apostrophe to straight for consistency
-          const normalizedArticle = articleLc === 'l’' ? "l'" : (isAllowed ? articleLc : '');
-          const hasPrefix = /^(le|la|les)\s+/i.test(frenchWord) || /^l['’]/i.test(frenchWord);
-          if (!hasPrefix && normalizedArticle) {
-            if (normalizedArticle === "l'") {
-              frenchWord = `${normalizedArticle}${frenchWord}`;
-            } else {
-              frenchWord = `${normalizedArticle} ${frenchWord}`;
-            }
+          const normalizedFromRaw = articleLc === 'l’' ? "l'" : (isAllowed ? articleLc : '');
+          // Strip any existing leading article (with or without space) or l'
+          let leading = frenchWord.match(/^(le|la|les)(?:\s+)?/i);
+          if (leading) {
+            frenchWord = frenchWord.replace(/^(le|la|les)(?:\s+)?/i, '');
+          } else if (/^l['’]/i.test(frenchWord)) {
+            leading = ["l'"] as any;
+            frenchWord = frenchWord.replace(/^l['’]/i, '');
           }
-          w.word_french = frenchWord || w.word_french || w.word_French || w.french_word || w.word_fr;
-          // Derive article from prefix if needed
-          if (!normalizedArticle) {
-            const m = frenchWord.match(/^(le|la|les)\s+/i) || frenchWord.match(/^l['’]/i);
-            w.article = m ? (m[0].toLowerCase().startsWith('l') ? "l'" : m[0].trim().toLowerCase()) : '';
-          } else {
-            w.article = normalizedArticle;
-          }
+          const finalArticle = normalizedFromRaw || (leading ? ((leading[0] as string).toLowerCase().startsWith('l') ? "l'" : (leading[1] ? (leading[1] as string).toLowerCase() : (leading[0] as string).trim().toLowerCase())) : '');
+          const finalWord = finalArticle ? (finalArticle === "l'" ? `${finalArticle}${frenchWord}` : `${finalArticle} ${frenchWord}`) : frenchWord;
+          w.word_french = finalWord || w.word_french || w.word_French || w.french_word || w.word_fr;
+          w.article = finalArticle;
           if (frenchKey && frenchKey !== 'word_french') delete w[frenchKey];
         } else if (isSpanish) {
           const spanishKey = ['word_spanish', 'word_Spanish', 'spanish_word', 'word_es'].find(k => typeof w?.[k] === 'string');
           let spanishWord: string = spanishKey ? w[spanishKey] : '';
           const articleRaw: string = (w.article || w.spanish_article || '').toString().trim();
-          const article = ['el','la','los','las'].includes(articleRaw.toLowerCase()) ? articleRaw.toLowerCase() : '';
-          const hasPrefix = /^(el|la|los|las)\s+/i.test(spanishWord);
-          if (!hasPrefix && article) {
-            spanishWord = `${article} ${spanishWord}`;
+          const articleFromRaw = ['el','la','los','las'].includes(articleRaw.toLowerCase()) ? articleRaw.toLowerCase() : '';
+          // Strip any existing article with or without space
+          const leadingMatch = spanishWord.match(/^(el|la|los|las)(?:\s+)?/i);
+          if (leadingMatch) {
+            spanishWord = spanishWord.replace(/^(el|la|los|las)(?:\s+)?/i, '');
           }
-          w.word_spanish = spanishWord || w.word_spanish || w.word_Spanish || w.spanish_word || w.word_es;
-          w.article = article || (hasPrefix ? spanishWord.split(/\s+/)[0].toLowerCase() : (w.article || ''));
+          const finalArticle = articleFromRaw || (leadingMatch ? leadingMatch[1].toLowerCase() : '');
+          const finalWord = finalArticle ? `${finalArticle} ${spanishWord}`.trim() : spanishWord.trim();
+          w.word_spanish = finalWord || w.word_spanish || w.word_Spanish || w.spanish_word || w.word_es;
+          w.article = finalArticle;
           if (spanishKey && spanishKey !== 'word_spanish') delete w[spanishKey];
         }
         return w;
