@@ -1055,7 +1055,7 @@ function CreateLessonForm() {
                       const pick = (arr:string[], n:number) => [...arr].sort(()=>Math.random()-0.5).slice(0, n);
                       const base = pick(pool, Math.min(12, pool.length));
                       const questions = base.map((correct:string)=>{
-                        const distractors = pick(pool.filter(w=>w!==correct), 2);
+                        const distractors = pick(pool.filter((w: string)=> w !== correct), 2);
                         const opts = [correct, ...distractors].sort(()=>Math.random()-0.5);
                         return { question: `Choose the correct word for: ${correct}`, options: opts, correctIndex: opts.indexOf(correct) };
                       });
