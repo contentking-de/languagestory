@@ -1051,13 +1051,24 @@ function CreateLessonForm() {
                       const vocab = Array.isArray(lessonData?.vocabulary) ? lessonData.vocabulary : [];
                       if (vocab.length < 4){ setLastMessage('Not enough vocabulary for Vocab Run (need at least 4).'); setAiBusy(false); return; }
                       const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
-                      const pool = vocab.map((v:any)=> (v?.[langKey] || v?.word_english || '').toString()).filter(Boolean);
-                      const pick = (arr:string[], n:number) => [...arr].sort(()=>Math.random()-0.5).slice(0, n);
-                      const base = pick(pool, Math.min(12, pool.length));
-                      const questions = base.map((correct:string)=>{
-                        const distractors = pick(pool.filter((w: string)=> w !== correct), 2);
+                      // Build pairs of { target: word in lesson language, english: translation }
+                      const pairs = vocab
+                        .map((v:any)=> ({ 
+                          target: (v?.[langKey] || v?.word_english || '').toString(),
+                          english: (v?.word_english || '').toString()
+                        }))
+                        .filter((p:any)=> !!p.target);
+                      const pick = <T,>(arr:T[], n:number): T[] => [...arr].sort(()=>Math.random()-0.5).slice(0, n);
+                      const base = pick(pairs, Math.min(12, pairs.length));
+                      const questions = base.map((item: { target: string; english: string; })=>{
+                        const correct = item.target;
+                        const distractors = pick(
+                          pairs.filter((p:any)=> p.target !== correct),
+                          2
+                        ).map((p:any)=> p.target);
                         const opts = [correct, ...distractors].sort(()=>Math.random()-0.5);
-                        return { question: `Choose the correct word for: ${correct}`, options: opts, correctIndex: opts.indexOf(correct) };
+                        const prompt = item.english || correct;
+                        return { question: `Choose the correct word for: ${prompt}`, options: opts, correctIndex: opts.indexOf(correct) };
                       });
                       const requestBody = {
                         title: `${lessonData?.title || 'Lesson'} - Vocab Run`,
