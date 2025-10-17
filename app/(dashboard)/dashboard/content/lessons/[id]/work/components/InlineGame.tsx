@@ -19,7 +19,8 @@ import {
   FlashcardsGame, 
   WordSearchGame, 
   WordMixupGame, 
-  WordAssociationGame 
+  WordAssociationGame, 
+  VocabRunGame 
 } from '@/app/(dashboard)/dashboard/games/components/GameRenderers';
 
 interface Game {
@@ -349,6 +350,9 @@ export const InlineGame = memo(({ gameId, onComplete, onNext }: InlineGameProps)
       case 'word_association':
         gameConfig = config.wordAssociation || config;
         break;
+      case 'vocab_run':
+        gameConfig = config.vocabRun || config;
+        break;
       default:
         gameConfig = config;
     }
@@ -453,6 +457,13 @@ export const InlineGame = memo(({ gameId, onComplete, onNext }: InlineGameProps)
             key={`wordassociation-${game.id}`}
             config={gameConfig} 
             onComplete={handleGameComplete}
+          />
+        );
+      case 'vocab_run':
+        return (
+          <VocabRunGame
+            key={`vocabrun-${game.id}`}
+            config={gameConfig}
           />
         );
       case 'wordwall':

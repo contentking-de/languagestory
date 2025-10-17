@@ -53,7 +53,7 @@ function CreateLessonForm() {
     course_id: preselectedCourseId ? parseInt(preselectedCourseId) : 0,
   });
   const [lessonId, setLessonId] = useState<number | null>(null);
-  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Word Search, 5 MC Quiz, 6 True/False, 7 Memory, 8 Gap Fill, 9 Hangman
+  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Word Search, 5 MC Quiz, 6 True/False, 7 Memory, 8 Gap Fill, 9 Vocab Run, 10 Hangman
   const [aiBusy, setAiBusy] = useState(false);
   const [vocabTopic, setVocabTopic] = useState('');
   const [vocabQuantity, setVocabQuantity] = useState(10);
@@ -168,6 +168,22 @@ function CreateLessonForm() {
     return flags[language as keyof typeof flags] || '🌐';
   };
 
+  // Helper: append newly created item to lesson's flow_order
+  const appendToFlow = async (item: { type: 'quiz' | 'game' | 'content' | 'cultural' | 'vocab' | 'grammar'; id?: number }) => {
+    try {
+      if (!lessonId) return;
+      const res = await fetch(`/api/lessons/${lessonId}`);
+      if (!res.ok) return;
+      const lessonData = await res.json();
+      const currentFlow = Array.isArray(lessonData?.flow_order) ? lessonData.flow_order : [];
+      const exists = currentFlow.some((it: any) => it?.type === item.type && (item.id ? it?.id === item.id : true));
+      const newFlow = exists ? currentFlow : [...currentFlow, item];
+      await fetch(`/api/lessons/${lessonId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ flow_order: newFlow }) });
+    } catch (e) {
+      console.warn('appendToFlow failed', e);
+    }
+  };
+
   const isFormValid = formData.title && formData.slug && formData.lesson_type && formData.course_id > 0;
 
   if (loading) {
@@ -201,7 +217,7 @@ function CreateLessonForm() {
       {/* Builder */}
       <div className="max-w-6xl">
         {/* Stepper */}
-        <div className="grid gap-2 mb-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-9">
+        <div className="grid gap-2 mb-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-10">
           {[
             { key: 0, title: 'Basics' },
             { key: 1, title: 'Vocabulary' },
@@ -212,7 +228,8 @@ function CreateLessonForm() {
             { key: 6, title: 'True/False' },
             { key: 7, title: 'Memory' },
             { key: 8, title: 'Gap Fill' },
-            { key: 9, title: 'Hangman' },
+            { key: 9, title: 'Vocab Run' },
+            { key: 10, title: 'Hangman' },
           ].map((s) => (
             <div key={s.key} className={`p-2 rounded-md border text-xs text-center ${currentStep === (s.key as any) ? 'border-orange-500 bg-orange-50 font-medium' : 'border-gray-200 bg-white'}`}>
               <span className="mr-1 text-[10px] align-middle">{(s.key as number) + 1}.</span>
@@ -234,7 +251,8 @@ function CreateLessonForm() {
               {currentStep === 6 && 'True/False Quiz'}
               {currentStep === 7 && 'Memory Game'}
               {currentStep === 8 && 'Gap Fill Quiz'}
-              {currentStep === 9 && 'Hangman Game'}
+              {currentStep === 9 && 'Vocab Run Game'}
+              {currentStep === 10 && 'Hangman Game'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -731,7 +749,11 @@ function CreateLessonForm() {
                         provider_name: 'Custom',
                       };
                       const res = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
-                      if (res.ok){ setLastMessage('Word Search game created.'); } else { const err = await res.json(); setLastMessage(err?.error || 'Failed to create game'); }
+                      if (res.ok){
+                        const created = await res.json();
+                        setLastMessage('Word Search game created.');
+                        await appendToFlow({ type: 'game', id: created?.id });
+                      } else { const err = await res.json(); setLastMessage(err?.error || 'Failed to create game'); }
                     }catch(e){ console.error(e); setLastMessage('Failed to create word search'); }
                     finally{ setAiBusy(false); }
                   }}>
@@ -782,6 +804,11 @@ function CreateLessonForm() {
                       setQuizPreview(g.preview || '');
                       const save = await fetch('/api/ai/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'quiz',data:g.data,lessonId,customName: quizName || `${formData.title || 'Lesson'} - Quiz`})});
                       const s = await save.json();
+                      // Try to append latest created quiz to flow
+                      const quizzesRes = await fetch(`/api/lessons/${lessonId}/quizzes`);
+                      const quizzesData = await quizzesRes.json().catch(()=>[]);
+                      const lastQuiz = Array.isArray(quizzesData) ? quizzesData[quizzesData.length-1] : null;
+                      if (lastQuiz?.id) await appendToFlow({ type: 'quiz', id: lastQuiz.id });
                       setLastMessage(`Quiz created with ${quizQuantity} questions.`);
                     }
                   }catch(e){ console.error(e); setLastMessage('Failed to generate/save quiz'); }
@@ -840,6 +867,10 @@ function CreateLessonForm() {
                       setTfPreview(g.preview || '');
                       const save = await fetch('/api/ai/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'true_false_quiz',data:g.data,lessonId,customName: tfName || `${formData.title || 'Lesson'} - True/False`})});
                       const s = await save.json();
+                      const quizzesRes = await fetch(`/api/lessons/${lessonId}/quizzes`);
+                      const quizzesData = await quizzesRes.json().catch(()=>[]);
+                      const lastQuiz = Array.isArray(quizzesData) ? quizzesData[quizzesData.length-1] : null;
+                      if (lastQuiz?.id) await appendToFlow({ type: 'quiz', id: lastQuiz.id });
                       setLastMessage(`True/False quiz created with ${tfQuantity} statements.`);
                     }
                   }catch(e){ console.error(e); setLastMessage('Failed to generate/save true/false quiz'); }
@@ -901,7 +932,11 @@ function CreateLessonForm() {
                         provider_name: 'Custom',
                       };
                       const res = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
-                      if (res.ok){ setLastMessage('Memory game created.'); } else { const err = await res.json(); setLastMessage(err?.error || 'Failed to create game'); }
+                      if (res.ok){
+                        const created = await res.json();
+                        setLastMessage('Memory game created.');
+                        await appendToFlow({ type: 'game', id: created?.id });
+                      } else { const err = await res.json(); setLastMessage(err?.error || 'Failed to create game'); }
                     }catch(e){ console.error(e); setLastMessage('Failed to create memory game'); }
                     finally{ setAiBusy(false); }
                   }}>
@@ -977,7 +1012,11 @@ function CreateLessonForm() {
                           gf_allow_hints: true,
                         };
                         const res = await fetch('/api/quizzes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
-                        if (res.ok){ setLastMessage('Gap Fill quiz created.'); } else { const err = await res.json().catch(()=>({})); setLastMessage(err?.error || 'Failed to create gap fill'); }
+                        if (res.ok){
+                          const created = await res.json();
+                          setLastMessage('Gap Fill quiz created.');
+                          await appendToFlow({ type: 'quiz', id: created?.id });
+                        } else { const err = await res.json().catch(()=>({})); setLastMessage(err?.error || 'Failed to create gap fill'); }
                       }catch(e){ console.error(e); setLastMessage('Failed to generate gap fill'); }
                       finally{ setAiBusy(false); }
                     }} className="w-full">
@@ -1000,6 +1039,59 @@ function CreateLessonForm() {
             )}
 
             {currentStep === 9 && (
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-md p-3 space-y-3">
+                  <div className="text-sm text-gray-700">Create a Vocab Run game (12 questions with 3 options) from this lesson's vocabulary.</div>
+                  <Button disabled={!lessonId || aiBusy} onClick={async()=>{
+                    if (!lessonId) return; setAiBusy(true); setLastMessage('');
+                    try{
+                      const lessonRes = await fetch(`/api/lessons/${lessonId}`);
+                      const lessonData = await lessonRes.json();
+                      const language = (lessonData?.course_language || '').toLowerCase();
+                      const vocab = Array.isArray(lessonData?.vocabulary) ? lessonData.vocabulary : [];
+                      if (vocab.length < 4){ setLastMessage('Not enough vocabulary for Vocab Run (need at least 4).'); setAiBusy(false); return; }
+                      const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
+                      const pool = vocab.map((v:any)=> (v?.[langKey] || v?.word_english || '').toString()).filter(Boolean);
+                      const pick = (arr:string[], n:number) => [...arr].sort(()=>Math.random()-0.5).slice(0, n);
+                      const base = pick(pool, Math.min(12, pool.length));
+                      const questions = base.map((correct:string)=>{
+                        const distractors = pick(pool.filter(w=>w!==correct), 2);
+                        const opts = [correct, ...distractors].sort(()=>Math.random()-0.5);
+                        return { question: `Choose the correct word for: ${correct}`, options: opts, correctIndex: opts.indexOf(correct) };
+                      });
+                      const requestBody = {
+                        title: `${lessonData?.title || 'Lesson'} - Vocab Run`,
+                        description: `Auto-created Vocab Run for lesson ${lessonId}`,
+                        language,
+                        category: 'vocabulary',
+                        difficulty_level: 1,
+                        estimated_duration: 5,
+                        lesson_id: lessonId.toString(),
+                        game_type: 'vocab_run',
+                        game_config: { vocabRun: { questions } },
+                        provider_name: 'Custom',
+                      };
+                      const res = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
+                      if (res.ok){
+                        const created = await res.json();
+                        setLastMessage('Vocab Run game created.');
+                        await appendToFlow({ type: 'game', id: created?.id });
+                      } else { const err = await res.json().catch(()=>({})); setLastMessage(err?.error || 'Failed to create Vocab Run'); }
+                    }catch(e){ console.error(e); setLastMessage('Failed to create Vocab Run'); }
+                    finally{ setAiBusy(false); }
+                  }}>
+                    Create Vocab Run
+                  </Button>
+                </div>
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={()=>setCurrentStep(8)}>Back</Button>
+                  <div className="text-sm text-gray-600">{lastMessage}</div>
+                  <Button onClick={()=>setCurrentStep(10)}>Next</Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 10 && (
               <div className="space-y-4">
                 {aiBusy && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
@@ -1066,7 +1158,7 @@ function CreateLessonForm() {
                   )}
                 </div>
                 <div className="flex justify-between pt-2">
-                  <Button variant="outline" onClick={()=>setCurrentStep(8)}>Back</Button>
+                  <Button variant="outline" onClick={()=>setCurrentStep(9)}>Back</Button>
                   <div className="text-sm text-gray-600">{lastMessage}</div>
                   <Button onClick={()=>router.push(`/dashboard/content/lessons/${lessonId}`)}>Finish</Button>
                 </div>

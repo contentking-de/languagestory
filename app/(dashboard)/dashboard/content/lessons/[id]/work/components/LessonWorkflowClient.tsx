@@ -176,15 +176,23 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     // If a flow_order exists on the lesson, use it to drive ordering
     const items: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game' | 'vocab'; id?: number; title?: string }> = Array.isArray(lesson?.flow_order) ? lesson!.flow_order : [];
     const steps: ProgressItem[] = [];
+    const addedQuizIds = new Set<number>();
+    const addedGameIds = new Set<number>();
+    const addedGrammarIds = new Set<number>();
+    let contentAdded = false;
+    let culturalAdded = false;
+    let vocabAdded = false;
     const addVocab = () => {
       if (lesson?.vocabulary && lesson.vocabulary.length > 0) {
         steps.push({ id: steps.length, type: 'content', title: 'Vocabulary Trainer', status: 'not_started' } as any);
+        vocabAdded = true;
       }
     };
 
     const addContent = () => {
       if (lesson?.content) {
         steps.push({ id: steps.length, type: 'content', title: 'Lesson Content', status: 'not_started' });
+        contentAdded = true;
       }
     };
     const addStories = () => {
@@ -198,33 +206,38 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
       if (lesson?.grammar && lesson.grammar.length > 0) {
         for (const g of lesson.grammar) {
           steps.push({ id: steps.length, type: 'grammar', title: g.title || 'Grammar', status: 'not_started', grammarId: g.id } as any);
+          addedGrammarIds.add(g.id as number);
         }
       }
     };
     const addCultural = () => {
       if (lesson?.cultural_information) {
         steps.push({ id: steps.length, type: 'cultural', title: 'Cultural Information', status: 'not_started' });
+        culturalAdded = true;
       }
     };
     const addQuizById = (qid?: number) => {
       if (!qid) return;
       const quiz = quizzes.find(q => q.id === qid);
-      if (quiz) {
+      if (quiz && !addedQuizIds.has(quiz.id)) {
         steps.push({ id: steps.length, type: 'quiz', title: quiz.title, status: 'not_started', quizId: quiz.id });
+        addedQuizIds.add(quiz.id);
       }
     };
     const addGameById = (gid?: number) => {
       if (!gid) return;
       const game = games.find(g => g.id === gid);
-      if (game) {
+      if (game && !addedGameIds.has(game.id)) {
         steps.push({ id: steps.length, type: 'game', title: game.title, status: 'not_started', gameId: game.id });
+        addedGameIds.add(game.id);
       }
     };
     const addGrammarById = (gid?: number) => {
       if (!gid) return;
       const gram = lesson?.grammar?.find(g => g.id === gid);
-      if (gram) {
+      if (gram && !addedGrammarIds.has(gram.id as number)) {
         steps.push({ id: steps.length, type: 'grammar', title: gram.title || 'Grammar', status: 'not_started', grammarId: gram.id } as any);
+        addedGrammarIds.add(gram.id as number);
       }
     };
 
@@ -239,8 +252,20 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         else if ((it as any).type === 'grammar') addGrammarById(it.id);
       }
       // Ensure vocab appears if the lesson has vocabulary but flow_order omitted it
-      if (!hasVocabInOrder && lesson?.vocabulary && lesson.vocabulary.length > 0) {
+      if (!hasVocabInOrder && lesson?.vocabulary && lesson.vocabulary.length > 0 && !vocabAdded) {
         steps.unshift({ id: -1, type: 'content', title: 'Vocabulary Trainer', status: 'not_started' } as any);
+        vocabAdded = true;
+      }
+      // Append any missing core content blocks not explicitly referenced in flow_order
+      if (lesson?.content && !contentAdded) addContent();
+      if (lesson?.cultural_information && !culturalAdded) addCultural();
+      // Always include stories if present (not currently addressable by flow_order)
+      addStories();
+      // Append any quizzes/games/grammar not present in flow_order
+      quizzes.forEach(q => { if (!addedQuizIds.has(q.id)) addQuizById(q.id); });
+      games.forEach(g => { if (!addedGameIds.has(g.id)) addGameById(g.id); });
+      if (lesson?.grammar && lesson.grammar.length > 0) {
+        lesson.grammar.forEach(g => { if (!addedGrammarIds.has(g.id as number)) addGrammarById(g.id); });
       }
       // Normalize step IDs after potential unshift
       return steps.map((s, idx) => ({ ...s, id: idx }));
