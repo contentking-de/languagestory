@@ -1470,43 +1470,112 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
     return audioCtxRef.current;
   };
 
-  const playQuack = () => {
+  // Stretch factor to slow down short SFX (higher = slower/longer)
+  const sfxStretch = 1.8;
+
+  const playFrogCroak = () => {
     const ctx = getAudioCtx();
     if (!ctx) return;
-    const duration = 0.35;
     const now = ctx.currentTime;
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
-    // Two oscillators to imitate a short "quack"
-    const osc1 = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    osc1.type = 'square';
-    osc2.type = 'sawtooth';
-    osc1.frequency.setValueAtTime(440, now);
-    osc1.frequency.exponentialRampToValueAtTime(220, now + duration);
-    osc2.frequency.setValueAtTime(660, now);
-    osc2.frequency.exponentialRampToValueAtTime(300, now + duration);
+    // Helper to create one croak burst (formant-filtered, AM-modulated, with slight pitch glide)
+    const createBurst = (startOffset: number, baseFreq: number, dur: number, brighter = false) => {
+      const start = now + startOffset;
 
-    osc1.connect(gain);
-    osc2.connect(gain);
-    gain.connect(ctx.destination);
-    osc1.start(now);
-    osc2.start(now);
-    osc1.stop(now + duration);
-    osc2.stop(now + duration);
+      // Source 1: low triangle for body
+      const osc = ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(baseFreq, start);
+      // Positive rising inflection, dann sanft zurück
+      osc.frequency.linearRampToValueAtTime(baseFreq * 1.12, start + dur * 0.35);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(130, baseFreq * 0.9), start + dur);
+
+      // Source 2: very subtle noise for rasp
+      const bufferSize = Math.floor(ctx.sampleRate * dur);
+      const nb = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const ch = nb.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) ch[i] = (Math.random() * 2 - 1) * 0.02; // etwas weniger Rauschen
+      const noise = ctx.createBufferSource();
+      noise.buffer = nb;
+
+      // Formants (bandpass filters) to mimic croak resonance
+      const bp1 = ctx.createBiquadFilter();
+      bp1.type = 'bandpass';
+      bp1.frequency.setValueAtTime(brighter ? 380 : 320, start);
+      bp1.Q.setValueAtTime(7.5, start);
+
+      const bp2 = ctx.createBiquadFilter();
+      bp2.type = 'bandpass';
+      bp2.frequency.setValueAtTime(brighter ? 820 : 680, start);
+      bp2.Q.setValueAtTime(4.5, start);
+
+      // Lowpass to tame highs
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(brighter ? 1800 : 1400, start);
+
+      // Amplitude envelope
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0, start);
+      env.gain.linearRampToValueAtTime(1.0, start + 0.035 * sfxStretch);
+      env.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+
+      // Amplitude modulation (tremolo) ~20-28 Hz
+      const trem = ctx.createOscillator();
+      trem.type = 'sine';
+      trem.frequency.setValueAtTime(24, start);
+      const tremGain = ctx.createGain();
+      tremGain.gain.setValueAtTime(0.35, start); // weniger stark, freundlicher
+      trem.connect(tremGain);
+      tremGain.connect(env.gain);
+
+      // Cheer-Tone Layer (leiser, höherer Dreieckston) für positiven Charakter
+      const cheer = ctx.createOscillator();
+      cheer.type = 'triangle';
+      cheer.frequency.setValueAtTime(baseFreq * 3.2, start);
+      cheer.frequency.linearRampToValueAtTime(baseFreq * 3.6, start + dur * 0.5);
+      const cheerGain = ctx.createGain();
+      cheerGain.gain.setValueAtTime(0, start);
+      cheerGain.gain.linearRampToValueAtTime(0.12, start + 0.03 * sfxStretch);
+      cheerGain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+
+      // Routing
+      osc.connect(bp1);
+      osc.connect(bp2);
+      noise.connect(bp1);
+      noise.connect(bp2);
+      bp1.connect(lp);
+      bp2.connect(lp);
+      lp.connect(env);
+      env.connect(ctx.destination);
+      cheer.connect(env);
+
+      // Schedule
+      trem.start(start);
+      osc.start(start);
+      noise.start(start);
+      cheer.start(start);
+      trem.stop(start + dur);
+      osc.stop(start + dur);
+      noise.stop(start + dur);
+      cheer.stop(start + dur);
+    };
+
+    // Two-burst "rib-bit" style croak, stretched by sfxStretch
+    const burstDur1 = 0.24 * sfxStretch;
+    const burstDur2 = 0.32 * sfxStretch;
+    createBurst(0, 230, burstDur1, true);                  // heller, "rib"
+    createBurst(0.14 * sfxStretch, 190, burstDur2, true);  // ebenfalls hell, "bit"
   };
 
   const playSplash = () => {
     const ctx = getAudioCtx();
     if (!ctx) return;
-    const duration = 0.45;
+    const duration = 0.9 * sfxStretch;
     const now = ctx.currentTime;
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.001, now);
-    gain.gain.linearRampToValueAtTime(0.2, now + 0.03);
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.06 * sfxStretch);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
     // White noise buffer
@@ -1522,7 +1591,7 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
     // Slight filtering for watery feel
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(1800, now);
+    filter.frequency.setValueAtTime(1400, now);
     filter.Q.setValueAtTime(0.7, now);
 
     noise.connect(filter);
@@ -1538,11 +1607,11 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
     const now = ctx.currentTime;
 
     const makeBurst = (startOffset: number) => {
-      const duration = 0.18;
+      const duration = 0.28 * sfxStretch;
       const start = now + startOffset;
       const gain = ctx.createGain();
       gain.gain.setValueAtTime(0.001, start);
-      gain.gain.linearRampToValueAtTime(0.35, start + 0.02);
+      gain.gain.linearRampToValueAtTime(0.35, start + 0.04 * sfxStretch);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
 
       // Noise source
@@ -1566,10 +1635,10 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
       noise.stop(start + duration);
     };
 
-    // 2-3 short bursts to simulate clapping
+    // 3 slower bursts to simulate clapping
     makeBurst(0);
-    makeBurst(0.06);
-    makeBurst(0.12);
+    makeBurst(0.12 * sfxStretch);
+    makeBurst(0.24 * sfxStretch);
   };
 
   const resetVocabRun = () => {
@@ -1607,7 +1676,7 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
     setRevealedRows((prev) => new Set(prev).add(currentIndex));
     if (isCorrect) {
       const isFinal = currentIndex + 1 >= total;
-      if (isFinal) playClap(); else playQuack();
+      if (isFinal) playClap(); else playFrogCroak();
       // place frog on the row that was just answered (currentIndex)
       setFrogLevel(() => currentIndex);
       setCurrentIndex((prev) => prev + 1);
@@ -1641,15 +1710,6 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
 
   return (
     <>
-      {/* Question above the playfield */}
-      {!finished && !gameOver && (
-        <div className="w-full flex justify-center mb-3">
-          <div className="bg-white/90 backdrop-blur px-4 py-2 rounded shadow text-center max-w-xl">
-            {question?.question}
-          </div>
-        </div>
-      )}
-
       <div
         className="relative w-full"
         ref={fieldRef}
@@ -1658,6 +1718,27 @@ export function VocabRunGame({ config }: VocabRunGameProps) {
           background: 'linear-gradient(180deg, #6ecbff 0%, #8fd3fe 35%, #bfe9ff 70%, #e6f7ff 100%)'
         }}
       >
+      {/* Floating question near active lily pad row (inside field for correct positioning) */}
+      {!finished && !gameOver && (
+        <div
+          className="pointer-events-none select-none"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            // Start unten (über der ersten Antwortreihe) und wandere mit jeder Reihe nach oben
+            bottom: `${Math.max(0, currentIndex) * padHeight + 104}px`,
+            zIndex: 3,
+          }}
+        >
+          <div className="mx-auto max-w-2xl w-[92%] sm:w-[70%]">
+            <div className="bg-white/95 px-3 sm:px-4 py-2 rounded shadow text-center text-sm sm:text-base border border-gray-200">
+              {question?.question}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Water background */}
       <div
         className="absolute inset-0 water-animated"
