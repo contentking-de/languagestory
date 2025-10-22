@@ -758,6 +758,7 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
                                 language={lessonLanguage || 'english'}
                                 size="md"
                                 type="content"
+                              showSpeedControl={true}
                               />
                             );
                           })()}

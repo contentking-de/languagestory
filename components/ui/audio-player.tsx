@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Volume2, Loader2, Square } from 'lucide-react';
+import { Volume2, Loader2, Square, Pause, Play } from 'lucide-react';
 
 interface AudioPlayerProps {
   text: string;
@@ -35,6 +35,7 @@ export function AudioPlayer({
   console.log('AudioPlayer v2.2 loaded', { text, vocabularyId, lessonId, type, topicId });
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -52,6 +53,7 @@ export function AudioPlayer({
     // Reset state
     setAudioUrl(null);
     setIsPlaying(false);
+    setIsPaused(false);
     setIsLoading(false);
   }, [text, type, lessonId, vocabularyId, topicId]);
 
@@ -69,7 +71,12 @@ export function AudioPlayer({
 
   const generateAudio = async () => {
     if (audioUrl) {
-      // If we already have audio, just play it
+      // If we already have audio and an existing element, resume from current position
+      if (audioRef.current) {
+        resumeAudio();
+        return;
+      }
+      // Otherwise, (re)create and play
       playAudio();
       return;
     }
@@ -149,19 +156,22 @@ export function AudioPlayer({
     const audioToPlay = url || audioUrl;
     if (!audioToPlay) return;
 
-    if (audioRef.current) {
-      audioRef.current.pause();
+    // Reuse existing audio element if same source, otherwise create
+    let audio = audioRef.current;
+    if (!audio || audio.src !== audioToPlay) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      audio = new Audio(audioToPlay);
+      audioRef.current = audio;
     }
-
-    const audio = new Audio(audioToPlay);
-    audioRef.current = audio;
     
     // Set playback speed
     audio.playbackRate = playbackSpeed;
     
-    audio.addEventListener('play', () => setIsPlaying(true));
+    audio.addEventListener('play', () => { setIsPlaying(true); setIsPaused(false); });
     audio.addEventListener('pause', () => setIsPlaying(false));
-    audio.addEventListener('ended', () => setIsPlaying(false));
+    audio.addEventListener('ended', () => { setIsPlaying(false); setIsPaused(false); });
     audio.addEventListener('error', () => {
       setIsPlaying(false);
       setIsLoading(false);
@@ -180,6 +190,27 @@ export function AudioPlayer({
       audioRef.current.currentTime = 0;
     }
     setIsPlaying(false);
+    setIsPaused(false);
+  };
+
+  const pauseAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPaused(true);
+      setIsPlaying(false);
+    }
+  };
+
+  const resumeAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackSpeed;
+      audioRef.current.play().catch(() => {});
+      setIsPaused(false);
+      setIsPlaying(true);
+    } else if (audioUrl) {
+      // Fallback if element missing
+      playAudio(audioUrl);
+    }
   };
 
   const handleSpeedChange = (speed: number) => {
@@ -193,6 +224,16 @@ export function AudioPlayer({
     <div className={`inline-flex items-center gap-1 ${className}`}>
       {isPlaying ? (
         <>
+          {/* Pause Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={pauseAudio}
+            className={`${buttonSize[size]} p-0 rounded-full hover:bg-gray-100 transition-colors`}
+            title={`Pause pronunciation of "${text}"`}
+          >
+            <Pause className={`${sizeClasses[size]} text-gray-700`} />
+          </Button>
           {/* Stop Button */}
           <Button
             variant="ghost"
@@ -205,19 +246,19 @@ export function AudioPlayer({
           </Button>
         </>
       ) : (
-        /* Play Button */
+        /* Play/Resume Button */
         <Button
           variant="ghost"
           size="sm"
           onClick={generateAudio}
           disabled={isLoading}
           className={`${buttonSize[size]} p-0 rounded-full hover:bg-gray-100 transition-colors`}
-          title={`Play pronunciation of "${text}"`}
+          title={isPaused ? `Resume pronunciation of "${text}"` : `Play pronunciation of "${text}"`}
         >
           {isLoading ? (
             <Loader2 className={`${sizeClasses[size]} animate-spin text-blue-600`} />
           ) : (
-            <Volume2 className={`${sizeClasses[size]} text-gray-600 hover:text-blue-600`} />
+            <Play className={`${sizeClasses[size]} text-gray-600 hover:text-blue-600`} />
           )}
         </Button>
       )}

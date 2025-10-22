@@ -735,7 +735,26 @@ function CreateLessonForm() {
                       if (vocab.length === 0) { setLastMessage('No vocabulary found for this lesson.'); setAiBusy(false); return; }
                       const shuffled = [...vocab].sort(()=>Math.random()-0.5).slice(0, Math.min(4, vocab.length));
                       const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
-                      const words = shuffled.map((v:any)=> (v?.[langKey] || v?.word_english || '').toString()).filter(Boolean);
+                      const stripArticleAndToSingleWord = (raw: string): string => {
+                        let s = (raw || '').toString().trim();
+                        if (!s) return '';
+                        if (language === 'german') {
+                          s = s.replace(/^(der|die|das)\s+/i, '');
+                        } else if (language === 'french') {
+                          s = s.replace(/^(le|la|les)\s+/i, '');
+                          s = s.replace(/^l['’]/i, '');
+                        } else if (language === 'spanish') {
+                          s = s.replace(/^(el|la|los|las)\s+/i, '');
+                        }
+                        // Ensure single token (no spaces) for word search
+                        s = s.split(/\s+/)[0];
+                        return s;
+                      };
+                      const words = Array.from(new Set(
+                        shuffled
+                          .map((v:any)=> stripArticleAndToSingleWord((v?.[langKey] || v?.word_english || '').toString()))
+                          .filter((w:string)=> !!w)
+                      ));
                       const requestBody = {
                         title: `${lessonData?.title || 'Lesson'} - Word Search`,
                         description: `Auto-created word search for lesson ${lessonId}`,
@@ -753,7 +772,7 @@ function CreateLessonForm() {
                         const created = await res.json();
                         setLastMessage('Word Search game created.');
                         await appendToFlow({ type: 'game', id: created?.id });
-                      } else { const err = await res.json(); setLastMessage(err?.error || 'Failed to create game'); }
+                      } else { const err = await res.json().catch(()=>({})); setLastMessage(err?.error || 'Failed to create game'); }
                     }catch(e){ console.error(e); setLastMessage('Failed to create word search'); }
                     finally{ setAiBusy(false); }
                   }}>
@@ -936,7 +955,7 @@ function CreateLessonForm() {
                         const created = await res.json();
                         setLastMessage('Memory game created.');
                         await appendToFlow({ type: 'game', id: created?.id });
-                      } else { const err = await res.json(); setLastMessage(err?.error || 'Failed to create game'); }
+                      } else { const err = await res.json().catch(()=>({})); setLastMessage(err?.error || 'Failed to create game'); }
                     }catch(e){ console.error(e); setLastMessage('Failed to create memory game'); }
                     finally{ setAiBusy(false); }
                   }}>
@@ -1125,15 +1144,43 @@ function CreateLessonForm() {
                       if (vocab.length === 0){ setLastMessage('No vocabulary found for this lesson.'); setAiBusy(false); return; }
                       const choice = vocab[Math.floor(Math.random()*vocab.length)];
                       const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
-                      const word = (choice?.[langKey] || choice?.word_english || '').toString();
-                      if (!word){ setLastMessage('Selected word is empty.'); setAiBusy(false); return; }
+                      const rawWord = (choice?.[langKey] || choice?.word_english || '').toString();
+                      const sanitizeForHangman = (w: string): string => {
+                        let s = (w || '').toString().trim();
+                        if (!s) return '';
+                        if (language === 'german') {
+                          s = s.replace(/^(der|die|das)\s+/i, '');
+                        } else if (language === 'french') {
+                          s = s.replace(/^(le|la|les)\s+/i, '');
+                          s = s.replace(/^l['’]/i, '');
+                        } else if (language === 'spanish') {
+                          s = s.replace(/^(el|la|los|las)\s+/i, '');
+                        }
+                        // Keep only letters (including latin accented letters and ß), drop spaces/punctuation
+                        s = s.normalize('NFKD').replace(/[^A-Za-zÀ-ÖØ-öø-ÿß]/g, '');
+                        return s;
+                      };
+                      const word = sanitizeForHangman(rawWord);
+                      if (!word){ setLastMessage('Selected word is not suitable for Hangman (empty after sanitizing).'); setAiBusy(false); return; }
                       setHangmanWord(word);
                       // Ask AI for a short hint using lesson description/content
                       const basis = ((formData.description || '') + '\n' + (formData.content || '')).slice(0, 1200);
-                      const hintPrompt = `Create a short, clear hint (max 12 words) for the hangman word in ${language}. The hint must not include the word itself. Context: ${basis}`;
-                      const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'story',aiProvider:'openai',language:language || 'english',level:courseLevel || 'beginner',topic:hintPrompt,quantity:1})});
+                      const gen = await fetch('/api/ai/generate',{
+                        method:'POST',
+                        headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({
+                          contentType:'hint',
+                          aiProvider:'openai',
+                          language:'english',
+                          level:courseLevel || 'beginner',
+                          topic: `Target word: ${word}\n${basis}`,
+                          quantity:1
+                        })
+                      });
                       const g = await gen.json();
-                      const hint = (g?.data?.story?.title || '').toString().slice(0, 80) || 'Guess the word!';
+                      const rawHint = (g?.data?.hint || g?.preview || '').toString();
+                      const sanitized = rawHint.replace(new RegExp(word, 'i'), '').trim();
+                      const hint = (sanitized || 'Guess the word!').slice(0, 80);
                       setHangmanHint(hint);
                       const requestBody = {
                         title: `${lessonData?.title || 'Lesson'} - Hangman`,

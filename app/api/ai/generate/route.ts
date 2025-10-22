@@ -56,11 +56,12 @@ Format as JSON:
   ]
 }`,
 
-    true_false_quiz: `Create ${quantity} true or false quiz questions about "${topic}" in ${language} for ${level} learners.
+    true_false_quiz: `Create ${quantity} true or false quiz questions about "${topic}" related to ${language} for ${level} learners.
 
 Requirements:
 - Use ${levelDesc}
-- Each question should be a statement that can be answered with TRUE or FALSE
+- IMPORTANT: Question text must ALWAYS be in English (the statement must be in English)
+- Each question should be a clear statement that can be answered with TRUE or FALSE
 - Include a mix of vocabulary, grammar, cultural facts, and comprehension questions
 - Questions should be practical and relevant to real-life situations
 - Provide the correct answer (true or false) for each question
@@ -70,7 +71,7 @@ Format as JSON:
 {
   "questions": [
     {
-      "question": "Statement in ${language}",
+      "question": "Statement in English",
       "correct_answer": "true",
       "explanation": "Brief explanation of why this statement is true or false",
       "difficulty_level": ${level === 'beginner' ? 1 : level === 'elementary' ? 2 : level === 'intermediate' ? 3 : level === 'upper-intermediate' ? 4 : 5}
@@ -135,7 +136,7 @@ Requirements:
 - Focus on practical, interesting facts learners can discuss (customs, etiquette, festivals, food, daily life, dos & don'ts)
 - Keep tone friendly and motivating; avoid politics or sensitive topics
 - Structure as short paragraphs (3-5), optionally with bullet points
- - IMPORTANT: Write the full output text in ${language} only (not English)
+ - IMPORTANT: Write the full output text in English only (not ${language})
  - IMPORTANT: Plain text only. Do NOT use any Markdown formatting (no headings, no bold/italics). Do NOT output symbols like **, __, #, *, backticks. Use simple sentences and optional dash bullets ("- ") only.
 
 Format as JSON:
@@ -194,6 +195,23 @@ Format as JSON:
     }
   ]
 }`
+,
+
+    hint: `Create a short, clear hint (max 12 words) for a hangman word for ${level} ${language} learners.
+
+Requirements:
+- IMPORTANT: Output strictly in English
+- Do NOT include the target word or any direct substring of it
+- Keep it generic but helpful (category, synonym, definition, or context)
+- Maximum 12 words
+
+Context:
+${topic}
+
+Format as JSON:
+{
+  "hint": "Short hint in English (<= 12 words, no quotes, no code)"
+}`
   } as Record<string, string>;
 
   return prompts[contentType as keyof typeof prompts] || '';
@@ -203,7 +221,7 @@ export async function POST(request: Request) {
   try {
     const { contentType, aiProvider, language, level, topic, quantity } = await request.json();
 
-    if (!contentType || !aiProvider || !topic) {
+    if (!contentType || !aiProvider || (contentType !== 'hint' && !topic)) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
         { status: 400 }
@@ -287,7 +305,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const prompt = getPrompt(contentType, language, level, topic, quantity);
+    const prompt = getPrompt(contentType, language, level, topic || '', quantity || 1);
     
     if (!prompt) {
       return NextResponse.json(
@@ -492,6 +510,12 @@ export async function POST(request: Request) {
         }
         return w;
       });
+    }
+
+    // Normalize hint minimal structure
+    if (contentType === 'hint' && typeof generatedContent?.hint === 'string') {
+      // preview is the hint itself
+      return NextResponse.json({ type: contentType, data: generatedContent, preview: generatedContent.hint, aiProvider });
     }
 
     // Create a preview of the content
