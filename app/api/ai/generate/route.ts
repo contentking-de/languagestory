@@ -29,6 +29,13 @@ const getPrompt = (contentType: string, language: string, level: string, topic: 
   const isGerman = langLower === 'german' || langLower === 'de' || langLower === 'deutsch';
   const isFrench = langLower === 'french' || langLower === 'fr' || langLower === 'français' || langLower === 'francais';
   const isSpanish = langLower === 'spanish' || langLower === 'es' || langLower === 'español' || langLower === 'espanol';
+  const levelLower = (level || '').toLowerCase();
+  const storyMaxWords = (() => {
+    if (levelLower === 'beginner') return 200;
+    if (levelLower === 'intermediate') return 300;
+    if (levelLower === 'advanced') return 500;
+    return 300; // sensible default
+  })();
 
   const prompts = {
     quiz: `Create ${quantity} multiple choice quiz questions about "${topic}" for ${level} ${language} learners.
@@ -112,7 +119,7 @@ Format as JSON:
 
 Requirements:
 - Use ${levelDesc}
-- Story should be 200-400 words long
+- IMPORTANT: Keep the story concise and do NOT exceed ${storyMaxWords} words (hard limit)
 - Include dialogue and descriptive language appropriate for the level
 - Focus on practical vocabulary related to the topic
 - Make it engaging and culturally relevant
