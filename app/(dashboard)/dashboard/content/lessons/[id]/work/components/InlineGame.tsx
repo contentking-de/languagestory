@@ -464,6 +464,7 @@ export const InlineGame = memo(({ gameId, onComplete, onNext }: InlineGameProps)
           <VocabRunGame
             key={`vocabrun-${game.id}`}
             config={gameConfig}
+            onComplete={() => handleGameComplete(100)}
           />
         );
       case 'wordwall':
@@ -532,16 +533,7 @@ export const InlineGame = memo(({ gameId, onComplete, onNext }: InlineGameProps)
             
             {renderGame}
 
-            <div className="flex justify-center mt-8">
-              <Button
-                variant="outline"
-                onClick={resetGame}
-                className="flex items-center gap-2"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Reset Game
-              </Button>
-            </div>
+            {/* Reset removed by design */}
           </>
         ) : (
           <div className="text-center py-8">

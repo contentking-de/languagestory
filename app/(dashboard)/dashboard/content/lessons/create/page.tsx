@@ -53,7 +53,7 @@ function CreateLessonForm() {
     course_id: preselectedCourseId ? parseInt(preselectedCourseId) : 0,
   });
   const [lessonId, setLessonId] = useState<number | null>(null);
-  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Word Search, 5 MC Quiz, 6 True/False, 7 Memory, 8 Gap Fill, 9 Vocab Run, 10 Hangman
+  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Games, 5 MC Quiz, 6 True/False, 7 Gap Fill
   const [aiBusy, setAiBusy] = useState(false);
   const [vocabTopic, setVocabTopic] = useState('');
   const [vocabQuantity, setVocabQuantity] = useState(10);
@@ -79,6 +79,14 @@ function CreateLessonForm() {
   const [gfPreview, setGfPreview] = useState<string>('');
   const [hangmanWord, setHangmanWord] = useState<string>('');
   const [hangmanHint, setHangmanHint] = useState<string>('');
+  // Combined Games creation state
+  const [creatingGames, setCreatingGames] = useState(false);
+  const [gamesProgress, setGamesProgress] = useState<{
+    wordSearch: 'idle' | 'pending' | 'success' | 'error';
+    memory: 'idle' | 'pending' | 'success' | 'error';
+    vocabRun: 'idle' | 'pending' | 'success' | 'error';
+    hangman: 'idle' | 'pending' | 'success' | 'error';
+  }>({ wordSearch: 'idle', memory: 'idle', vocabRun: 'idle', hangman: 'idle' });
 
   useEffect(() => {
     fetchCourses();
@@ -185,6 +193,34 @@ function CreateLessonForm() {
     }
   };
 
+  // Finalize flow order after creation: vocab, content, cultural, quizzes, games, grammar
+  const finalizeFlowOrder = async () => {
+    try {
+      if (!lessonId) return;
+      const [lessonRes, quizzesRes, gamesRes] = await Promise.all([
+        fetch(`/api/lessons/${lessonId}`),
+        fetch(`/api/lessons/${lessonId}/quizzes`),
+        fetch(`/api/lessons/${lessonId}/games`)
+      ]);
+      const lessonData = lessonRes.ok ? await lessonRes.json() : {};
+      const quizzesData = quizzesRes.ok ? await quizzesRes.json() : [];
+      const gamesData = gamesRes.ok ? await gamesRes.json() : [];
+      const flow: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game' | 'grammar' | 'vocab'; id?: number; title?: string }> = [];
+      if (Array.isArray(lessonData?.vocabulary) && lessonData.vocabulary.length > 0) flow.push({ key: 'vocab', type: 'vocab', title: 'Vocabulary Trainer' });
+      if (lessonData?.content) flow.push({ key: 'content', type: 'content', title: 'Lesson Content' });
+      if (lessonData?.cultural_information) flow.push({ key: 'cultural', type: 'cultural', title: 'Cultural Information' });
+      quizzesData.forEach((q: any) => flow.push({ key: `quiz-${q.id}`, type: 'quiz', id: q.id, title: q.title }));
+      gamesData.forEach((g: any) => flow.push({ key: `game-${g.id}`, type: 'game', id: g.id, title: g.title }));
+      if (Array.isArray(lessonData?.grammar)) lessonData.grammar.forEach((gr: any) => flow.push({ key: `grammar-${gr.id}`, type: 'grammar', id: gr.id, title: gr.title }));
+      // Persist locally for the overview page immediate display
+      try { window.localStorage.setItem(`lesson_flow_order_${lessonId}`, JSON.stringify(flow)); } catch {}
+      // Persist to server
+      await fetch(`/api/lessons/${lessonId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ flow_order: flow }) });
+    } catch (e) {
+      console.warn('finalizeFlowOrder failed', e);
+    }
+  };
+
   const isFormValid = formData.title && formData.slug && formData.lesson_type && formData.course_id > 0;
 
   if (loading) {
@@ -224,13 +260,10 @@ function CreateLessonForm() {
             { key: 1, title: 'Vocabulary' },
             { key: 2, title: 'Cultural' },
             { key: 3, title: 'Images' },
-            { key: 4, title: 'Word Search' },
+            { key: 4, title: 'Games' },
             { key: 5, title: 'MC Quiz' },
             { key: 6, title: 'True/False' },
-            { key: 7, title: 'Memory' },
-            { key: 8, title: 'Gap Fill' },
-            { key: 9, title: 'Vocab Run' },
-            { key: 10, title: 'Hangman' },
+            { key: 7, title: 'Gap Fill' },
           ].map((s) => (
             <div key={s.key} className={`p-2 rounded-md border text-xs text-center ${currentStep === (s.key as any) ? 'border-orange-500 bg-orange-50 font-medium' : 'border-gray-200 bg-white'}`}>
               <span className="mr-1 text-[10px] align-middle">{(s.key as number) + 1}.</span>
@@ -247,13 +280,10 @@ function CreateLessonForm() {
               {currentStep === 1 && 'Vocabulary'}
               {currentStep === 2 && 'Cultural Information'}
               {currentStep === 3 && 'Images'}
-              {currentStep === 4 && 'Word Search Game'}
+              {currentStep === 4 && 'Create Games'}
               {currentStep === 5 && 'Multiple Choice Quiz'}
               {currentStep === 6 && 'True/False Quiz'}
-              {currentStep === 7 && 'Memory Game'}
-              {currentStep === 8 && 'Gap Fill Quiz'}
-              {currentStep === 9 && 'Vocab Run Game'}
-              {currentStep === 10 && 'Hangman Game'}
+              {currentStep === 7 && 'Gap Fill Quiz'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -751,69 +781,121 @@ function CreateLessonForm() {
             {currentStep === 4 && (
               <div className="space-y-4">
                 <div className="bg-gray-50 rounded-md p-3">
-                  <div className="text-sm text-gray-700 mb-2">Create a Word Search game using 4 random words from this lesson's vocabulary.</div>
-                  <Button disabled={!lessonId || aiBusy} onClick={async()=>{
-                    if (!lessonId) return; setAiBusy(true); setLastMessage('');
-                    try{
-                      // Load lesson to get language
+                  <div className="text-sm text-gray-700 mb-3">Automatically create a set of games for this lesson (Word Search, Memory, Vocab Run, Hangman). We will show progress for each game.</div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm"><div className={`w-2 h-2 rounded-full ${gamesProgress.wordSearch==='success'?'bg-green-500':gamesProgress.wordSearch==='error'?'bg-red-500':gamesProgress.wordSearch==='pending'?'bg-yellow-400':'bg-gray-300'}`}></div><span>Word Search</span></div>
+                    <div className="flex items-center gap-2 text-sm"><div className={`w-2 h-2 rounded-full ${gamesProgress.memory==='success'?'bg-green-500':gamesProgress.memory==='error'?'bg-red-500':gamesProgress.memory==='pending'?'bg-yellow-400':'bg-gray-300'}`}></div><span>Memory</span></div>
+                    <div className="flex items-center gap-2 text-sm"><div className={`w-2 h-2 rounded-full ${gamesProgress.vocabRun==='success'?'bg-green-500':gamesProgress.vocabRun==='error'?'bg-red-500':gamesProgress.vocabRun==='pending'?'bg-yellow-400':'bg-gray-300'}`}></div><span>Vocab Run</span></div>
+                    <div className="flex items-center gap-2 text-sm"><div className={`w-2 h-2 rounded-full ${gamesProgress.hangman==='success'?'bg-green-500':gamesProgress.hangman==='error'?'bg-red-500':gamesProgress.hangman==='pending'?'bg-yellow-400':'bg-gray-300'}`}></div><span>Hangman</span></div>
+                  </div>
+                  <div className="mt-3">
+                    <Button disabled={!lessonId || creatingGames} onClick={async()=>{
+                      if (!lessonId) return;
+                      setCreatingGames(true);
+                      setGamesProgress({ wordSearch:'pending', memory:'idle', vocabRun:'idle', hangman:'idle' });
+                      setLastMessage('');
+                      try{
+                        // Load lesson and vocab once
                       const lessonRes = await fetch(`/api/lessons/${lessonId}`);
                       const lessonData = await lessonRes.json();
                       const language = (lessonData?.course_language || '').toLowerCase();
-                      // Fetch vocab
-                      const vocabRes = await fetch(`/api/lessons/${lessonId}`);
-                      const vocabData = await vocabRes.json();
-                      const vocab = Array.isArray(vocabData?.vocabulary) ? vocabData.vocabulary : [];
-                      if (vocab.length === 0) { setLastMessage('No vocabulary found for this lesson.'); setAiBusy(false); return; }
-                      const shuffled = [...vocab].sort(()=>Math.random()-0.5).slice(0, Math.min(4, vocab.length));
+                        const vocab = Array.isArray(lessonData?.vocabulary) ? lessonData.vocabulary : [];
                       const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
-                      const stripArticleAndToSingleWord = (raw: string): string => {
-                        let s = (raw || '').toString().trim();
-                        if (!s) return '';
-                        if (language === 'german') {
-                          s = s.replace(/^(der|die|das)\s+/i, '');
-                        } else if (language === 'french') {
-                          s = s.replace(/^(le|la|les)\s+/i, '');
-                          s = s.replace(/^l['’]/i, '');
-                        } else if (language === 'spanish') {
-                          s = s.replace(/^(el|la|los|las)\s+/i, '');
-                        }
-                        // Ensure single token (no spaces) for word search
-                        s = s.split(/\s+/)[0];
-                        return s;
-                      };
-                      const words = Array.from(new Set(
-                        shuffled
-                          .map((v:any)=> stripArticleAndToSingleWord((v?.[langKey] || v?.word_english || '').toString()))
-                          .filter((w:string)=> !!w)
-                      ));
-                      const requestBody = {
-                        title: `${lessonData?.title || 'Lesson'} - Word Search`,
-                        description: `Auto-created word search for lesson ${lessonId}`,
-                        language,
-                        category: 'vocabulary',
-                        difficulty_level: 1,
-                        estimated_duration: 5,
-                        lesson_id: lessonId.toString(),
-                        game_type: 'word_search',
-                        game_config: { wordSearch: { words, gridSize: 15, directions: ['horizontal','vertical','diagonal'] } },
-                        provider_name: 'Custom',
-                      };
-                      const res = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
-                      if (res.ok){
-                        const created = await res.json();
-                        setLastMessage('Word Search game created.');
-                        await appendToFlow({ type: 'game', id: created?.id });
-                      } else { const err = await res.json().catch(()=>({})); setLastMessage(err?.error || 'Failed to create game'); }
-                    }catch(e){ console.error(e); setLastMessage('Failed to create word search'); }
-                    finally{ setAiBusy(false); }
-                  }}>
-                    Create Word Search
+                        if (vocab.length === 0){ throw new Error('No vocabulary found for this lesson.'); }
+
+                        // 1) Word Search
+                        try{
+                          const shuffled = [...vocab].sort(()=>Math.random()-0.5).slice(0, Math.min(4, vocab.length));
+                          const stripArticleAndToSingleWord = (raw: string): string => {
+                            let s = (raw || '').toString().trim();
+                            if (!s) return '';
+                            if (language === 'german') s = s.replace(/^(der|die|das)\s+/i, '');
+                            else if (language === 'french'){ s = s.replace(/^(le|la|les)\s+/i, ''); s = s.replace(/^l['’]/i, ''); }
+                            else if (language === 'spanish') s = s.replace(/^(el|la|los|las)\s+/i, '');
+                            s = s.split(/\s+/)[0];
+                            return s;
+                          };
+                          const wsWords = shuffled.map((v:any)=> stripArticleAndToSingleWord((v?.[langKey] || v?.word_english || '').toString())).filter(Boolean);
+                          const wsBody = { title: `${lessonData?.title || 'Lesson'} - Word Search`, description: `Auto-created word search for lesson ${lessonId}`, language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'word_search', game_config: { wordSearch: { words: wsWords, gridSize: 15, directions: ['horizontal','vertical','diagonal'] } }, provider_name: 'Custom' };
+                          const wsRes = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(wsBody)});
+                          if (!wsRes.ok) throw new Error('Word Search creation failed');
+                          const wsCreated = await wsRes.json();
+                          await appendToFlow({ type: 'game', id: wsCreated?.id });
+                          setGamesProgress(prev=>({ ...prev, wordSearch:'success', memory:'pending' }));
+                        }catch(e){ setGamesProgress(prev=>({ ...prev, wordSearch:'error', memory:'pending' })); }
+
+                        // 2) Memory
+                        try{
+                          const memShuffled = [...vocab].sort(()=>Math.random()-0.5).slice(0, Math.min(12, vocab.length));
+                          const cards = memShuffled.map((v:any, idx:number)=> ({ id: `${v.id || idx}`, word: (v?.[langKey] || v?.word_english || '').toString(), translation: (v?.word_english || '').toString() }));
+                          const memBody = { title: `${lessonData?.title || 'Lesson'} - Memory`, description: `Auto-created memory game for lesson ${lessonId}`, language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'memory', game_config: { memory: { cards, gridSize: 4, timeLimit: 120 } }, provider_name: 'Custom' };
+                          const memRes = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(memBody)});
+                          if (!memRes.ok) throw new Error('Memory creation failed');
+                          const memCreated = await memRes.json();
+                          await appendToFlow({ type: 'game', id: memCreated?.id });
+                          setGamesProgress(prev=>({ ...prev, memory:'success', vocabRun:'pending' }));
+                        }catch(e){ setGamesProgress(prev=>({ ...prev, memory:'error', vocabRun:'pending' })); }
+
+                        // 3) Vocab Run
+                        try{
+                          const pairs = vocab.map((v:any)=> ({ target: (v?.[langKey] || v?.word_english || '').toString(), english: (v?.word_english || '').toString() })).filter((p:any)=>!!p.target);
+                          const pick = <T,>(arr:T[], n:number): T[] => [...arr].sort(()=>Math.random()-0.5).slice(0, n);
+                          const base = pick(pairs, Math.min(12, pairs.length));
+                          const questions = base.map((item: { target: string; english: string; })=>{
+                            const correct = item.target;
+                            const distractors = pick(pairs.filter((p:any)=> p.target !== correct), 2).map((p:any)=> p.target);
+                            const opts = [correct, ...distractors].sort(()=>Math.random()-0.5);
+                            const prompt = item.english || correct;
+                            return { question: `Choose the correct word for: ${prompt}`, options: opts, correctIndex: opts.indexOf(correct) };
+                          });
+                          const vrBody = { title: `${lessonData?.title || 'Lesson'} - Vocab Run`, description: `Auto-created Vocab Run for lesson ${lessonId}`, language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'vocab_run', game_config: { vocabRun: { questions } }, provider_name: 'Custom' };
+                          const vrRes = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(vrBody)});
+                          if (!vrRes.ok) throw new Error('Vocab Run creation failed');
+                          const vrCreated = await vrRes.json();
+                          await appendToFlow({ type: 'game', id: vrCreated?.id });
+                          setGamesProgress(prev=>({ ...prev, vocabRun:'success', hangman:'pending' }));
+                        }catch(e){ setGamesProgress(prev=>({ ...prev, vocabRun:'error', hangman:'pending' })); }
+
+                        // 4) Hangman
+                        try{
+                          const choice = vocab[Math.floor(Math.random()*vocab.length)];
+                          const rawWord = (choice?.[langKey] || choice?.word_english || '').toString();
+                          const sanitizeForHangman = (w: string): string => {
+                            let s = (w || '').toString().trim();
+                            if (!s) return '';
+                            if (language === 'german') s = s.replace(/^(der|die|das)\s+/i, '');
+                            else if (language === 'french'){ s = s.replace(/^(le|la|les)\s+/i, ''); s = s.replace(/^l['’]/i, ''); }
+                            else if (language === 'spanish') s = s.replace(/^(el|la|los|las)\s+/i, '');
+                            s = s.normalize('NFKD').replace(/[^A-Za-zÀ-ÖØ-öø-ÿß]/g, '');
+                            return s;
+                          };
+                          const word = sanitizeForHangman(rawWord);
+                          if (!word) throw new Error('Selected word unsuitable for Hangman');
+                          const basis = ((formData.description || '') + '\n' + (formData.content || '')).slice(0, 1200);
+                          const gen = await fetch('/api/ai/generate',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contentType:'hint', aiProvider:'openai', language:'english', level:courseLevel || 'beginner', topic: `Target word: ${word}\n${basis}`, quantity:1 }) });
+                          const g = await gen.json();
+                          const rawHint = (g?.data?.hint || g?.preview || '').toString();
+                          const sanitized = rawHint.replace(new RegExp(word,'i'),'').trim();
+                          const hint = (sanitized || 'Guess the word!').slice(0,80);
+                          const hmBody = { title: `${lessonData?.title || 'Lesson'} - Hangman`, description: `Auto-created hangman for lesson ${lessonId}`, language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'hangman', game_config: { hangman: { words: [word], hints: [hint], maxAttempts: 6, categories: ['lesson'] } }, provider_name: 'Custom' };
+                          const hmRes = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(hmBody)});
+                          if (!hmRes.ok) throw new Error('Hangman creation failed');
+                          const hmCreated = await hmRes.json();
+                          await appendToFlow({ type: 'game', id: hmCreated?.id });
+                          setGamesProgress(prev=>({ ...prev, hangman:'success' }));
+                          setLastMessage('All games created.');
+                        }catch(e){ setGamesProgress(prev=>({ ...prev, hangman:'error' })); }
+                      }catch(e:any){ setLastMessage(e?.message || 'Game creation failed'); }
+                      finally{ setCreatingGames(false); }
+                    }}>
+                      {creatingGames ? 'Creating…' : 'Create Games'}
                   </Button>
+                  </div>
                 </div>
                 <div className="flex justify-between pt-2">
                   <Button variant="outline" onClick={()=>setCurrentStep(3)}>Back</Button>
                   <div className="text-sm text-gray-600">{lastMessage}</div>
-                  <Button onClick={()=>setCurrentStep(5)}>Next</Button>
+                  <Button onClick={()=>setCurrentStep(5)} disabled={creatingGames}>Next</Button>
                 </div>
               </div>
             )}
@@ -952,46 +1034,68 @@ function CreateLessonForm() {
                     </div>
                   </div>
                 )}
-                <div className="bg-gray-50 rounded-md p-3">
-                  <div className="text-sm text-gray-700 mb-2">Create a Memory game using up to 12 vocabulary words from this lesson.</div>
-                  <Button disabled={!lessonId || aiBusy} onClick={async()=>{
-                    if (!lessonId) return; setAiBusy(true); setLastMessage('');
-                    try{
-                      // Load lesson to get language
-                      const lessonRes = await fetch(`/api/lessons/${lessonId}`);
-                      const lessonData = await lessonRes.json();
-                      const language = (lessonData?.course_language || '').toLowerCase();
-                      // Fetch vocab
-                      const vocabRes = await fetch(`/api/lessons/${lessonId}`);
-                      const vocabData = await vocabRes.json();
-                      const vocab = Array.isArray(vocabData?.vocabulary) ? vocabData.vocabulary : [];
-                      if (vocab.length === 0) { setLastMessage('No vocabulary found for this lesson.'); setAiBusy(false); return; }
-                      const shuffled = [...vocab].sort(()=>Math.random()-0.5).slice(0, Math.min(12, vocab.length));
-                      const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
-                      const cards = shuffled.map((v:any, idx:number)=> ({ id: `${v.id || idx}`, word: (v?.[langKey] || v?.word_english || '').toString(), translation: (v?.word_english || '').toString() }));
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Number of Gaps</Label>
+                    <Select value={gfNumGaps.toString()} onValueChange={(v)=>setGfNumGaps(parseInt(v))}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {[6,8,10,12].map(n => (<SelectItem key={n} value={n.toString()}>{n}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="md:col-span-2 flex items-end">
+                    <Button disabled={!lessonId || aiBusy || !formData.content} onClick={async()=>{
+                      if (!lessonId) return; setAiBusy(true); setLastMessage(''); setGfPreview('');
+                      try{
+                        const text = (formData.content || '').toString();
+                        const words = Array.from(new Set(text
+                          .replace(/[^A-Za-zÀ-ÿäöüÄÖÜß\s]/g,'')
+                          .split(/\s+/)
+                          .map(w=>w.trim())
+                          .filter(w=>w.length>3 && !['the','and','der','die','das','und','les','des','que','para','with','that'].includes(w.toLowerCase()))));
+                        const selected = words.sort(()=>Math.random()-0.5).slice(0, Math.min(gfNumGaps, words.length));
+                        let updated = text;
+                        const correctOrder: string[] = [];
+                        selected.forEach((w)=>{
+                          const re = new RegExp(`\\b${w.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')}\\b`,'i');
+                          const m = updated.match(re);
+                          if (m){
+                            updated = updated.replace(re,'[BLANK]');
+                            correctOrder.push(m[0]);
+                          }
+                        });
+                        setGfPreview(updated);
                       const requestBody = {
-                        title: `${lessonData?.title || 'Lesson'} - Memory`,
-                        description: `Auto-created memory game for lesson ${lessonId}`,
-                        language,
-                        category: 'vocabulary',
-                        difficulty_level: 1,
-                        estimated_duration: 5,
-                        lesson_id: lessonId.toString(),
-                        game_type: 'memory',
-                        game_config: { memory: { cards, gridSize: 4, timeLimit: 120 } },
-                        provider_name: 'Custom',
-                      };
-                      const res = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
+                          title: `${formData.title || 'Lesson'} - Gap Fill`,
+                          description: 'Auto-created gap fill from lesson content',
+                          quiz_type: 'gap_fill',
+                          pass_percentage: 70,
+                          time_limit: 0,
+                          max_attempts: 0,
+                          points_value: 50,
+                          is_published: true,
+                          lesson_id: lessonId,
+                          gf_original_text: text,
+                          gf_text_content: updated,
+                          gf_num_gaps: selected.length,
+                          gf_word_bank: selected.join(', '),
+                          gf_correct_order: correctOrder.join('|'),
+                          gf_difficulty: 'medium',
+                          gf_allow_hints: true,
+                        };
+                        const res = await fetch('/api/quizzes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
                       if (res.ok){
                         const created = await res.json();
-                        setLastMessage('Memory game created.');
-                        await appendToFlow({ type: 'game', id: created?.id });
-                      } else { const err = await res.json().catch(()=>({})); setLastMessage(err?.error || 'Failed to create game'); }
-                    }catch(e){ console.error(e); setLastMessage('Failed to create memory game'); }
+                          setLastMessage('Gap Fill quiz created.');
+                          await appendToFlow({ type: 'quiz', id: created?.id });
+                        } else { const err = await res.json().catch(()=>({})); setLastMessage(err?.error || 'Failed to create gap fill'); }
+                      }catch(e){ console.error(e); setLastMessage('Failed to generate gap fill'); }
                     finally{ setAiBusy(false); }
-                  }}>
-                    Create Memory Game
+                    }} className="w-full">
+                      <Wand2 className="h-4 w-4 mr-2"/>Generate & Save Gap Fill
                   </Button>
+                  </div>
                 </div>
                 <div className="flex justify-between pt-2">
                   <Button variant="outline" onClick={()=>setCurrentStep(6)}>Back</Button>
@@ -1081,179 +1185,13 @@ function CreateLessonForm() {
                   </div>
                 )}
                 <div className="flex justify-between pt-2">
-                  <Button variant="outline" onClick={()=>setCurrentStep(7)}>Back</Button>
+                  <Button variant="outline" onClick={()=>setCurrentStep(6)}>Back</Button>
                   <div className="text-sm text-gray-600">{lastMessage}</div>
-                  <Button onClick={()=>setCurrentStep(9)}>Next</Button>
+                  <Button onClick={async()=>{ await finalizeFlowOrder(); router.push(`/dashboard/content/lessons/${lessonId}`); }}>Finish</Button>
                 </div>
               </div>
             )}
-
-            {currentStep === 9 && (
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-md p-3 space-y-3">
-                  <div className="text-sm text-gray-700">Create a Vocab Run game (12 questions with 3 options) from this lesson's vocabulary.</div>
-                  <Button disabled={!lessonId || aiBusy} onClick={async()=>{
-                    if (!lessonId) return; setAiBusy(true); setLastMessage('');
-                    try{
-                      const lessonRes = await fetch(`/api/lessons/${lessonId}`);
-                      const lessonData = await lessonRes.json();
-                      const language = (lessonData?.course_language || '').toLowerCase();
-                      const vocab = Array.isArray(lessonData?.vocabulary) ? lessonData.vocabulary : [];
-                      if (vocab.length < 4){ setLastMessage('Not enough vocabulary for Vocab Run (need at least 4).'); setAiBusy(false); return; }
-                      const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
-                      // Build pairs of { target: word in lesson language, english: translation }
-                      type Pair = { target: string; english: string };
-                      const pairs: Pair[] = vocab
-                        .map((v:any)=> ({ 
-                          target: (v?.[langKey] || v?.word_english || '').toString(),
-                          english: (v?.word_english || '').toString()
-                        }))
-                        .filter((p: Pair)=> !!p.target);
-                      const pick = <T,>(arr:T[], n:number): T[] => [...arr].sort(()=>Math.random()-0.5).slice(0, n);
-                      const base: Pair[] = pick<Pair>(pairs, Math.min(12, pairs.length));
-                      const questions = base.map((item: Pair)=>{
-                        const correct = item.target;
-                        const distractors = pick(
-                          pairs.filter((p:any)=> p.target !== correct),
-                          2
-                        ).map((p:any)=> p.target);
-                        const opts = [correct, ...distractors].sort(()=>Math.random()-0.5);
-                        const prompt = item.english || correct;
-                        return { question: `Choose the correct word for: ${prompt}`, options: opts, correctIndex: opts.indexOf(correct) };
-                      });
-                      const requestBody = {
-                        title: `${lessonData?.title || 'Lesson'} - Vocab Run`,
-                        description: `Auto-created Vocab Run for lesson ${lessonId}`,
-                        language,
-                        category: 'vocabulary',
-                        difficulty_level: 1,
-                        estimated_duration: 5,
-                        lesson_id: lessonId.toString(),
-                        game_type: 'vocab_run',
-                        game_config: { vocabRun: { questions } },
-                        provider_name: 'Custom',
-                      };
-                      const res = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
-                      if (res.ok){
-                        const created = await res.json();
-                        setLastMessage('Vocab Run game created.');
-                        await appendToFlow({ type: 'game', id: created?.id });
-                      } else { const err = await res.json().catch(()=>({})); setLastMessage(err?.error || 'Failed to create Vocab Run'); }
-                    }catch(e){ console.error(e); setLastMessage('Failed to create Vocab Run'); }
-                    finally{ setAiBusy(false); }
-                  }}>
-                    Create Vocab Run
-                  </Button>
-                </div>
-                <div className="flex justify-between pt-2">
-                  <Button variant="outline" onClick={()=>setCurrentStep(8)}>Back</Button>
-                  <div className="text-sm text-gray-600">{lastMessage}</div>
-                  <Button onClick={()=>setCurrentStep(10)}>Next</Button>
-                </div>
-              </div>
-            )}
-
-            {currentStep === 10 && (
-              <div className="space-y-4">
-                {aiBusy && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
-                    <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
-                    <div className="text-sm text-yellow-800">
-                      Creating... this might take some time! Grab a coffee and please wait for results and do not go to the next step!
-                    </div>
-                  </div>
-                )}
-                <div className="bg-gray-50 rounded-md p-3 space-y-3">
-                  <div className="text-sm text-gray-700">Create a Hangman game from your lesson vocabulary. We'll pick one saved word and ask AI for a hint.</div>
-                  <Button disabled={!lessonId || aiBusy} onClick={async()=>{
-                    if (!lessonId) return; setAiBusy(true); setLastMessage('');
-                    try{
-                      const lessonRes = await fetch(`/api/lessons/${lessonId}`);
-                      const lessonData = await lessonRes.json();
-                      const language = (lessonData?.course_language || '').toLowerCase();
-                      const vocab = Array.isArray(lessonData?.vocabulary) ? lessonData.vocabulary : [];
-                      if (vocab.length === 0){ setLastMessage('No vocabulary found for this lesson.'); setAiBusy(false); return; }
-                      const choice = vocab[Math.floor(Math.random()*vocab.length)];
-                      const langKey = language === 'german' ? 'word_german' : language === 'french' ? 'word_french' : language === 'spanish' ? 'word_spanish' : 'word_english';
-                      const rawWord = (choice?.[langKey] || choice?.word_english || '').toString();
-                      const sanitizeForHangman = (w: string): string => {
-                        let s = (w || '').toString().trim();
-                        if (!s) return '';
-                        if (language === 'german') {
-                          s = s.replace(/^(der|die|das)\s+/i, '');
-                        } else if (language === 'french') {
-                          s = s.replace(/^(le|la|les)\s+/i, '');
-                          s = s.replace(/^l['’]/i, '');
-                        } else if (language === 'spanish') {
-                          s = s.replace(/^(el|la|los|las)\s+/i, '');
-                        }
-                        // Keep only letters (including latin accented letters and ß), drop spaces/punctuation
-                        s = s.normalize('NFKD').replace(/[^A-Za-zÀ-ÖØ-öø-ÿß]/g, '');
-                        return s;
-                      };
-                      const word = sanitizeForHangman(rawWord);
-                      if (!word){ setLastMessage('Selected word is not suitable for Hangman (empty after sanitizing).'); setAiBusy(false); return; }
-                      setHangmanWord(word);
-                      // Ask AI for a short hint using lesson description/content
-                      const basis = ((formData.description || '') + '\n' + (formData.content || '')).slice(0, 1200);
-                      const gen = await fetch('/api/ai/generate',{
-                        method:'POST',
-                        headers:{'Content-Type':'application/json'},
-                        body:JSON.stringify({
-                          contentType:'hint',
-                          aiProvider:'openai',
-                          language:'english',
-                          level:courseLevel || 'beginner',
-                          topic: `Target word: ${word}\n${basis}`,
-                          quantity:1
-                        })
-                      });
-                      const g = await gen.json();
-                      const rawHint = (g?.data?.hint || g?.preview || '').toString();
-                      const sanitized = rawHint.replace(new RegExp(word, 'i'), '').trim();
-                      const hint = (sanitized || 'Guess the word!').slice(0, 80);
-                      setHangmanHint(hint);
-                      const requestBody = {
-                        title: `${lessonData?.title || 'Lesson'} - Hangman`,
-                        description: `Auto-created hangman for lesson ${lessonId}`,
-                        language,
-                        category: 'vocabulary',
-                        difficulty_level: 1,
-                        estimated_duration: 5,
-                        lesson_id: lessonId.toString(),
-                        game_type: 'hangman',
-                        game_config: { hangman: { words: [word], hints: [hint], maxAttempts: 6, categories: ['lesson'] } },
-                        provider_name: 'Custom',
-                      };
-                      const res = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
-                      if (res.ok){
-                        const created = await res.json();
-                        // Append to lesson flow_order to ensure it appears in the workflow
-                        const currentFlow = Array.isArray(lessonData?.flow_order) ? lessonData.flow_order : [];
-                        const alreadyInFlow = currentFlow.some((it:any)=> it?.type === 'game' && it?.id === created?.id);
-                        const newFlow = alreadyInFlow ? currentFlow : [...currentFlow, { type: 'game', id: created.id }];
-                        await fetch(`/api/lessons/${lessonId}`,{ method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ flow_order: newFlow })});
-                        setLastMessage('Hangman game created and added to lesson flow.');
-                      } else {
-                        const err = await res.json().catch(()=>({}));
-                        setLastMessage(err?.error || 'Failed to create hangman');
-                      }
-                    }catch(e){ console.error(e); setLastMessage('Failed to create hangman'); }
-                    finally{ setAiBusy(false); }
-                  }}>
-                    Create Hangman Game
-                  </Button>
-                  {(hangmanWord || hangmanHint) && (
-                    <div className="text-sm text-gray-700">Word: <span className="font-medium">{hangmanWord}</span> • Hint: <span className="italic">{hangmanHint}</span></div>
-                  )}
-                </div>
-                <div className="flex justify-between pt-2">
-                  <Button variant="outline" onClick={()=>setCurrentStep(9)}>Back</Button>
-                  <div className="text-sm text-gray-600">{lastMessage}</div>
-                  <Button onClick={()=>router.push(`/dashboard/content/lessons/${lessonId}`)}>Finish</Button>
-                </div>
-              </div>
-            )}
+            {/* Removed old steps 9 & 10 (Vocab Run, Hangman) — consolidated in Games step */}
           </CardContent>
         </Card>
       </div>

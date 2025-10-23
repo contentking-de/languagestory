@@ -465,18 +465,56 @@ export async function POST(request: Request) {
       );
     }
 
-    // Parse the JSON response
+    // Parse the JSON response (robust extraction + sanitization)
     try {
-      // Clean the response to extract JSON
-      const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
-      const jsonString = jsonMatch ? jsonMatch[0] : rawResponse;
+      let candidate = rawResponse;
+      // Prefer fenced code block content if present
+      const fence = rawResponse.match(/```[\s\S]*?```/);
+      if (fence && fence[0]) {
+        const inside = fence[0].replace(/^```[a-zA-Z]*\n?/, '').replace(/```\s*$/, '');
+        candidate = inside;
+      }
+      // Try to grab the outermost JSON object if present
+      const jsonMatch = candidate.match(/\{[\s\S]*\}/);
+      let jsonString = jsonMatch ? jsonMatch[0] : candidate;
+      // Remove problematic unescaped control characters (keep \t, \n, \r)
+      jsonString = jsonString.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
       generatedContent = JSON.parse(jsonString);
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
+      // Fallback: for cultural, return plain text instead of failing hard
+      if (contentType === 'cultural') {
+        // Strip code fences and control characters
+        let text = rawResponse
+          .replace(/```[a-zA-Z]*\n?/g, '')
+          .replace(/```/g, '')
+          .replace(/[{}]/g, '')
+          .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+          .trim();
+        if (!text) text = 'Cultural information could not be parsed from the AI response.';
+        return NextResponse.json({
+          type: 'cultural',
+          data: { cultural_information: text },
+          preview: text,
+          aiProvider
+        });
+      }
       return NextResponse.json(
         { error: 'Failed to parse AI response. Please try again.' },
         { status: 500 }
       );
+    }
+
+    // Post-process cultural text to remove stray braces/backticks/markdown
+    if (contentType === 'cultural' && typeof generatedContent?.cultural_information === 'string') {
+      let cleaned = generatedContent.cultural_information
+        .replace(/```[a-zA-Z]*\n?/g, '')
+        .replace(/```/g, '')
+        .replace(/[{}]/g, '')
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+        .replace(/\s{3,}/g, '\n\n')
+        .trim();
+      generatedContent.cultural_information = cleaned;
     }
 
     // Normalize vocabulary to ensure articles are included for DE/FR/ES
