@@ -1103,7 +1103,7 @@ function CreateLessonForm() {
                 <div className="flex justify-between pt-2">
                   <Button variant="outline" onClick={()=>setCurrentStep(6)}>Back</Button>
                   <div className="text-sm text-gray-600">{lastMessage}</div>
-                  <Button onClick={()=>setCurrentStep(8)}>Next</Button>
+                  <Button onClick={async()=>{ await finalizeFlowOrder(); router.push(`/dashboard/content/lessons/${lessonId}`); }}>Finish</Button>
                 </div>
               </div>
             )}
