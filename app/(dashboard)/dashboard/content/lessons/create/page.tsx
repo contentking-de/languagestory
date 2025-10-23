@@ -838,12 +838,15 @@ function CreateLessonForm() {
 
                         // 3) Vocab Run
                         try{
-                          const pairs = vocab.map((v:any)=> ({ target: (v?.[langKey] || v?.word_english || '').toString(), english: (v?.word_english || '').toString() })).filter((p:any)=>!!p.target);
+                          type Pair = { target: string; english: string };
+                          const pairs: Pair[] = vocab
+                            .map((v:any)=> ({ target: (v?.[langKey] || v?.word_english || '').toString(), english: (v?.word_english || '').toString() }))
+                            .filter((p: Pair)=> !!p.target);
                           const pick = <T,>(arr:T[], n:number): T[] => [...arr].sort(()=>Math.random()-0.5).slice(0, n);
-                          const base = pick(pairs, Math.min(12, pairs.length));
-                          const questions = base.map((item: { target: string; english: string; })=>{
+                          const base: Pair[] = pick<Pair>(pairs, Math.min(12, pairs.length));
+                          const questions = base.map((item: Pair)=>{
                             const correct = item.target;
-                            const distractors = pick(pairs.filter((p:any)=> p.target !== correct), 2).map((p:any)=> p.target);
+                            const distractors = pick<Pair>(pairs.filter((p)=> p.target !== correct), 2).map((p)=> p.target);
                             const opts = [correct, ...distractors].sort(()=>Math.random()-0.5);
                             const prompt = item.english || correct;
                             return { question: `Choose the correct word for: ${prompt}`, options: opts, correctIndex: opts.indexOf(correct) };
