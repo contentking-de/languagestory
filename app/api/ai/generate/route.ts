@@ -252,12 +252,20 @@ export async function POST(request: Request) {
 
       // Compose image prompt using blueprint reference
       const userPrompt = topic as string;
-      // Determine blueprint (team vs avatar)
-      const host = request.headers.get('host');
-      const isAvatar = typeof avatarFile === 'string' && avatarFile.trim().length > 0;
+      // Determine blueprint (team vs avatar) with hardcoded production URLs for avatars
+      const prodBase = 'https://www.lingoletics.com/';
+      const allowedAvatars = new Set([
+        'johnny.png',
+        'nico.png',
+        'carlos.png',
+        'carla.png',
+        'annie.png',
+        'matthieu.png',
+      ]);
+      const isAvatar = typeof avatarFile === 'string' && allowedAvatars.has(avatarFile.trim());
       const avatarFilename = isAvatar ? avatarFile.trim() : '';
       const referenceUrl = isAvatar
-        ? (host ? `https://${host}/${avatarFilename}` : `/${avatarFilename}`)
+        ? `${prodBase}${avatarFilename}`
         : 'https://www.lingoletics.com/lingoletics-team.png';
 
       try {
@@ -277,16 +285,16 @@ export async function POST(request: Request) {
               model,
               image: blob,
               prompt: isAvatar
-                ? `this is our avatar blueprint ${referenceUrl} . please use this character to build the new image and show this character in the following setup: ${userPrompt}. Keep character identity, outfit, and general style consistent with the blueprint. Please use the exact face of the character in the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`
-                : `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`,
+                ? `this is our avatar blueprint ${referenceUrl}. Important: use this character to build the new image and show this character in the following context: ${userPrompt}. Keep character identity, outfit, haircut, haircolor, skin tone, eyes and general style consistent with the blueprint. Please use the exact face and clothing and colors of the character in the blueprint. Do not add things such as glasses to the characters face. Always keep the body proportions especially from head to body.`
+                : `this is our team blueprint ${referenceUrl}. please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`,
               size: '1024x1024'
             });
             const b64 = edited.data?.[0]?.b64_json;
             if (b64) {
               const preview = `data:image/png;base64,${b64}`;
               const usedPrompt = isAvatar
-                ? `this is our avatar blueprint ${referenceUrl} . please use this character to build the new image and show this character in the following setup: ${userPrompt}. Keep character identity, outfit, and general style consistent with the blueprint. Please use the exact face of the character in the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`
-                : `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`;
+                ? `this is our avatar blueprint ${referenceUrl}. Important: use this character to build the new image and show this character in the following context: ${userPrompt}. Keep character identity, outfit, haircut, haircolor, skin tone, eyes and general style consistent with the blueprint. Please use the exact face and clothing and colors of the character in the blueprint. Do not add things such as glasses to the characters face. Always keep the body proportions especially from head to body.`
+                : `this is our team blueprint ${referenceUrl}. please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`;
               return NextResponse.json({ type: 'image', data: { base64: b64, referenceUrl }, preview, aiProvider, usedPrompt });
             }
           } catch (editErr: any) {
@@ -299,8 +307,8 @@ export async function POST(request: Request) {
         const img = await openai.images.generate({
           model,
           prompt: isAvatar
-            ? `this is our avatar blueprint ${referenceUrl} . please use this character to build the new image and show this character in the following setup: ${userPrompt}. Keep character identity, outfit, and general style consistent with the blueprint. Please use the exact face of the character in the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`
-            : `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`,
+            ? `this is our avatar blueprint ${referenceUrl}. Important: use this character to build the new image and show this character in the following context: ${userPrompt}. Keep character identity, outfit, haircut, haircolor, skin tone, eyes and general style consistent with the blueprint. Please use the exact face and clothing and colors of the character in the blueprint. Do not add things such as glasses to the characters face. Always keep the body proportions especially from head to body.`
+            : `this is our team blueprint ${referenceUrl}. please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`,
           size: '1024x1024'
         });
 
@@ -310,8 +318,8 @@ export async function POST(request: Request) {
         }
         const preview = `data:image/png;base64,${b64}`;
         const usedPrompt = isAvatar
-          ? `this is our avatar blueprint ${referenceUrl} . please use this character to build the new image and show this character in the following setup: ${userPrompt}. Keep character identity, outfit, and general style consistent with the blueprint. Please use the exact face of the character in the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`
-          : `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`;
+          ? `this is our avatar blueprint ${referenceUrl}. Important: use this character to build the new image and show this character in the following context: ${userPrompt}. Keep character identity, outfit, haircut, haircolor, skin tone, eyes and general style consistent with the blueprint. Please use the exact face and clothing and colors of the character in the blueprint. Do not add things such as glasses to the characters face. Always keep the body proportions especially from head to body.`
+          : `this is our team blueprint ${referenceUrl}. please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`;
 
         return NextResponse.json({
           type: 'image',
