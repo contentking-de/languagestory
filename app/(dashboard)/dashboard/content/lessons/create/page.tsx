@@ -1108,7 +1108,8 @@ function CreateLessonForm() {
               </div>
             )}
 
-            {currentStep === 8 && (
+            {/* Step 8 removed; no longer used */}
+            {false && (
               <div className="space-y-4">
                 {aiBusy && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
