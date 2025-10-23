@@ -226,7 +226,7 @@ Format as JSON:
 
 export async function POST(request: Request) {
   try {
-    const { contentType, aiProvider, language, level, topic, quantity } = await request.json();
+    const { contentType, aiProvider, language, level, topic, quantity, avatarFile } = await request.json();
 
     if (!contentType || !aiProvider || (contentType !== 'hint' && !topic)) {
       return NextResponse.json(
@@ -252,13 +252,20 @@ export async function POST(request: Request) {
 
       // Compose image prompt using blueprint reference
       const userPrompt = topic as string;
-      // Reference image hosted publicly (exact URL as requested)
-      const referenceUrl = 'https://www.lingoletics.com/lingoletics-team.png';
+      // Determine blueprint (team vs avatar)
+      const host = request.headers.get('host');
+      const isAvatar = typeof avatarFile === 'string' && avatarFile.trim().length > 0;
+      const avatarFilename = isAvatar ? avatarFile.trim() : '';
+      const referenceUrl = isAvatar
+        ? (host ? `https://${host}/${avatarFilename}` : `/${avatarFilename}`)
+        : 'https://www.lingoletics.com/lingoletics-team.png';
 
       try {
         const model = process.env.OPENAI_GPT5_IMAGE_MODEL || 'gpt-image-1';
         // Try image edit (image-to-image) first using blueprint file
-        const blueprintPath = path.join(process.cwd(), 'public', 'lingoletics-team.png');
+        const blueprintPath = isAvatar
+          ? path.join(process.cwd(), 'public', avatarFilename)
+          : path.join(process.cwd(), 'public', 'lingoletics-team.png');
         const blueprintExists = fs.existsSync(blueprintPath);
         if (blueprintExists && (openai as any).images?.edits) {
           try {
@@ -269,13 +276,17 @@ export async function POST(request: Request) {
             const edited = await (openai as any).images.edits({
               model,
               image: blob,
-              prompt: `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint.`,
+              prompt: isAvatar
+                ? `this is our avatar blueprint ${referenceUrl} . please use this character to build the new image and show this character in the following setup: ${userPrompt}. Keep character identity, outfit, and general style consistent with the blueprint. Please use the exact face of the character in the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`
+                : `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`,
               size: '1024x1024'
             });
             const b64 = edited.data?.[0]?.b64_json;
             if (b64) {
               const preview = `data:image/png;base64,${b64}`;
-              const usedPrompt = `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint.`;
+              const usedPrompt = isAvatar
+                ? `this is our avatar blueprint ${referenceUrl} . please use this character to build the new image and show this character in the following setup: ${userPrompt}. Keep character identity, outfit, and general style consistent with the blueprint. Please use the exact face of the character in the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`
+                : `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`;
               return NextResponse.json({ type: 'image', data: { base64: b64, referenceUrl }, preview, aiProvider, usedPrompt });
             }
           } catch (editErr: any) {
@@ -287,7 +298,9 @@ export async function POST(request: Request) {
         console.log('[AI][image.generate] model:', model, 'size:', '1024x1024');
         const img = await openai.images.generate({
           model,
-          prompt: `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint.`,
+          prompt: isAvatar
+            ? `this is our avatar blueprint ${referenceUrl} . please use this character to build the new image and show this character in the following setup: ${userPrompt}. Keep character identity, outfit, and general style consistent with the blueprint. Please use the exact face of the character in the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`
+            : `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`,
           size: '1024x1024'
         });
 
@@ -296,7 +309,9 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'No image returned from model' }, { status: 500 });
         }
         const preview = `data:image/png;base64,${b64}`;
-        const usedPrompt = `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint.`;
+        const usedPrompt = isAvatar
+          ? `this is our avatar blueprint ${referenceUrl} . please use this character to build the new image and show this character in the following setup: ${userPrompt}. Keep character identity, outfit, and general style consistent with the blueprint. Please use the exact face of the character in the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`
+          : `this is our team blueprint ${referenceUrl} . please use these characters to build the new image and show this team in the following setup: ${userPrompt}. Keep character identities, outfits, and general style consistent with the blueprint. Please use the exact faces of the characters in the the blueprint, because we are building stories and want to always relate to the same characters and faces to create continuity.`;
 
         return NextResponse.json({
           type: 'image',

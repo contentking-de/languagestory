@@ -64,6 +64,7 @@ function CreateLessonForm() {
     setManualVocab(prev => prev.map((v,i)=> i===idx ? {...v, [key]: val} : v));
   };
   const [imagePrompt, setImagePrompt] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState<string>('');
   const [lastMessage, setLastMessage] = useState('');
   const [vocabPreview, setVocabPreview] = useState<any[]>([]);
   const [culturalPreview, setCulturalPreview] = useState<string>('');
@@ -681,10 +682,40 @@ function CreateLessonForm() {
                   <Label>Image Prompt</Label>
                   <Input value={imagePrompt} onChange={(e)=>setImagePrompt(e.target.value)} className="mt-1" placeholder="Describe the image to generate" />
                 </div>
+                {/* Avatar selection (optional) */}
+                <div className="space-y-2">
+                  <Label>Choose an avatar (optional)</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    {['johnny.png','nico.png','carlos.png','carla.png','annie.png','matthieu.png'].map((file)=> (
+                      <button
+                        key={file}
+                        type="button"
+                        onClick={()=> setSelectedAvatar(prev => prev === file ? '' : file)}
+                        className={`border rounded-md p-2 flex flex-col items-center gap-2 hover:bg-gray-50 focus:outline-none ${selectedAvatar === file ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'}`}
+                        title={file.replace('.png','')}
+                      >
+                        <img src={`/${file}`} alt={file} className="h-16 w-16 object-cover rounded" />
+                        <span className="text-xs text-gray-700 capitalize">{file.replace('.png','')}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {selectedAvatar && (
+                    <div className="text-xs text-gray-600">Selected avatar: <span className="font-medium">{selectedAvatar.replace('.png','')}</span></div>
+                  )}
+                </div>
                 <Button disabled={!lessonId || aiBusy || !imagePrompt} onClick={async()=>{
                   if (!lessonId) return; setAiBusy(true); setLastMessage('');
                   try{
-                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'image',aiProvider:'gpt5',topic:imagePrompt})});
+                    const gen = await fetch('/api/ai/generate',{
+                      method:'POST',
+                      headers:{'Content-Type':'application/json'},
+                      body:JSON.stringify({
+                        contentType:'image',
+                        aiProvider:'gpt5',
+                        topic:imagePrompt,
+                        avatarFile: selectedAvatar // optional
+                      })
+                    });
                     const g = await gen.json();
                     if (g?.preview) {
                       setImagePreview(g.preview);
