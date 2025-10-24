@@ -85,8 +85,9 @@ function CreateLessonForm() {
     wordSearch: 'idle' | 'pending' | 'success' | 'error';
     memory: 'idle' | 'pending' | 'success' | 'error';
     vocabRun: 'idle' | 'pending' | 'success' | 'error';
+    listenType: 'idle' | 'pending' | 'success' | 'error';
     hangman: 'idle' | 'pending' | 'success' | 'error';
-  }>({ wordSearch: 'idle', memory: 'idle', vocabRun: 'idle', hangman: 'idle' });
+  }>({ wordSearch: 'idle', memory: 'idle', vocabRun: 'idle', listenType: 'idle', hangman: 'idle' });
 
   useEffect(() => {
     fetchCourses();
@@ -786,13 +787,14 @@ function CreateLessonForm() {
                     <div className="flex items-center gap-2 text-sm"><div className={`w-2 h-2 rounded-full ${gamesProgress.wordSearch==='success'?'bg-green-500':gamesProgress.wordSearch==='error'?'bg-red-500':gamesProgress.wordSearch==='pending'?'bg-yellow-400':'bg-gray-300'}`}></div><span>Word Search</span></div>
                     <div className="flex items-center gap-2 text-sm"><div className={`w-2 h-2 rounded-full ${gamesProgress.memory==='success'?'bg-green-500':gamesProgress.memory==='error'?'bg-red-500':gamesProgress.memory==='pending'?'bg-yellow-400':'bg-gray-300'}`}></div><span>Memory</span></div>
                     <div className="flex items-center gap-2 text-sm"><div className={`w-2 h-2 rounded-full ${gamesProgress.vocabRun==='success'?'bg-green-500':gamesProgress.vocabRun==='error'?'bg-red-500':gamesProgress.vocabRun==='pending'?'bg-yellow-400':'bg-gray-300'}`}></div><span>Vocab Run</span></div>
+                    <div className="flex items-center gap-2 text-sm"><div className={`w-2 h-2 rounded-full ${gamesProgress.listenType==='success'?'bg-green-500':gamesProgress.listenType==='error'?'bg-red-500':gamesProgress.listenType==='pending'?'bg-yellow-400':'bg-gray-300'}`}></div><span>Listen & Type</span></div>
                     <div className="flex items-center gap-2 text-sm"><div className={`w-2 h-2 rounded-full ${gamesProgress.hangman==='success'?'bg-green-500':gamesProgress.hangman==='error'?'bg-red-500':gamesProgress.hangman==='pending'?'bg-yellow-400':'bg-gray-300'}`}></div><span>Hangman</span></div>
                   </div>
                   <div className="mt-3">
                     <Button disabled={!lessonId || creatingGames} onClick={async()=>{
                       if (!lessonId) return;
                       setCreatingGames(true);
-                      setGamesProgress({ wordSearch:'pending', memory:'idle', vocabRun:'idle', hangman:'idle' });
+                      setGamesProgress({ wordSearch:'pending', memory:'idle', vocabRun:'idle', listenType:'idle', hangman:'idle' });
                       setLastMessage('');
                       try{
                         // Load lesson and vocab once
@@ -856,10 +858,32 @@ function CreateLessonForm() {
                           if (!vrRes.ok) throw new Error('Vocab Run creation failed');
                           const vrCreated = await vrRes.json();
                           await appendToFlow({ type: 'game', id: vrCreated?.id });
-                          setGamesProgress(prev=>({ ...prev, vocabRun:'success', hangman:'pending' }));
-                        }catch(e){ setGamesProgress(prev=>({ ...prev, vocabRun:'error', hangman:'pending' })); }
+                          setGamesProgress(prev=>({ ...prev, vocabRun:'success', listenType:'pending' }));
+                        }catch(e){ setGamesProgress(prev=>({ ...prev, vocabRun:'error', listenType:'pending' })); }
 
-                        // 4) Hangman
+                        // 4) Listen & Type (5 random vocab)
+                        try{
+                          const items = [...vocab]
+                            .sort(()=>Math.random()-0.5)
+                            .slice(0, Math.min(5, vocab.length))
+                            .map((v:any, idx:number)=> ({
+                              id: `${v.id || idx}`,
+                              word: (v?.[langKey] || v?.word_english || '').toString(),
+                              language,
+                              vocabularyId: v?.id || null,
+                            }))
+                            .filter((it:any)=> !!it.word);
+                          if (items.length > 0){
+                            const ltBody = { title: `${lessonData?.title || 'Lesson'} - Listen & Type`, description: `Auto-created Listen & Type for lesson ${lessonId}`, language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'listen_type', game_config: { listenType: { items } }, provider_name: 'Custom' };
+                            const ltRes = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ltBody)});
+                            if (!ltRes.ok) throw new Error('Listen & Type creation failed');
+                            const ltCreated = await ltRes.json();
+                            await appendToFlow({ type: 'game', id: ltCreated?.id });
+                          }
+                          setGamesProgress(prev=>({ ...prev, listenType:'success', hangman:'pending' }));
+                        }catch(e){ setGamesProgress(prev=>({ ...prev, listenType:'error', hangman:'pending' })); }
+
+                        // 5) Hangman
                         try{
                           const choice = vocab[Math.floor(Math.random()*vocab.length)];
                           const rawWord = (choice?.[langKey] || choice?.word_english || '').toString();

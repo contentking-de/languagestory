@@ -20,7 +20,8 @@ import {
   WordSearchGame, 
   WordMixupGame, 
   WordAssociationGame, 
-  VocabRunGame 
+  VocabRunGame,
+  ListenTypeGame 
 } from '@/app/(dashboard)/dashboard/games/components/GameRenderers';
 
 interface Game {
@@ -467,6 +468,16 @@ export const InlineGame = memo(({ gameId, onComplete, onNext }: InlineGameProps)
             onComplete={() => handleGameComplete(100)}
           />
         );
+      case 'listen_type': {
+        const cfg = (gameConfig?.listenType || gameConfig);
+        return (
+          <ListenTypeGame
+            key={`listen-${game.id}`}
+            config={cfg}
+            onComplete={() => handleGameComplete(100)}
+          />
+        );
+      }
       case 'wordwall':
         // Wordwall games are handled above in the renderGame function
         // This case should never be reached, but included for completeness

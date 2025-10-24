@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { 
   RotateCcw, 
   Check, 
@@ -1957,5 +1958,263 @@ export function VocabRunGame({ config, onComplete }: VocabRunGameProps) {
       )}
     </div>
     </>
+  );
+}
+
+// Listen & Type Game
+interface ListenTypeItem { id: string; word: string; language: string; vocabularyId?: number }
+interface ListenTypeConfig { items: ListenTypeItem[] }
+
+export function ListenTypeGame({ config, onComplete }: { config: ListenTypeConfig; onComplete?: (score: number) => void }) {
+  const [index, setIndex] = useState(0);
+  const [value, setValue] = useState('');
+  const [attempts, setAttempts] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [audioUrl, setAudioUrl] = useState<string>('');
+  const [audioBusy, setAudioBusy] = useState<boolean>(false);
+  const [audioCache, setAudioCache] = useState<Record<string, string>>({});
+  const [justCorrect, setJustCorrect] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  if (!config || !Array.isArray(config.items) || config.items.length === 0) {
+    return (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500">Invalid game configuration</p>
+        </div>
+      </div>
+    );
+  }
+
+  const current = config.items[index];
+  const total = config.items.length;
+
+  const normalize = (s: string) => s
+    .normalize('NFKD')
+    .replace(/\p{Diacritic}/gu, '')
+    .trim()
+    .toLowerCase();
+
+  // Lightweight chime
+  const playChime = () => {
+    if (typeof window === 'undefined') return;
+    // @ts-ignore
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const now = ctx.currentTime;
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.0001, now);
+    env.gain.linearRampToValueAtTime(0.9, now + 0.02);
+    env.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.setValueAtTime(400, now);
+    const partialGain = ctx.createGain();
+    partialGain.gain.setValueAtTime(0.9, now);
+    ;[1047, 1319, 1568].forEach((f, i) => {
+      const o = ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f, now);
+      o.frequency.linearRampToValueAtTime(f * 1.02, now + 0.2);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime([0.9, 0.6, 0.5][i], now);
+      o.connect(g);
+      g.connect(partialGain);
+      o.start(now);
+      o.stop(now + 0.8);
+    });
+    partialGain.connect(hp);
+    hp.connect(env);
+    env.connect(ctx.destination);
+  };
+
+  const playFail = () => {
+    if (typeof window === 'undefined') return;
+    // @ts-ignore
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const now = ctx.currentTime;
+    // Short descending sine + slight noise burst
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.exponentialRampToValueAtTime(180, now + 0.5); // slower glide
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.001, now);
+    env.gain.linearRampToValueAtTime(0.5, now + 0.04);
+    env.gain.exponentialRampToValueAtTime(0.0001, now + 0.7); // longer tail
+    // light noise
+    const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.35), ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const nGain = ctx.createGain();
+    nGain.gain.setValueAtTime(0.08, now);
+    osc.connect(env);
+    noise.connect(nGain);
+    nGain.connect(env);
+    env.connect(ctx.destination);
+    osc.start(now);
+    noise.start(now);
+    osc.stop(now + 0.7);
+    noise.stop(now + 0.35);
+  };
+
+  const isGerman = (current.language || '').toLowerCase() === 'german' || (current.language || '').toLowerCase() === 'de';
+  const equals = (a: string, b: string) => {
+    if (isGerman) {
+      // Strict (case-sensitive) compare for German to enforce noun capitalization
+      return a.trim() === b.trim();
+    }
+    return normalize(a) === normalize(b);
+  };
+
+  const handleCheck = () => {
+    if (equals(value, current.word)) {
+      const nextCorrect = correctCount + 1;
+      setCorrectCount(nextCorrect);
+      setAttempts(0);
+      setJustCorrect(true);
+      playChime();
+      if (index + 1 >= total) {
+        // Finish after brief success feedback
+        setTimeout(() => {
+          setCompleted(true);
+          onComplete?.(Math.round((nextCorrect / total) * 100));
+        }, 500);
+      } else {
+        setTimeout(() => {
+          setValue('');
+          setJustCorrect(false);
+          setIndex((i) => i + 1);
+        }, 1500);
+      }
+    } else {
+      setAttempts((a) => a + 1);
+      playFail();
+    }
+  };
+
+  // Prefetch all audios in parallel (uses server-side DB/cache when vocabularyId vorhanden)
+  useEffect(() => {
+    let cancelled = false;
+    const prefetchAll = async () => {
+      try {
+        const entries = await Promise.all(
+          config.items.map(async (it) => {
+            try {
+              const res = await fetch('/api/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: it.word, language: it.language, type: 'vocabulary', vocabularyId: it.vocabularyId })
+              });
+              const data = await res.json();
+              return [it.id, data?.audio_url || ''] as const;
+            } catch {
+              return [it.id, ''] as const;
+            }
+          })
+        );
+        if (!cancelled) {
+          const map: Record<string, string> = {};
+          entries.forEach(([id, url]) => { if (id && url) map[id] = url; });
+          setAudioCache(map);
+        }
+      } catch (e) {
+        console.error('ListenType prefetch error', e);
+      }
+    };
+    prefetchAll();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch/generate TTS audio for current item via POST API if not yet prefetched
+  useEffect(() => {
+    let cancelled = false;
+    const loadAudio = async () => {
+      try{
+        // If cached from prefetch, use immediately
+        if (audioCache[current.id]) {
+          setAudioUrl(audioCache[current.id]);
+          return;
+        }
+        setAudioBusy(true);
+        setAudioUrl('');
+        const res = await fetch('/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: current.word, language: current.language, type: 'vocabulary', vocabularyId: current.vocabularyId })
+        });
+        const data = await res.json();
+        if (!cancelled && data?.audio_url) {
+          setAudioUrl(data.audio_url);
+          setAudioCache(prev => ({ ...prev, [current.id]: data.audio_url }));
+        }
+      } catch(e){
+        console.error('ListenType TTS error', e);
+      } finally {
+        if (!cancelled) setAudioBusy(false);
+      }
+    };
+    loadAudio();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, current.word, current.language, current.id, audioCache[current.id]]);
+
+  if (completed) {
+    return (
+      <Card className="max-w-3xl mx-auto">
+        <CardContent className="p-8 text-center space-y-3">
+          <div className="w-16 h-16 rounded-full bg-green-100 mx-auto flex items-center justify-center">
+            <Check className="h-8 w-8 text-green-600" />
+          </div>
+          <div className="text-xl font-semibold text-green-700">Great job! You completed the game.</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="max-w-3xl mx-auto">
+      <CardContent className="p-6 space-y-4">
+        <div className="text-sm text-gray-600">Item {index + 1} of {total}</div>
+        <div className="space-y-2">
+          <div className="text-gray-700">Listen and type the vocabulary word you hear.</div>
+          <div className="bg-gray-50 border rounded p-3">
+            {audioUrl ? (
+              <audio
+                controls
+                src={audioUrl}
+                preload="auto"
+                ref={audioRef}
+                onLoadedMetadata={() => {
+                  try { if (audioRef.current) audioRef.current.playbackRate = 0.75; } catch {}
+                }}
+              />
+            ) : (
+              <div className="text-sm text-gray-500">{audioBusy ? 'Loading audio…' : 'Audio unavailable'}</div>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Input value={value} onChange={(e)=>setValue(e.target.value)} placeholder="Type the word" />
+          <Button onClick={handleCheck}>Check</Button>
+        </div>
+        {justCorrect && (
+          <div className="flex items-center gap-2 text-sm text-green-700">
+            <Check className="h-4 w-4" /> Correct!
+          </div>
+        )}
+        {!justCorrect && attempts > 0 && (
+          <div className="text-sm text-red-600">Not quite. Try again!</div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -64,6 +64,9 @@ interface GameConfig {
     showTimer: boolean;
     shuffle: boolean;
   };
+  listenType?: {
+    items: Array<{ id: string; word: string; language: string; vocabularyId?: number }>
+  };
 }
 
 const gameTypes = [
@@ -74,6 +77,7 @@ const gameTypes = [
   { value: 'word_association', label: 'Word Association', icon: Link, description: 'Match related word pairs to build vocabulary connections' },
   { value: 'flashcards', label: 'Flashcards', icon: Star, description: 'Interactive flashcards for vocabulary practice' },
   { value: 'vocab_run', label: 'Vocab Run', icon: Target, description: 'Answer 12 quick MC questions with a frog jumping on lily pads' },
+  { value: 'listen_type', label: 'Listen & Type', icon: BookOpen, description: 'Listen to the word audio and type what you hear' },
 ];
 
 export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameModalProps) {
@@ -211,6 +215,42 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
       (!gameConfig.wordSearch || !gameConfig.wordSearch.words || gameConfig.wordSearch.words.length === 0)
     ) {
       autoFillWordSearchFromLesson(formData.lesson_id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGameType, formData.lesson_id, formData.language]);
+
+  // Auto-fill for listen_type
+  const autoFillListenTypeFromLesson = async (selectedLessonId: string) => {
+    try {
+      if (!selectedLessonId) return;
+      const res = await fetch(`/api/lessons/${selectedLessonId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const vocab: Array<any> = Array.isArray(data?.vocabulary) ? data.vocabulary : [];
+      if (vocab.length === 0) return;
+
+      const lang = (formData.language || data?.course_language || 'english').toLowerCase();
+      const langKey = lang === 'german' ? 'word_german' : lang === 'french' ? 'word_french' : lang === 'spanish' ? 'word_spanish' : 'word_english';
+
+      const items = [...vocab]
+        .sort(()=>Math.random()-0.5)
+        .slice(0, Math.min(5, vocab.length))
+        .map((v:any, idx:number)=> ({ id: `${v.id || idx}`, word: (v?.[langKey] || v?.word_english || '').toString(), language: lang }))
+        .filter((it:any)=> !!it.word);
+
+      setGameConfig(prev => ({ ...prev, listenType: { items } }));
+    } catch (e) {
+      console.error('Failed to auto-fill listen_type:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      selectedGameType === 'listen_type' &&
+      formData.lesson_id &&
+      (!gameConfig.listenType || !gameConfig.listenType.items || gameConfig.listenType.items.length === 0)
+    ) {
+      autoFillListenTypeFromLesson(formData.lesson_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGameType, formData.lesson_id, formData.language]);
@@ -610,6 +650,14 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                       <Button type="button" variant="outline" size="sm" onClick={() => autoFillWordSearchFromLesson(formData.lesson_id)}>
                         <Shuffle className="h-4 w-4 mr-2" />
                         Auto-fill from Lesson Vocabulary
+                      </Button>
+                    </div>
+                  )}
+                  {selectedGameType === 'listen_type' && formData.lesson_id && (
+                    <div>
+                      <Button type="button" variant="outline" size="sm" onClick={() => autoFillListenTypeFromLesson(formData.lesson_id)}>
+                        <Shuffle className="h-4 w-4 mr-2" />
+                        Generate Vocabulary for Listen & Type
                       </Button>
                     </div>
                   )}

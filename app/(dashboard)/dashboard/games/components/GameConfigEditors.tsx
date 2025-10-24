@@ -63,6 +63,7 @@ export type GameConfig = {
   wordAssociation?: WordAssociationConfig;
   flashcards?: FlashcardsConfig;
   vocabRun?: VocabRunConfig;
+  listenType?: { items: Array<{ id: string; word: string; language: string }> };
 };
 
 export function getConfigKeyForType(gameType: string): keyof GameConfig | undefined {
@@ -81,6 +82,8 @@ export function getConfigKeyForType(gameType: string): keyof GameConfig | undefi
       return 'flashcards';
     case 'vocab_run':
       return 'vocabRun';
+    case 'listen_type':
+      return 'listenType';
     default:
       return undefined;
   }
@@ -110,9 +113,55 @@ export function GameConfigEditor({
       return <FlashcardsGameEditor config={config} onChange={onChange} />;
     case 'vocab_run':
       return <VocabRunGameEditor config={config} onChange={onChange} />;
+    case 'listen_type':
+      return <ListenTypeEditor config={config} onChange={onChange} />;
     default:
       return <div>Select a supported game type to edit its configuration.</div>;
   }
+}
+
+export function ListenTypeEditor({ config, onChange }: { config?: { items: Array<{ id: string; word: string; language: string; vocabularyId?: number }> }; onChange: (cfg: any) => void }) {
+  const [items, setItems] = useState<Array<{ id: string; word: string; language: string; vocabularyId?: number }>>(config?.items || [{ id: '1', word: '', language: 'german' }]);
+  const addItem = () => {
+    const next = [...items, { id: Date.now().toString(), word: '', language: 'german' }];
+    setItems(next);
+    onChange({ items: next });
+  };
+  const updateItem = (idx: number, field: 'word'|'language'|'vocabularyId', val: any) => {
+    const next = [...items];
+    next[idx] = { ...next[idx], [field]: val } as any;
+    setItems(next);
+    onChange({ items: next });
+  };
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold">Listen & Type Items</h4>
+        <Button type="button" variant="outline" size="sm" onClick={addItem}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Item
+        </Button>
+      </div>
+      <div className="space-y-3">
+        {items.map((it, i) => (
+          <div key={it.id} className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <Label>Word</Label>
+              <Input value={it.word} onChange={(e)=>updateItem(i,'word',e.target.value)} placeholder="Enter vocabulary word" />
+            </div>
+            <div>
+              <Label>Language</Label>
+              <Input value={it.language} onChange={(e)=>updateItem(i,'language',e.target.value)} placeholder="e.g. german, french" />
+            </div>
+            <div>
+              <Label>Vocabulary ID (optional)</Label>
+              <Input value={it.vocabularyId || ''} onChange={(e)=>updateItem(i,'vocabularyId',parseInt(e.target.value)||undefined)} placeholder="numeric ID" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function VocabRunGameEditor({ config, onChange }: { config?: VocabRunConfig; onChange: (config: VocabRunConfig) => void }) {
