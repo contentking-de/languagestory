@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
       await db
         .update(lessons)
         .set({
-          cultural_audio_blob_id: blob.url.split('/').pop()?.split('?')[0] || filename,
+          cultural_audio_blob_id: blob.url.split('/').pop()?.split('?')[0] || deterministicName,
           cultural_audio_url: blob.url,
           cultural_audio_generated_at: new Date(),
         })
@@ -253,7 +253,7 @@ export async function POST(request: NextRequest) {
       await db
         .update(lessons)
         .set({
-          content_audio_blob_id: blob.url.split('/').pop()?.split('?')[0] || filename,
+          content_audio_blob_id: blob.url.split('/').pop()?.split('?')[0] || deterministicName,
           content_audio_url: blob.url,
           content_audio_generated_at: new Date(),
         })
