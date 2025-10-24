@@ -42,21 +42,19 @@ const getPrompt = (contentType: string, language: string, level: string, topic: 
 
 Requirements:
 - Use ${levelDesc}
-- IMPORTANT: Question text must ALWAYS be in English, regardless of the target language
-- Answer options must be in ${language} (the target language)
+- IMPORTANT: Both the question text and ALL answer options must ALWAYS be in English (do not use ${language})
 - Each question should have 4 options (A, B, C, D) with only one correct answer
-- Include a mix of vocabulary, grammar, and comprehension questions
-- Questions should test knowledge of ${language} language skills
+- Include a mix of vocabulary, grammar, and comprehension questions that are phrased and answered in English
 - Questions should be practical and relevant to real-life situations
-- Provide the correct answer for each question
+- Provide the correct answer for each question (A/B/C/D)
 
 Format as JSON:
 {
   "questions": [
     {
-      "question": "Question text in English (always English, never in ${language})",
-      "options": ["A) Answer option 1 in ${language}", "B) Answer option 2 in ${language}", "C) Answer option 3 in ${language}", "D) Answer option 4 in ${language}"],
-      "correct_answer": "A",
+      "question": "Question text in English (always English)",
+      "options": ["A) Answer option 1 in English", "B) Answer option 2 in English", "C) Answer option 3 in English", "D) Answer option 4 in English"],
+      "correct_answer": "A", 
       "explanation": "Brief explanation in English of why this is correct",
       "difficulty_level": ${level === 'beginner' ? 1 : level === 'elementary' ? 2 : level === 'intermediate' ? 3 : level === 'upper-intermediate' ? 4 : 5}
     }
