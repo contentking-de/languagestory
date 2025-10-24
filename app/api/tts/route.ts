@@ -116,60 +116,115 @@ export async function POST(request: NextRequest) {
 
     // Normalize/auto-detect language
     const normalizedLang = (language || detectLanguage(text) || 'english').toString().toLowerCase();
+    // Determine provider (start using ElevenLabs for lesson content)
+    const providerEnv = (process.env.TTS_PROVIDER || '').toLowerCase();
+    let provider: 'openai' | 'elevenlabs' = providerEnv === 'elevenlabs' ? 'elevenlabs' : 'openai';
+    if (type === 'content' || type === 'cultural' || type === 'vocabulary') provider = 'elevenlabs';
+
     // Determine voice based on language or use provided voice
     const selectedVoice = voice || VOICE_MAPPING[normalizedLang] || VOICE_MAPPING.english;
-    // Model/speed tuning per language (Spanish langsamer für Klarheit)
+    // Model/speed tuning per language for OpenAI
     let ttsModel = 'tts-1';
     const ttsSpeed = normalizedLang === 'spanish' ? 0.85 : 1.0;
     // Clean text: remove stray braces/brackets and trim
     const cleanText = (text as string).replace(/[\[\]{}()]/g, '').trim();
 
-    // Call OpenAI TTS API
-    const doRequest = async (model: string) => fetch(OPENAI_TTS_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        input: cleanText,
-        voice: selectedVoice,
-        response_format: 'mp3',
-        speed: ttsSpeed
-      }),
-    });
-
-    // First attempt
-    let response = await doRequest(ttsModel);
-
-    if (!response.ok) {
-      // If model not found (e.g., tts-1-hq), fallback to tts-1
-      try {
-        const errorData = await response.json();
-        if ((errorData?.error?.code === 'model_not_found' || errorData?.error?.message?.includes('does not exist')) && ttsModel !== 'tts-1') {
-          ttsModel = 'tts-1';
-          response = await doRequest(ttsModel);
-        }
-        if (!response.ok) {
-          console.error('OpenAI TTS API error:', errorData);
-          console.error('Request details:', {
-            model: ttsModel,
-            voice: selectedVoice,
-            text: cleanText.substring(0, 100) + (cleanText.length > 100 ? '...' : '')
-          });
-          return NextResponse.json({ 
-            error: 'Failed to generate speech',
-            details: errorData 
-          }, { status: response.status });
-        }
-      } catch {
-        return NextResponse.json({ error: 'Failed to generate speech' }, { status: 500 });
+    // Build audio via selected provider
+    let audioBuffer: ArrayBuffer;
+    if (provider === 'elevenlabs') {
+      const baseUrl = process.env.ELEVENLABS_BASE_URL || 'https://api.elevenlabs.io';
+      const modelId = process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2';
+      const xiKey = process.env.ELEVENLABS_API_KEY;
+      if (!xiKey) {
+        return NextResponse.json({ error: 'ElevenLabs API key not configured' }, { status: 500 });
       }
-    }
+      const voiceId = (
+        (normalizedLang === 'german' && process.env.ELEVENLABS_VOICE_GERMAN) ||
+        (normalizedLang === 'french' && process.env.ELEVENLABS_VOICE_FRENCH) ||
+        (normalizedLang === 'spanish' && process.env.ELEVENLABS_VOICE_SPANISH) ||
+        (normalizedLang === 'english' && process.env.ELEVENLABS_VOICE_ENGLISH) ||
+        process.env.ELEVENLABS_VOICE_DEFAULT
+      );
+      if (!voiceId) {
+        return NextResponse.json({ error: 'ElevenLabs voice not configured' }, { status: 500 });
+      }
+      const stability = parseFloat(process.env.ELEVENLABS_STABILITY || '0.45');
+      const similarityBoost = parseFloat(process.env.ELEVENLABS_SIMILARITY || '0.8');
+      const style = parseFloat(process.env.ELEVENLABS_STYLE || '0');
+      const useSpeakerBoost = (process.env.ELEVENLABS_USE_SPEAKER_BOOST || 'true') === 'true';
+      const optimizeStreamingLatency = parseInt(process.env.ELEVENLABS_OPTIMIZE_STREAMING_LATENCY || '0');
 
-    // Get audio data
-    const audioBuffer = await response.arrayBuffer();
+      const elResponse = await fetch(`${baseUrl}/v1/text-to-speech/${voiceId}`, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': xiKey,
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: cleanText,
+          model_id: modelId,
+          optimize_streaming_latency: optimizeStreamingLatency,
+          voice_settings: {
+            stability,
+            similarity_boost: similarityBoost,
+            style,
+            use_speaker_boost: useSpeakerBoost,
+          },
+        }),
+      });
+      if (!elResponse.ok) {
+        const errText = await elResponse.text();
+        console.error('ElevenLabs TTS error:', errText);
+        return NextResponse.json({ error: 'Failed to generate speech (ElevenLabs)', details: errText }, { status: elResponse.status });
+      }
+      audioBuffer = await elResponse.arrayBuffer();
+    } else {
+      // OpenAI path
+      const doRequest = async (model: string) => fetch(OPENAI_TTS_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          input: cleanText,
+          voice: selectedVoice,
+          response_format: 'mp3',
+          speed: ttsSpeed
+        }),
+      });
+
+      // First attempt
+      let response = await doRequest(ttsModel);
+
+      if (!response.ok) {
+        // If model not found (e.g., tts-1-hq), fallback to tts-1
+        try {
+          const errorData = await response.json();
+          if ((errorData?.error?.code === 'model_not_found' || errorData?.error?.message?.includes('does not exist')) && ttsModel !== 'tts-1') {
+            ttsModel = 'tts-1';
+            response = await doRequest(ttsModel);
+          }
+          if (!response.ok) {
+            console.error('OpenAI TTS API error:', errorData);
+            console.error('Request details:', {
+              model: ttsModel,
+              voice: selectedVoice,
+              text: cleanText.substring(0, 100) + (cleanText.length > 100 ? '...' : '')
+            });
+            return NextResponse.json({ 
+              error: 'Failed to generate speech',
+              details: errorData 
+            }, { status: response.status });
+          }
+        } catch {
+          return NextResponse.json({ error: 'Failed to generate speech' }, { status: 500 });
+        }
+      }
+      audioBuffer = await response.arrayBuffer();
+    }
 
     // For conversation, return base64 directly to reduce latency (no upload/store)
     if (type === 'conversation') {
