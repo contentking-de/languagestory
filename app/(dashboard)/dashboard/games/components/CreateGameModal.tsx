@@ -97,6 +97,8 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
   const [lessons, setLessons] = useState<Array<{ id: number; title: string; course_title: string; course_language: string }>>([]);
   const [autoGenBusy, setAutoGenBusy] = useState(false);
   const [autoGenPreview, setAutoGenPreview] = useState<Array<{ question: string; options: string[]; correctIndex: number }>>([]);
+  const [ltBusy, setLtBusy] = useState(false);
+  const [ltPreview, setLtPreview] = useState<Array<{ id: string; word: string; language: string }>>([]);
 
   const handleGameTypeSelect = (gameType: string) => {
     setSelectedGameType(gameType);
@@ -223,6 +225,8 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
   const autoFillListenTypeFromLesson = async (selectedLessonId: string) => {
     try {
       if (!selectedLessonId) return;
+      setLtBusy(true);
+      setLtPreview([]);
       const res = await fetch(`/api/lessons/${selectedLessonId}`);
       if (!res.ok) return;
       const data = await res.json();
@@ -235,13 +239,14 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
       const items = [...vocab]
         .sort(()=>Math.random()-0.5)
         .slice(0, Math.min(5, vocab.length))
-        .map((v:any, idx:number)=> ({ id: `${v.id || idx}`, word: (v?.[langKey] || v?.word_english || '').toString(), language: lang }))
+        .map((v:any, idx:number)=> ({ id: `${v.id || idx}`, word: (v?.[langKey] || v?.word_english || '').toString(), language: lang, vocabularyId: v?.id || undefined }))
         .filter((it:any)=> !!it.word);
 
       setGameConfig(prev => ({ ...prev, listenType: { items } }));
+      setLtPreview(items.map(({ id, word, language }) => ({ id, word, language })));
     } catch (e) {
       console.error('Failed to auto-fill listen_type:', e);
-    }
+    } finally { setLtBusy(false); }
   };
 
   useEffect(() => {
@@ -655,9 +660,18 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                   )}
                   {selectedGameType === 'listen_type' && formData.lesson_id && (
                     <div>
-                      <Button type="button" variant="outline" size="sm" onClick={() => autoFillListenTypeFromLesson(formData.lesson_id)}>
-                        <Shuffle className="h-4 w-4 mr-2" />
-                        Generate Vocabulary for Listen & Type
+                      <Button type="button" variant="outline" size="sm" onClick={() => autoFillListenTypeFromLesson(formData.lesson_id)} disabled={ltBusy}>
+                        {ltBusy ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Shuffle className="h-4 w-4 mr-2" />
+                            Generate Vocabulary for Listen & Type
+                          </>
+                        )}
                       </Button>
                     </div>
                   )}
@@ -690,6 +704,16 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                 </CardHeader>
                 <CardContent>
                   {renderGameConfig()}
+                  {selectedGameType === 'listen_type' && ltPreview.length > 0 && (
+                    <div className="mt-4 border rounded p-3 bg-gray-50">
+                      <div className="font-semibold mb-2 text-sm">Selected 5 words:</div>
+                      <div className="flex flex-wrap gap-2">
+                        {ltPreview.map((it)=> (
+                          <Badge key={it.id} variant="secondary">{it.word}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {selectedGameType === 'vocab_run' && autoGenPreview.length > 0 && (
                     <div className="mt-4 border rounded p-3 bg-gray-50">
                       <div className="font-semibold mb-2 text-sm">Preview (first 5):</div>

@@ -2,19 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserWithTeamData } from '@/lib/db/queries';
 import { put } from '@vercel/blob';
 import { db } from '@/lib/db/drizzle';
-import { vocabulary, lessons, topics } from '@/lib/db/content-schema';
+import { vocabulary, lessons, topics, media_files } from '@/lib/db/content-schema';
 import { eq } from 'drizzle-orm';
 
 // OpenAI TTS API configuration
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_TTS_URL = 'https://api.openai.com/v1/audio/speech';
 
-// Voice mapping for different languages
-const VOICE_MAPPING = {
+// Voice mapping for different languages (tuned for clarity)
+const VOICE_MAPPING: Record<string, string> = {
   english: 'fable',
   french: 'fable',
   german: 'fable',
-  spanish: 'fable'
+  // Spanish benefits from a clearer, less-stylized voice
+  spanish: 'alloy'
 };
 
 // Language detection helper
@@ -54,13 +55,23 @@ export async function POST(request: NextRequest) {
     console.log(`TTS: Checking cache for lessonId: ${lessonId}, type: ${type}, vocabularyId: ${vocabularyId}`);
     
     if (vocabularyId) {
-      const [vocab] = await db
-        .select({ audio_url: vocabulary.audio_url })
-        .from(vocabulary)
-        .where(eq(vocabulary.id, vocabularyId))
+      // Use per-language deterministic cache via media_files.name
+      const normalizedLang = (language || detectLanguage(text) || 'english').toString().toLowerCase();
+      const slugPart = (text as string)
+        .normalize('NFKD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 48) || 'x';
+      const cacheName = `tts-vocab-${vocabularyId}-${normalizedLang}-${slugPart}.mp3`;
+      const [mf] = await db
+        .select({ url: media_files.url })
+        .from(media_files)
+        .where(eq(media_files.name, cacheName))
         .limit(1);
-      existingAudio = vocab?.audio_url;
-      console.log(`TTS: Vocabulary cache check - found: ${existingAudio ? 'yes' : 'no'}`);
+      existingAudio = (mf as any)?.url || null;
+      console.log(`TTS: Vocabulary per-language cache check - name: ${cacheName} - found: ${existingAudio ? 'yes' : 'no'}`);
     } else if (topicId && type === 'story') {
       const [topic] = await db
         .select({ audio_url: topics.audio_file })
@@ -103,37 +114,58 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Normalize/auto-detect language
+    const normalizedLang = (language || detectLanguage(text) || 'english').toString().toLowerCase();
     // Determine voice based on language or use provided voice
-    const selectedVoice = voice || VOICE_MAPPING[language as keyof typeof VOICE_MAPPING] || VOICE_MAPPING.english;
+    const selectedVoice = voice || VOICE_MAPPING[normalizedLang] || VOICE_MAPPING.english;
+    // Model/speed tuning per language (Spanish langsamer für Klarheit)
+    let ttsModel = 'tts-1';
+    const ttsSpeed = normalizedLang === 'spanish' ? 0.85 : 1.0;
+    // Clean text: remove stray braces/brackets and trim
+    const cleanText = (text as string).replace(/[\[\]{}()]/g, '').trim();
 
     // Call OpenAI TTS API
-    const response = await fetch(OPENAI_TTS_URL, {
+    const doRequest = async (model: string) => fetch(OPENAI_TTS_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1',
-        input: text,
+        model,
+        input: cleanText,
         voice: selectedVoice,
         response_format: 'mp3',
-        speed: 1.0
+        speed: ttsSpeed
       }),
     });
 
+    // First attempt
+    let response = await doRequest(ttsModel);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI TTS API error:', errorData);
-      console.error('Request details:', {
-        model: 'tts-1',
-        voice: selectedVoice,
-        text: text.substring(0, 100) + (text.length > 100 ? '...' : '')
-      });
-      return NextResponse.json({ 
-        error: 'Failed to generate speech',
-        details: errorData 
-      }, { status: response.status });
+      // If model not found (e.g., tts-1-hq), fallback to tts-1
+      try {
+        const errorData = await response.json();
+        if ((errorData?.error?.code === 'model_not_found' || errorData?.error?.message?.includes('does not exist')) && ttsModel !== 'tts-1') {
+          ttsModel = 'tts-1';
+          response = await doRequest(ttsModel);
+        }
+        if (!response.ok) {
+          console.error('OpenAI TTS API error:', errorData);
+          console.error('Request details:', {
+            model: ttsModel,
+            voice: selectedVoice,
+            text: cleanText.substring(0, 100) + (cleanText.length > 100 ? '...' : '')
+          });
+          return NextResponse.json({ 
+            error: 'Failed to generate speech',
+            details: errorData 
+          }, { status: response.status });
+        }
+      } catch {
+        return NextResponse.json({ error: 'Failed to generate speech' }, { status: 500 });
+      }
     }
 
     // Get audio data
@@ -162,27 +194,43 @@ export async function POST(request: NextRequest) {
         cached: false,
         format: 'mp3',
         voice: selectedVoice,
-        text
+        text: cleanText
       });
     }
 
     // Otherwise upload to Vercel Blob and store for caching
-    const filename = `tts-${Date.now()}-${Math.random().toString(36).substring(7)}.mp3`;
-    const blob = await put(filename, audioBuffer, {
+    // If vocabularyId: use deterministic name per language/text for stable caching
+    const normalizedLangForStore = (language || detectLanguage(text) || 'english').toString().toLowerCase();
+    const slugPartForStore = (cleanText as string)
+      .normalize('NFKD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'x';
+    const deterministicName = vocabularyId ? `tts-vocab-${vocabularyId}-${normalizedLangForStore}-${slugPartForStore}.mp3` : `tts-${Date.now()}-${Math.random().toString(36).substring(7)}.mp3`;
+    const blob = await put(deterministicName, audioBuffer, {
       access: 'public',
       addRandomSuffix: false,
     });
 
     if (vocabularyId) {
-      await db
-        .update(vocabulary)
-        .set({
-          audio_blob_id: blob.url.split('/').pop()?.split('?')[0] || filename,
-          audio_url: blob.url,
-          audio_generated_at: new Date(),
-        })
-        .where(eq(vocabulary.id, vocabularyId));
-      console.log(`TTS: Stored vocabulary audio for ID: ${vocabularyId}`);
+      // Save to media_files as deterministic cache entry
+      try {
+        await db.insert(media_files).values({
+          blob_id: blob.url.split('/').pop()?.split('?')[0] || deterministicName,
+          name: deterministicName,
+          url: blob.url,
+          size: (audioBuffer as ArrayBuffer).byteLength ?? 0,
+          type: 'audio/mpeg',
+          category: 'tts',
+          tags: [{ vocabularyId, language: normalizedLangForStore } as any],
+          uploaded_by: user.id,
+        } as any);
+      } catch (e) {
+        // ignore duplicate inserts
+      }
+      console.log(`TTS: Stored vocabulary audio cache for vocab ${vocabularyId} (${normalizedLangForStore})`);
     } else if (topicId && type === 'story') {
       await db
         .update(topics)
@@ -220,7 +268,7 @@ export async function POST(request: NextRequest) {
       cached: false,
       format: 'mp3',
       voice: selectedVoice,
-      text
+      text: cleanText
     });
 
   } catch (error) {
