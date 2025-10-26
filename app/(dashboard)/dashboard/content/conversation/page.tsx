@@ -121,7 +121,7 @@ export default function ConversationPage() {
       const ttsRes = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, language: 'english', type: 'conversation' }),
+        body: JSON.stringify({ text, language: (selectedLesson?.course_language || 'english'), type: 'conversation' }),
       });
       const ttsData = await ttsRes.json();
       const base64 = ttsData?.audio_base64;

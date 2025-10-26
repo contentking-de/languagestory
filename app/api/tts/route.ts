@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     // Determine provider (start using ElevenLabs for lesson content)
     const providerEnv = (process.env.TTS_PROVIDER || '').toLowerCase();
     let provider: 'openai' | 'elevenlabs' = providerEnv === 'elevenlabs' ? 'elevenlabs' : 'openai';
-    if (type === 'content' || type === 'cultural' || type === 'vocabulary') provider = 'elevenlabs';
+    if (type === 'content' || type === 'cultural' || type === 'vocabulary' || type === 'conversation') provider = 'elevenlabs';
 
     // Determine voice based on language or use provided voice
     const selectedVoice = voice || VOICE_MAPPING[normalizedLang] || VOICE_MAPPING.english;
