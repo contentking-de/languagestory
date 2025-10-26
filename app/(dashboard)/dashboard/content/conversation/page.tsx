@@ -45,6 +45,7 @@ export default function ConversationPage() {
   const [turns, setTurns] = useState<Array<{ user?: string; ai?: string; responseTimeMs?: number }>>([]);
   const lastQuestionTimeRef = useRef<number | null>(null);
   const [rating, setRating] = useState<any>(null);
+  const [courseLevel, setCourseLevel] = useState<string>('intermediate');
 
   // Load lesson content on selection (for pre-read screen)
   useEffect(() => {
@@ -60,6 +61,7 @@ export default function ConversationPage() {
         if (res.ok) {
           const data = await res.json();
           setLessonContent(data?.content || '');
+          if (data?.course_level) setCourseLevel(data.course_level);
           // map vocabulary if available
           const vocab = Array.isArray(data?.vocabulary) ? data.vocabulary : [];
           const mapped = vocab.map((v: any) => {
@@ -356,7 +358,7 @@ export default function ConversationPage() {
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
                             language: (selectedLesson?.course_language || 'english'),
-                            level: (selectedLesson?.course_level || 'intermediate'),
+                            level: courseLevel || 'intermediate',
                             topic: (selectedLesson?.title || 'Lesson'),
                             turns,
                             lessonVocabulary
