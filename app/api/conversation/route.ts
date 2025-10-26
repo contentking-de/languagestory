@@ -9,6 +9,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export async function POST(request: NextRequest) {
   try {
     const { lessonId, messages, start } = await request.json();
+    const { stop } = (await request.json().catch(() => ({}))) as any;
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
@@ -90,6 +91,11 @@ When crafting questions, prefer to use this lesson vocabulary and vary across di
           role: 'user' as const,
           content: `Start the conversation now with a brief friendly welcome in ${language} and ask if the learner is ready for a conversation about the lesson topic. Do NOT ask content questions yet. Wait for the learner's confirmation (e.g., yes/ready).`
         }
+      : stop
+      ? {
+          role: 'user' as const,
+          content: `The learner has stopped the conversation. In ${language}, reply with a short closing message that thanks the learner for the nice conversation and points them to their personal conversation rating below. Do NOT ask any new question. Say something like: "Thank you for our nice conversation. Please find my personal conversation rating underneath. Read it carefully and you will find excellent hints to improve for the next time!"`
+        }
       : {
           role: 'user' as const,
           content: `Continue the conversation based strictly on the lesson content and the chat so far.
@@ -102,7 +108,7 @@ Ask exactly one question at a time, then wait for the learner's answer.`
     ];
 
     // Add anti-repetition hint using the last assistant question if available
-    if (hasMessages) {
+    if (hasMessages && !stop) {
       const lastAssistant = [...messages].reverse().find((m: any) => m?.role === 'assistant')?.content as string | undefined;
       if (lastAssistant && lastAssistant.trim().length > 0) {
         const snippet = lastAssistant.length > 220 ? lastAssistant.slice(0, 220) + '…' : lastAssistant;
@@ -117,8 +123,8 @@ Ask exactly one question at a time, then wait for the learner's answer.`
     const completion = await openai.chat.completions.create({
       model,
       messages: chatMessages,
-      temperature: 0.7,
-      max_tokens: 500,
+      temperature: stop ? 0.3 : 0.7,
+      max_tokens: stop ? 120 : 500,
     });
 
     const reply = completion.choices?.[0]?.message?.content || '';

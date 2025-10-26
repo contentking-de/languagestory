@@ -22,6 +22,7 @@ export default function ConversationPage() {
   const autoListenRef = useRef<boolean>(false);
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
   const lastAssistantRef = useRef<string>('');
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -52,6 +53,7 @@ export default function ConversationPage() {
       setMessages([]);
       setLessonContent('');
       setLessonVocabulary([]);
+      setRating(null);
       if (!lessonId) return;
       try {
         const res = await fetch(`/api/lessons/${lessonId}`);
@@ -115,24 +117,44 @@ export default function ConversationPage() {
     }
   };
 
-  async function playReplyTTS(text: string) {
+  const stopCurrentTTS = () => {
     try {
+      const a = ttsAudioRef.current;
+      if (a) {
+        a.pause();
+        a.currentTime = 0;
+      }
+    } catch {}
+    setIsPlayingTTS(false);
+  };
+
+  async function playReplyTTS(text: string, langOverride?: string) {
+    try {
+      // Stop any ongoing TTS to avoid overlap
+      stopCurrentTTS();
       setIsPlayingTTS(true);
       const ttsRes = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, language: (selectedLesson?.course_language || 'english'), type: 'conversation' }),
+        body: JSON.stringify({ text, language: (langOverride || selectedLesson?.course_language || 'english'), type: 'conversation' }),
       });
       const ttsData = await ttsRes.json();
       const base64 = ttsData?.audio_base64;
       const url = ttsData?.audio_url;
       await new Promise<void>((resolve) => {
-        const audio = new Audio(base64 ? `data:audio/mp3;base64,${base64}` : url);
-        audio.onended = () => resolve();
-        audio.onerror = () => resolve();
-        audio.play().catch(() => resolve());
+        try {
+          const audio = new Audio(base64 ? `data:audio/mp3;base64,${base64}` : url);
+          ttsAudioRef.current = audio;
+          audio.onended = () => { resolve(); setIsPlayingTTS(false); };
+          audio.onerror = () => { resolve(); setIsPlayingTTS(false); };
+          audio.play().catch(() => { resolve(); setIsPlayingTTS(false); });
+        } catch {
+          resolve();
+          setIsPlayingTTS(false);
+        }
       });
     } finally {
+      // state is also toggled in event handlers; ensure it's off
       setIsPlayingTTS(false);
     }
   }
@@ -257,6 +279,7 @@ export default function ConversationPage() {
                 className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                 disabled={!lessonId}
                 onClick={async () => {
+                  setRating(null);
                   setHasStarted(true);
                   setThinking(true);
                   try {
@@ -318,17 +341,22 @@ export default function ConversationPage() {
                       const navAny = navigator as any;
                       (navAny.mediaDevices?.getUserMedia && (navAny._activeStream?.getTracks?.().forEach((t: any) => t.stop())));
                     } catch {}
-                    setIsPlayingTTS(false);
+                    // stop any playing TTS immediately
+                    stopCurrentTTS();
                     setThinking(false);
-                    // Request rating
+                    // Abschlussbotschaft (fixer englischer Text) + Rating
                     (async () => {
                       try {
+                        const closingText = "thank you for our nice conversation. Please find my personal conversation rating underneath. Read it carefully and you will find excellent hints to improve for the next time! Speak to you soon!";
+                        setMessages(prev => [...prev, { role: 'assistant', content: closingText }]);
+                        try { await playReplyTTS(closingText, 'english'); } catch {}
+
                         const res = await fetch('/api/conversation/rate', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
-                            language: 'english',
-                            level: 'intermediate',
+                            language: (selectedLesson?.course_language || 'english'),
+                            level: (selectedLesson?.course_level || 'intermediate'),
                             topic: (selectedLesson?.title || 'Lesson'),
                             turns,
                             lessonVocabulary
