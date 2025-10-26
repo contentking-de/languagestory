@@ -53,7 +53,7 @@ function CreateLessonForm() {
     course_id: preselectedCourseId ? parseInt(preselectedCourseId) : 0,
   });
   const [lessonId, setLessonId] = useState<number | null>(null);
-  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Games, 5 MC Quiz, 6 True/False, 7 Gap Fill
+  const [currentStep, setCurrentStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8>(0); // 0 Basics, 1 Vocab, 2 Cultural, 3 Images, 4 Games, 5 Grammar, 6 MC Quiz, 7 True/False, 8 Gap Fill
   const [aiBusy, setAiBusy] = useState(false);
   const [vocabTopic, setVocabTopic] = useState('');
   const [vocabQuantity, setVocabQuantity] = useState(10);
@@ -75,6 +75,9 @@ function CreateLessonForm() {
   const [tfQuantity, setTfQuantity] = useState(10);
   const [tfName, setTfName] = useState('');
   const [tfPreview, setTfPreview] = useState<string>('');
+  const [grammarQuantity, setGrammarQuantity] = useState(8);
+  const [grammarName, setGrammarName] = useState('');
+  const [grammarPreview, setGrammarPreview] = useState<string>('');
   const [gfNumGaps, setGfNumGaps] = useState(8);
   const [gfPreview, setGfPreview] = useState<string>('');
   const [hangmanWord, setHangmanWord] = useState<string>('');
@@ -255,16 +258,17 @@ function CreateLessonForm() {
       {/* Builder */}
       <div className="max-w-6xl">
         {/* Stepper */}
-        <div className="grid gap-2 mb-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 xl:grid-cols-10">
+        <div className="grid gap-2 mb-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9 xl:grid-cols-10">
           {[
             { key: 0, title: 'Basics' },
             { key: 1, title: 'Vocabulary' },
             { key: 2, title: 'Cultural' },
             { key: 3, title: 'Images' },
             { key: 4, title: 'Games' },
-            { key: 5, title: 'MC Quiz' },
-            { key: 6, title: 'True/False' },
-            { key: 7, title: 'Gap Fill' },
+            { key: 5, title: 'Grammar' },
+            { key: 6, title: 'MC Quiz' },
+            { key: 7, title: 'True/False' },
+            { key: 8, title: 'Gap Fill' },
           ].map((s) => (
             <div key={s.key} className={`p-2 rounded-md border text-xs text-center ${currentStep === (s.key as any) ? 'border-orange-500 bg-orange-50 font-medium' : 'border-gray-200 bg-white'}`}>
               <span className="mr-1 text-[10px] align-middle">{(s.key as number) + 1}.</span>
@@ -282,9 +286,10 @@ function CreateLessonForm() {
               {currentStep === 2 && 'Cultural Information'}
               {currentStep === 3 && 'Images'}
               {currentStep === 4 && 'Create Games'}
-              {currentStep === 5 && 'Multiple Choice Quiz'}
-              {currentStep === 6 && 'True/False Quiz'}
-              {currentStep === 7 && 'Gap Fill Quiz'}
+              {currentStep === 5 && 'Grammar Exercises'}
+              {currentStep === 6 && 'Multiple Choice Quiz'}
+              {currentStep === 7 && 'True/False Quiz'}
+              {currentStep === 8 && 'Gap Fill Quiz'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -939,6 +944,69 @@ function CreateLessonForm() {
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-2">
+                    <Label>Grammar Name (optional)</Label>
+                    <Input value={grammarName} onChange={(e)=>setGrammarName(e.target.value)} className="mt-1" placeholder={`${formData.title || 'Lesson'} - Grammar Exercises`} />
+                  </div>
+                  <div>
+                    <Label>Questions</Label>
+                    <Select value={grammarQuantity.toString()} onValueChange={(v)=>setGrammarQuantity(parseInt(v))}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {[5,8,10,12,15].map(n => (<SelectItem key={n} value={n.toString()}>{n}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button disabled={!lessonId || aiBusy} onClick={async()=>{
+                  if (!lessonId) return; setAiBusy(true); setLastMessage(''); setGrammarPreview('');
+                  try{
+                    const topicBase = (formData.content || '').toString().slice(0, 1200) || formData.title || 'lesson content';
+                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'grammar',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:topicBase,quantity:grammarQuantity})});
+                    const g = await gen.json();
+                    if (g?.data) {
+                      setGrammarPreview(g.preview || '');
+                      const save = await fetch('/api/ai/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'grammar',data:g.data,lessonId,customName: grammarName || `${formData.title || 'Lesson'} - Grammar Exercises`})});
+                      await save.json();
+                      try {
+                        const lessonRes = await fetch(`/api/lessons/${lessonId}`);
+                        const lessonData = await lessonRes.json();
+                        const grammarArr = Array.isArray(lessonData?.grammar) ? lessonData.grammar : [];
+                        const lastGrammar = grammarArr[grammarArr.length-1];
+                        if (lastGrammar?.id) await appendToFlow({ type: 'grammar', id: lastGrammar.id });
+                        setLastMessage(`Grammar exercises created with ${grammarQuantity} questions.`);
+                      } catch {}
+                    }
+                  }catch(e){ console.error(e); setLastMessage('Failed to generate/save grammar exercises'); }
+                  finally{ setAiBusy(false); }
+                }}>
+                  <Wand2 className="h-4 w-4 mr-2"/>Generate & Save Grammar
+                </Button>
+                {grammarPreview && (
+                  <div className="bg-gray-50 rounded-md p-3 max-h-72 overflow-auto">
+                    <div className="text-sm font-medium mb-2">Preview</div>
+                    <pre className="whitespace-pre-wrap text-sm text-gray-800">{grammarPreview}</pre>
+                  </div>
+                )}
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" onClick={()=>setCurrentStep(4)}>Back</Button>
+                  <div className="text-sm text-gray-600">{lastMessage}</div>
+                  <Button onClick={()=>setCurrentStep(6)}>Next</Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 6 && (
+              <div className="space-y-4">
+                {aiBusy && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
+                    <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
+                    <div className="text-sm text-yellow-800">
+                      Creating... this might take some time! Grab a coffee and please wait for results and do not go to the next step!
+                    </div>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2">
                     <Label>Quiz Name (optional)</Label>
                     <Input value={quizName} onChange={(e)=>setQuizName(e.target.value)} className="mt-1" placeholder={`${formData.title || 'Lesson'} - Quiz`} />
                   </div>
@@ -955,7 +1023,6 @@ function CreateLessonForm() {
                 <Button disabled={!lessonId || aiBusy} onClick={async()=>{
                   if (!lessonId) return; setAiBusy(true); setLastMessage(''); setQuizPreview('');
                   try{
-                    // Use lesson content (trim) as topic basis
                     const topicBase = (formData.content || '').toString().slice(0, 800) || formData.title || 'lesson content';
                     const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'quiz',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:topicBase,quantity:quizQuantity})});
                     const g = await gen.json();
@@ -963,7 +1030,6 @@ function CreateLessonForm() {
                       setQuizPreview(g.preview || '');
                       const save = await fetch('/api/ai/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'quiz',data:g.data,lessonId,customName: quizName || `${formData.title || 'Lesson'} - Quiz`})});
                       const s = await save.json();
-                      // Try to append latest created quiz to flow
                       const quizzesRes = await fetch(`/api/lessons/${lessonId}/quizzes`);
                       const quizzesData = await quizzesRes.json().catch(()=>[]);
                       const lastQuiz = Array.isArray(quizzesData) ? quizzesData[quizzesData.length-1] : null;
@@ -982,14 +1048,14 @@ function CreateLessonForm() {
                   </div>
                 )}
                 <div className="flex justify-between pt-2">
-                  <Button variant="outline" onClick={()=>setCurrentStep(4)}>Back</Button>
+                  <Button variant="outline" onClick={()=>setCurrentStep(5)}>Back</Button>
                   <div className="text-sm text-gray-600">{lastMessage}</div>
-                  <Button onClick={()=>setCurrentStep(6)}>Next</Button>
+                  <Button onClick={()=>setCurrentStep(7)}>Next</Button>
                 </div>
               </div>
             )}
 
-            {currentStep === 6 && (
+            {currentStep === 7 && (
               <div className="space-y-4">
                 {aiBusy && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
@@ -1025,7 +1091,7 @@ function CreateLessonForm() {
                     if (g?.data) {
                       setTfPreview(g.preview || '');
                       const save = await fetch('/api/ai/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'true_false_quiz',data:g.data,lessonId,customName: tfName || `${formData.title || 'Lesson'} - True/False`})});
-                      const s = await save.json();
+                      await save.json();
                       const quizzesRes = await fetch(`/api/lessons/${lessonId}/quizzes`);
                       const quizzesData = await quizzesRes.json().catch(()=>[]);
                       const lastQuiz = Array.isArray(quizzesData) ? quizzesData[quizzesData.length-1] : null;
@@ -1044,96 +1110,14 @@ function CreateLessonForm() {
                   </div>
                 )}
                 <div className="flex justify-between pt-2">
-                  <Button variant="outline" onClick={()=>setCurrentStep(5)}>Back</Button>
-                  <div className="text-sm text-gray-600">{lastMessage}</div>
-                  <Button onClick={()=>setCurrentStep(7)}>Next</Button>
-                </div>
-              </div>
-            )}
-
-            {currentStep === 7 && (
-              <div className="space-y-4">
-                {aiBusy && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
-                    <Loader2 className="h-4 w-4 text-yellow-600 mt-0.5 animate-spin" />
-                    <div className="text-sm text-yellow-800">
-                      Creating... this might take some time! Grab a coffee and please wait for results and do not go to the next step!
-                    </div>
-                  </div>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label>Number of Gaps</Label>
-                    <Select value={gfNumGaps.toString()} onValueChange={(v)=>setGfNumGaps(parseInt(v))}>
-                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {[6,8,10,12].map(n => (<SelectItem key={n} value={n.toString()}>{n}</SelectItem>))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="md:col-span-2 flex items-end">
-                    <Button disabled={!lessonId || aiBusy || !formData.content} onClick={async()=>{
-                      if (!lessonId) return; setAiBusy(true); setLastMessage(''); setGfPreview('');
-                      try{
-                        const text = (formData.content || '').toString();
-                        const words = Array.from(new Set(text
-                          .replace(/[^A-Za-zÀ-ÿäöüÄÖÜß\s]/g,'')
-                          .split(/\s+/)
-                          .map(w=>w.trim())
-                          .filter(w=>w.length>3 && !['the','and','der','die','das','und','les','des','que','para','with','that'].includes(w.toLowerCase()))));
-                        const selected = words.sort(()=>Math.random()-0.5).slice(0, Math.min(gfNumGaps, words.length));
-                        let updated = text;
-                        const correctOrder: string[] = [];
-                        selected.forEach((w)=>{
-                          const re = new RegExp(`\\b${w.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')}\\b`,'i');
-                          const m = updated.match(re);
-                          if (m){
-                            updated = updated.replace(re,'[BLANK]');
-                            correctOrder.push(m[0]);
-                          }
-                        });
-                        setGfPreview(updated);
-                      const requestBody = {
-                          title: `${formData.title || 'Lesson'} - Gap Fill`,
-                          description: 'Auto-created gap fill from lesson content',
-                          quiz_type: 'gap_fill',
-                          pass_percentage: 70,
-                          time_limit: 0,
-                          max_attempts: 0,
-                          points_value: 50,
-                          is_published: true,
-                          lesson_id: lessonId,
-                          gf_original_text: text,
-                          gf_text_content: updated,
-                          gf_num_gaps: selected.length,
-                          gf_word_bank: selected.join(', '),
-                          gf_correct_order: correctOrder.join('|'),
-                          gf_difficulty: 'medium',
-                          gf_allow_hints: true,
-                        };
-                        const res = await fetch('/api/quizzes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(requestBody)});
-                      if (res.ok){
-                        const created = await res.json();
-                          setLastMessage('Gap Fill quiz created.');
-                          await appendToFlow({ type: 'quiz', id: created?.id });
-                        } else { const err = await res.json().catch(()=>({})); setLastMessage(err?.error || 'Failed to create gap fill'); }
-                      }catch(e){ console.error(e); setLastMessage('Failed to generate gap fill'); }
-                    finally{ setAiBusy(false); }
-                    }} className="w-full">
-                      <Wand2 className="h-4 w-4 mr-2"/>Generate & Save Gap Fill
-                  </Button>
-                  </div>
-                </div>
-                <div className="flex justify-between pt-2">
                   <Button variant="outline" onClick={()=>setCurrentStep(6)}>Back</Button>
                   <div className="text-sm text-gray-600">{lastMessage}</div>
-                  <Button onClick={async()=>{ await finalizeFlowOrder(); router.push(`/dashboard/content/lessons/${lessonId}`); }}>Finish</Button>
+                  <Button onClick={()=>setCurrentStep(8)}>Next</Button>
                 </div>
               </div>
             )}
 
-            {/* Step 8 removed; no longer used */}
-            {false && (
+            {currentStep === 8 && (
               <div className="space-y-4">
                 {aiBusy && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start gap-3">
@@ -1167,7 +1151,7 @@ function CreateLessonForm() {
                         let updated = text;
                         const correctOrder: string[] = [];
                         selected.forEach((w)=>{
-                          const re = new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i');
+                          const re = new RegExp(`\\b${w.replace(/[.*+?^${}()|[\\]\\]/g,'\\$&')}\\b`,'i');
                           const m = updated.match(re);
                           if (m){
                             updated = updated.replace(re,'[BLANK]');
@@ -1213,7 +1197,7 @@ function CreateLessonForm() {
                   </div>
                 )}
                 <div className="flex justify-between pt-2">
-                  <Button variant="outline" onClick={()=>setCurrentStep(6)}>Back</Button>
+                  <Button variant="outline" onClick={()=>setCurrentStep(7)}>Back</Button>
                   <div className="text-sm text-gray-600">{lastMessage}</div>
                   <Button onClick={async()=>{ await finalizeFlowOrder(); router.push(`/dashboard/content/lessons/${lessonId}`); }}>Finish</Button>
                 </div>
