@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, ArrowRight, BookOpen } from 'lucide-react';
+import { AudioPlayer } from '@/components/ui/audio-player';
 
 export interface LessonVocabularyItem {
   id: number;
@@ -94,7 +95,16 @@ export function InlineVocabTrainer({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Prompt (English)</p>
-                <p className="text-2xl font-semibold text-gray-900">{current.word_english}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-2xl font-semibold text-gray-900">{current.word_english}</p>
+                  <AudioPlayer
+                    text={current.word_english}
+                    language="english"
+                    type="vocabulary"
+                    vocabularyId={current.id}
+                    size="sm"
+                  />
+                </div>
                 {current.context_sentence && (
                   <p className="text-sm text-gray-600 mt-2 italic">"{current.context_sentence}"</p>
                 )}
@@ -109,8 +119,17 @@ export function InlineVocabTrainer({
             <>
               <p className="text-gray-500 text-sm mb-1">Reveal (English)</p>
               {showAnswer ? (
-                <div>
+                <div className="flex items-center gap-2">
                   <p className="text-xl font-medium text-gray-900">{englishWord || '—'}</p>
+                  {englishWord && (
+                    <AudioPlayer
+                      text={englishWord}
+                      language="english"
+                      type="vocabulary"
+                      vocabularyId={current.id}
+                      size="sm"
+                    />
+                  )}
                 </div>
               ) : (
                 <p className="text-xl text-gray-300 select-none">•••••••</p>
@@ -120,7 +139,18 @@ export function InlineVocabTrainer({
             <>
               <p className="text-gray-500 text-sm mb-1">Answer ({targetLanguage})</p>
               {showAnswer ? (
-                <p className="text-xl font-medium text-gray-900">{translation || '—'}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xl font-medium text-gray-900">{translation || '—'}</p>
+                  {translation && (
+                    <AudioPlayer
+                      text={translation}
+                      language={targetLanguage}
+                      type="vocabulary"
+                      vocabularyId={current.id}
+                      size="sm"
+                    />
+                  )}
+                </div>
               ) : (
                 <p className="text-xl text-gray-300 select-none">•••••••</p>
               )}
