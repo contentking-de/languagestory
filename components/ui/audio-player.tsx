@@ -12,7 +12,7 @@ interface AudioPlayerProps {
   size?: 'sm' | 'md' | 'lg';
   vocabularyId?: number;
   lessonId?: number;
-  type?: 'cultural' | 'content' | 'story';
+  type?: 'cultural' | 'content' | 'story' | 'vocabulary';
   topicId?: number;
   uniqueId?: string; // Add unique identifier for different audio instances
   showSpeedControl?: boolean; // Show speed control selector
