@@ -429,6 +429,7 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                       <AudioPlayer 
                         text={word.word_english} 
                         language="english" 
+                        type="vocabulary"
                         size="sm"
                         vocabularyId={word.id}
                       />
@@ -463,6 +464,7 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                       <AudioPlayer 
                         text={word.word_french} 
                         language="french" 
+                        type="vocabulary"
                         size="sm"
                         vocabularyId={word.id}
                       />
@@ -475,6 +477,7 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                       <AudioPlayer 
                         text={word.word_german} 
                         language="german" 
+                        type="vocabulary"
                         size="sm"
                         vocabularyId={word.id}
                       />
@@ -487,6 +490,7 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                       <AudioPlayer 
                         text={word.word_spanish} 
                         language="spanish" 
+                        type="vocabulary"
                         size="sm"
                         vocabularyId={word.id}
                       />
@@ -511,7 +515,9 @@ export function VocabularyClient({ userRole }: VocabularyClientProps) {
                       <AudioPlayer 
                         text={word.context_sentence} 
                         language={word.course_language || 'english'} 
+                        type="vocabulary"
                         size="sm"
+                        vocabularyId={word.id}
                       />
                     </div>
                   </div>

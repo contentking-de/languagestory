@@ -24,6 +24,7 @@ export async function GET(
         title: games.title,
         description: games.description,
         category: games.category,
+        game_type: games.game_type,
         language: games.language,
         difficulty_level: games.difficulty_level,
         estimated_duration: games.estimated_duration,

@@ -77,6 +77,7 @@ interface Game {
   title: string;
   description: string;
   category: string;
+  game_type?: string;
   language: string | null;
   difficulty_level: number;
   estimated_duration: number | null;
@@ -234,6 +235,74 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
     return order.map((o) => o.key);
   };
 
+  // Helper function to get sort order for flow items
+  const getFlowItemSortOrder = (
+    item: { type: string; id?: number }
+  ): number => {
+    // 1. Vocab trainer
+    if (item.type === 'vocab') return 1;
+    
+    // 2. Vocab run game
+    if (item.type === 'game' && item.id) {
+      const game = games.find(g => g.id === item.id);
+      if (game?.game_type === 'vocab_run') return 2;
+    }
+    
+    // 3. Memory game
+    if (item.type === 'game' && item.id) {
+      const game = games.find(g => g.id === item.id);
+      if (game?.game_type === 'memory') return 3;
+    }
+    
+    // 4. Lesson content
+    if (item.type === 'content') return 4;
+    
+    // 5. Multiple choice quiz
+    if (item.type === 'quiz' && item.id) {
+      const quiz = quizzes.find(q => q.id === item.id);
+      if (quiz?.quiz_type === 'multiple_choice') return 5;
+    }
+    
+    // 6. Listen & Type game
+    if (item.type === 'game' && item.id) {
+      const game = games.find(g => g.id === item.id);
+      if (game?.game_type === 'listen_type') return 6;
+    }
+    
+    // 7. Gap fill quiz
+    if (item.type === 'quiz' && item.id) {
+      const quiz = quizzes.find(q => q.id === item.id);
+      if (quiz?.quiz_type === 'gap_fill') return 7;
+    }
+    
+    // 8. Grammar exercises
+    if (item.type === 'grammar') return 8;
+    
+    // 9. Word search game
+    if (item.type === 'game' && item.id) {
+      const game = games.find(g => g.id === item.id);
+      if (game?.game_type === 'word_search') return 9;
+    }
+    
+    // 10. Hangman game
+    if (item.type === 'game' && item.id) {
+      const game = games.find(g => g.id === item.id);
+      if (game?.game_type === 'hangman') return 10;
+    }
+    
+    // 11. Cultural content
+    if (item.type === 'cultural') return 11;
+    
+    // 12. True/False quiz
+    if (item.type === 'quiz' && item.id) {
+      const quiz = quizzes.find(q => q.id === item.id);
+      if (quiz?.quiz_type === 'true_false') return 12;
+    }
+    
+    // Default: put at end (100+)
+    return 100;
+  };
+
   // Flow ordering (admin-only): build default list
   useEffect(() => {
     if (!lesson) return;
@@ -262,6 +331,18 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
         return;
       }
     } catch {}
+    
+    // If no saved order, sort by default order
+    base.sort((a, b) => {
+      const orderA = getFlowItemSortOrder(a);
+      const orderB = getFlowItemSortOrder(b);
+      // If same order, maintain creation order (by id or key)
+      if (orderA === orderB) {
+        return (a.id || 0) - (b.id || 0);
+      }
+      return orderA - orderB;
+    });
+    
     setFlowItems(base);
   }, [lesson, quizzes, games]);
 

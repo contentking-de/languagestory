@@ -251,6 +251,7 @@ export function VocabularyDetailClient({ userRole }: VocabularyDetailClientProps
                       <AudioPlayer 
                         text={lang.word} 
                         language={lang.language} 
+                        type="vocabulary"
                         size="md"
                         vocabularyId={word.id}
                       />
@@ -281,6 +282,7 @@ export function VocabularyDetailClient({ userRole }: VocabularyDetailClientProps
                       <AudioPlayer 
                         text={word.context_sentence} 
                         language={word.course_language || 'english'} 
+                        type="vocabulary"
                         size="md"
                         vocabularyId={word.id}
                       />

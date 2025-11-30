@@ -171,6 +171,30 @@ function CreateLessonForm() {
   const selectedCourse = courses.find(c => c.id === formData.course_id);
   const courseLanguage = selectedCourse?.language || '';
   const courseLevel = selectedCourse?.level || '';
+  
+  // Map course level to API level based on course title (A1, A2, B1, B2, C1) or DB level
+  const getApiLevel = (course: Course | undefined): string => {
+    if (!course) return 'beginner';
+    const title = (course.title || '').toUpperCase();
+    
+    // Check course title for CEFR level indicators
+    if (title.includes('A1')) return 'beginner';
+    if (title.includes('A2')) return 'elementary';
+    if (title.includes('B1')) return 'intermediate';
+    if (title.includes('B2')) return 'upper-intermediate';
+    if (title.includes('C1')) return 'advanced';
+    
+    // Fallback: map DB level to API level
+    // DB levels: 'beginner', 'intermediate', 'advanced'
+    // API levels: 'beginner', 'elementary', 'intermediate', 'upper-intermediate', 'advanced'
+    if (course.level === 'beginner') return 'beginner';
+    if (course.level === 'intermediate') return 'intermediate'; // Default to B1 if no A2/B2 indicator
+    if (course.level === 'advanced') return 'advanced';
+    
+    return 'beginner'; // Default fallback
+  };
+  
+  const apiLevel = getApiLevel(selectedCourse);
 
   const getLanguageFlag = (language: string) => {
     const flags = {
@@ -197,7 +221,77 @@ function CreateLessonForm() {
     }
   };
 
-  // Finalize flow order after creation: vocab, content, cultural, quizzes, games, grammar
+  // Helper function to get sort order for flow items
+  const getFlowItemSortOrder = (
+    item: { type: string; id?: number },
+    quizzesData: Array<{ id: number; quiz_type?: string }>,
+    gamesData: Array<{ id: number; game_type?: string }>
+  ): number => {
+    // 1. Vocab trainer
+    if (item.type === 'vocab') return 1;
+    
+    // 2. Vocab run game
+    if (item.type === 'game' && item.id) {
+      const game = gamesData.find(g => g.id === item.id);
+      if (game?.game_type === 'vocab_run') return 2;
+    }
+    
+    // 3. Memory game
+    if (item.type === 'game' && item.id) {
+      const game = gamesData.find(g => g.id === item.id);
+      if (game?.game_type === 'memory') return 3;
+    }
+    
+    // 4. Lesson content
+    if (item.type === 'content') return 4;
+    
+    // 5. Multiple choice quiz
+    if (item.type === 'quiz' && item.id) {
+      const quiz = quizzesData.find(q => q.id === item.id);
+      if (quiz?.quiz_type === 'multiple_choice') return 5;
+    }
+    
+    // 6. Listen & Type game
+    if (item.type === 'game' && item.id) {
+      const game = gamesData.find(g => g.id === item.id);
+      if (game?.game_type === 'listen_type') return 6;
+    }
+    
+    // 7. Gap fill quiz
+    if (item.type === 'quiz' && item.id) {
+      const quiz = quizzesData.find(q => q.id === item.id);
+      if (quiz?.quiz_type === 'gap_fill') return 7;
+    }
+    
+    // 8. Grammar exercises
+    if (item.type === 'grammar') return 8;
+    
+    // 9. Word search game
+    if (item.type === 'game' && item.id) {
+      const game = gamesData.find(g => g.id === item.id);
+      if (game?.game_type === 'word_search') return 9;
+    }
+    
+    // 10. Hangman game
+    if (item.type === 'game' && item.id) {
+      const game = gamesData.find(g => g.id === item.id);
+      if (game?.game_type === 'hangman') return 10;
+    }
+    
+    // 11. Cultural content
+    if (item.type === 'cultural') return 11;
+    
+    // 12. True/False quiz
+    if (item.type === 'quiz' && item.id) {
+      const quiz = quizzesData.find(q => q.id === item.id);
+      if (quiz?.quiz_type === 'true_false') return 12;
+    }
+    
+    // Default: put at end (100+)
+    return 100;
+  };
+
+  // Finalize flow order after creation with automatic sorting
   const finalizeFlowOrder = async () => {
     try {
       if (!lessonId) return;
@@ -210,12 +304,34 @@ function CreateLessonForm() {
       const quizzesData = quizzesRes.ok ? await quizzesRes.json() : [];
       const gamesData = gamesRes.ok ? await gamesRes.json() : [];
       const flow: Array<{ key: string; type: 'content' | 'cultural' | 'quiz' | 'game' | 'grammar' | 'vocab'; id?: number; title?: string }> = [];
-      if (Array.isArray(lessonData?.vocabulary) && lessonData.vocabulary.length > 0) flow.push({ key: 'vocab', type: 'vocab', title: 'Vocabulary Trainer' });
-      if (lessonData?.content) flow.push({ key: 'content', type: 'content', title: 'Lesson Content' });
-      if (lessonData?.cultural_information) flow.push({ key: 'cultural', type: 'cultural', title: 'Cultural Information' });
+      
+      // Add all items
+      if (Array.isArray(lessonData?.vocabulary) && lessonData.vocabulary.length > 0) {
+        flow.push({ key: 'vocab', type: 'vocab', title: 'Vocabulary Trainer' });
+      }
+      if (lessonData?.content) {
+        flow.push({ key: 'content', type: 'content', title: 'Lesson Content' });
+      }
       quizzesData.forEach((q: any) => flow.push({ key: `quiz-${q.id}`, type: 'quiz', id: q.id, title: q.title }));
       gamesData.forEach((g: any) => flow.push({ key: `game-${g.id}`, type: 'game', id: g.id, title: g.title }));
-      if (Array.isArray(lessonData?.grammar)) lessonData.grammar.forEach((gr: any) => flow.push({ key: `grammar-${gr.id}`, type: 'grammar', id: gr.id, title: gr.title }));
+      if (Array.isArray(lessonData?.grammar)) {
+        lessonData.grammar.forEach((gr: any) => flow.push({ key: `grammar-${gr.id}`, type: 'grammar', id: gr.id, title: gr.title }));
+      }
+      if (lessonData?.cultural_information) {
+        flow.push({ key: 'cultural', type: 'cultural', title: 'Cultural Information' });
+      }
+      
+      // Sort flow items according to the predefined order
+      flow.sort((a, b) => {
+        const orderA = getFlowItemSortOrder(a, quizzesData, gamesData);
+        const orderB = getFlowItemSortOrder(b, quizzesData, gamesData);
+        // If same order, maintain creation order (by id or key)
+        if (orderA === orderB) {
+          return (a.id || 0) - (b.id || 0);
+        }
+        return orderA - orderB;
+      });
+      
       // Persist locally for the overview page immediate display
       try { window.localStorage.setItem(`lesson_flow_order_${lessonId}`, JSON.stringify(flow)); } catch {}
       // Persist to server
@@ -584,7 +700,7 @@ function CreateLessonForm() {
                       setLastMessage('');
                       try {
                         const topicBase = (formData.content || '').toString().slice(0, 800) || formData.title || 'lesson content';
-                        const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'vocabulary',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:topicBase,quantity:vocabQuantity})});
+                        const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'vocabulary',aiProvider:'openai',language:courseLanguage,level:apiLevel,topic:topicBase,quantity:vocabQuantity})});
                         const g = await gen.json();
                         if (g?.data) {
                           setVocabPreview(Array.isArray(g.data.words) ? g.data.words : []);
@@ -678,7 +794,7 @@ function CreateLessonForm() {
                 <Button disabled={!lessonId || aiBusy || !culturalTopic} onClick={async()=>{
                   if (!lessonId) return; setAiBusy(true); setLastMessage('');
                   try{
-                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'cultural',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:culturalTopic,quantity:1})});
+                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'cultural',aiProvider:'openai',language:courseLanguage,level:apiLevel,topic:culturalTopic,quantity:1})});
                     const g = await gen.json();
                     if (g?.data) {
                       setCulturalPreview(g.data.cultural_information || '');
@@ -904,7 +1020,7 @@ function CreateLessonForm() {
                           const word = sanitizeForHangman(rawWord);
                           if (!word) throw new Error('Selected word unsuitable for Hangman');
                           const basis = ((formData.description || '') + '\n' + (formData.content || '')).slice(0, 1200);
-                          const gen = await fetch('/api/ai/generate',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contentType:'hint', aiProvider:'openai', language:'english', level:courseLevel || 'beginner', topic: `Target word: ${word}\n${basis}`, quantity:1 }) });
+                          const gen = await fetch('/api/ai/generate',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contentType:'hint', aiProvider:'openai', language:'english', level:apiLevel || 'beginner', topic: `Target word: ${word}\n${basis}`, quantity:1 }) });
                           const g = await gen.json();
                           const rawHint = (g?.data?.hint || g?.preview || '').toString();
                           const sanitized = rawHint.replace(new RegExp(word,'i'),'').trim();
@@ -961,7 +1077,7 @@ function CreateLessonForm() {
                   if (!lessonId) return; setAiBusy(true); setLastMessage(''); setGrammarPreview('');
                   try{
                     const topicBase = (formData.content || '').toString().slice(0, 1200) || formData.title || 'lesson content';
-                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'grammar',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:topicBase,quantity:grammarQuantity})});
+                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'grammar',aiProvider:'openai',language:courseLanguage,level:apiLevel,topic:topicBase,quantity:grammarQuantity})});
                     const g = await gen.json();
                     if (g?.data) {
                       setGrammarPreview(g.preview || '');
@@ -1024,7 +1140,7 @@ function CreateLessonForm() {
                   if (!lessonId) return; setAiBusy(true); setLastMessage(''); setQuizPreview('');
                   try{
                     const topicBase = (formData.content || '').toString().slice(0, 800) || formData.title || 'lesson content';
-                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'quiz',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:topicBase,quantity:quizQuantity})});
+                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'quiz',aiProvider:'openai',language:courseLanguage,level:apiLevel,topic:topicBase,quantity:quizQuantity})});
                     const g = await gen.json();
                     if (g?.data) {
                       setQuizPreview(g.preview || '');
@@ -1086,7 +1202,7 @@ function CreateLessonForm() {
                     const lessonRes = await fetch(`/api/lessons/${lessonId}`);
                     const lessonData = await lessonRes.json();
                     const basis = (lessonData?.cultural_information || '').toString().slice(0, 1200) || formData.title || 'culture';
-                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'true_false_quiz',aiProvider:'openai',language:courseLanguage,level:courseLevel,topic:basis,quantity:tfQuantity})});
+                    const gen = await fetch('/api/ai/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contentType:'true_false_quiz',aiProvider:'openai',language:courseLanguage,level:apiLevel,topic:basis,quantity:tfQuantity})});
                     const g = await gen.json();
                     if (g?.data) {
                       setTfPreview(g.preview || '');
