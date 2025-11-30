@@ -15,8 +15,11 @@ import {
   Globe
 } from 'lucide-react';
 import Link from 'next/link';
+import useSWR from 'swr';
 
 export default function WelcomePage() {
+  const fetcher = (url: string) => fetch(url).then((res) => res.json());
+  const { data: user } = useSWR('/api/user', fetcher);
   return (
     <div className="p-6 space-y-8">
       {/* Header */}
@@ -224,12 +227,14 @@ export default function WelcomePage() {
           Your language adventure awaits
         </div>
         <div className="space-x-4">
-          <Link href="/dashboard/content">
-            <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
-              <BookOpen className="h-5 w-5 mr-2" />
-              Start Your First Story
-            </Button>
-          </Link>
+          {user?.role === 'super_admin' && (
+            <Link href="/dashboard/content">
+              <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
+                <BookOpen className="h-5 w-5 mr-2" />
+                Start Your First Story
+              </Button>
+            </Link>
+          )}
           <Link href="/dashboard/progress">
             <Button variant="outline" size="lg">
               <Trophy className="h-5 w-5 mr-2" />

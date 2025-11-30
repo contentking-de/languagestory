@@ -766,6 +766,15 @@ export function WordSearchGame({ config, onComplete }: WordSearchGameProps) {
     return () => clearInterval(timer);
   }, [gameStarted, gameCompleted]);
 
+  // Handle game completion - call onComplete in useEffect to avoid setState during render
+  useEffect(() => {
+    if (foundWords.length === config.words.length && !gameCompleted) {
+      setGameCompleted(true);
+      const timeScore = Math.max(0, 100 - Math.floor(timeElapsed / 10));
+      onComplete?.(timeScore);
+    }
+  }, [foundWords.length, config.words.length, gameCompleted, timeElapsed, onComplete]);
+
   const handleCellClick = (row: number, col: number) => {
     if (!gameStarted) setGameStarted(true);
     if (gameCompleted) return;
@@ -828,13 +837,7 @@ export function WordSearchGame({ config, onComplete }: WordSearchGameProps) {
               const newFoundWords = [...prevFound, word];
               console.log(`*** UPDATED FOUND WORDS: ${newFoundWords.join(', ')} (${newFoundWords.length}/${config.words.length}) ***`);
               
-              // Check if all words are found
-              if (newFoundWords.length === config.words.length) {
-                console.log('*** GAME COMPLETED! ***');
-                setGameCompleted(true);
-                const timeScore = Math.max(0, 100 - Math.floor(timeElapsed / 10));
-                onComplete?.(timeScore);
-              }
+              // Note: Game completion is handled in useEffect to avoid setState during render
               
               return newFoundWords;
             });
