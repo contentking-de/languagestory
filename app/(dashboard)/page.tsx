@@ -1512,6 +1512,57 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* From Teachers for Teachers and Students Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="lg:grid lg:grid-cols-12 lg:gap-8">
+            <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left lg:flex lg:items-center">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 tracking-tight sm:text-4xl mb-6">
+                  From Teachers for Teachers and Students
+                </h2>
+                <p className="mt-3 text-base text-gray-600 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl mb-4">
+                  Lingoletics.com is a project created by a teacher, for teachers and students. 
+                  Built with deep understanding of the educational landscape and classroom needs, 
+                  our platform reflects the professionalism and dedication that comes from real 
+                  teaching experience.
+                </p>
+                <p className="text-base text-gray-600 sm:text-xl lg:text-lg xl:text-xl mb-6">
+                  Every story, exercise, and feature has been carefully crafted with pedagogical 
+                  expertise, ensuring that both educators and learners have access to high-quality, 
+                  curriculum-aligned resources that truly support language acquisition and teaching excellence.
+                </p>
+                <div className="border-l-4 border-orange-500 pl-6 mt-6">
+                  <p className="text-lg font-semibold text-gray-900 italic mb-2">
+                    "Teaching is my passion. It's about inspiring students to discover the joy of 
+                    language learning and empowering fellow educators with tools that make a real 
+                    difference in the classroom. Lingoletics.com represents my commitment to creating 
+                    resources that combine authentic cultural experiences with effective pedagogy, 
+                    because I believe that when teachers have the right tools, students can achieve 
+                    extraordinary things."
+                  </p>
+                  <p className="text-base text-gray-600 font-medium">
+                    — Andrew Stokes, Founder & Teacher
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
+              <div className="relative w-full">
+                <Image
+                  src="/andrew-stokes.jpeg"
+                  alt="Andrew Stokes - Teacher and Creator of Lingoletics.com"
+                  width={600}
+                  height={400}
+                  sizes="(max-width: 1024px) 100vw, 600px"
+                  className="w-full h-auto object-contain rounded-lg shadow-lg"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
               {/* Features Section */}
         <section id="features" className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
