@@ -43,12 +43,12 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
         <h2 class="text-xl font-bold mb-4">Privacy Policy</h2>
         
         <h3 class="text-lg font-semibold mb-2">Who we are</h3>
-        <p class="mb-4">Our website address is: <a href="https://alanguagestory.com" class="text-orange-600 hover:underline">https://alanguagestory.com</a></p>
+        <p class="mb-4">Our website address is: <a href="https://www.lingoletics.com" class="text-orange-600 hover:underline">https://www.lingoletics.com</a></p>
         <div class="mb-4">
           <p class="font-semibold">Post:</p>
           <p class="mb-2">30 Tithe Barn Road, Stafford, England, ST16 3PH, GB</p>
           <p class="font-semibold">Email:</p>
-          <p>info@alanguagestory.com</p>
+          <p>info@lingoletics.com</p>
         </div>
         
         <h3 class="text-lg font-semibold mb-2">Comments</h3>
@@ -102,7 +102,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
         <h3 class="text-lg font-semibold mb-2">Cancellation</h3>
         <div class="mb-4">
           <p class="mb-2"><strong>7 day cooling off period:</strong> In accordance with the above law, you have a 7 day 'cooling off period' in which you have the right to cancel your purchase and receive a refund. You do not need to give a reason for cancelling your purchase. Should you choose to cancel, we will refund your payment within 30 days of your cancellation.</p>
-          <p class="mb-2">Should you wish to cancel your purchase within the 7 days' cooling off' period, please email us at <a href="mailto:info@alanguagestory.com" class="text-orange-600 hover:underline">info@alanguagestory.com</a> or write to us at the following address:</p>
+          <p class="mb-2">Should you wish to cancel your purchase within the 7 days' cooling off' period, please email us at <a href="mailto:info@lingoletics.com" class="text-orange-600 hover:underline">info@lingoletics.com</a> or write to us at the following address:</p>
           <div class="ml-4 mb-2">
             <p>Lingoletics.com</p>
             <p>30 Tithe Barn Road, Stafford, ST163PH</p>

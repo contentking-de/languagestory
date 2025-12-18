@@ -36,7 +36,7 @@ import {
 const mockCurrentUser = {
   id: 1,
   name: 'John Teacher',
-  email: 'john@alanguagestory.com',
+  email: 'john@lingoletics.com',
   role: 'teacher' as UserRole,
   institutionId: 1,
 };

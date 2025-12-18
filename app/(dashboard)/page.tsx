@@ -40,12 +40,12 @@ const modalContent = {
       <h2 class="text-xl font-bold mb-4">Privacy Policy</h2>
       
       <h3 class="text-lg font-semibold mb-2">Who we are</h3>
-      <p class="mb-4">Our website address is: <a href="https://alanguagestory.com" class="text-orange-600 hover:underline">https://alanguagestory.com</a></p>
+      <p class="mb-4">Our website address is: <a href="https://www.lingoletics.com" class="text-orange-600 hover:underline">https://www.lingoletics.com</a></p>
       <div class="mb-4">
         <p class="font-semibold">Post:</p>
         <p class="mb-2">30 Tithe Barn Road, Stafford, England, ST16 3PH, GB</p>
         <p class="font-semibold">Email:</p>
-        <p>info@alanguagestory.com</p>
+        <p>info@lingoletics.com</p>
       </div>
       
       <h3 class="text-lg font-semibold mb-2">Comments</h3>
@@ -80,7 +80,7 @@ const modalContent = {
       <h3 class="text-lg font-semibold mb-2">About this cookie policy</h3>
       <p class="mb-4">This Cookie Policy explains what cookies are and how we use them, the types of cookies we use i.e, the information we collect using cookies and how that information is used, and how to control the cookie preferences. For further information on how we use, store, and keep your personal data secure, see our Privacy Policy.</p>
       <p class="mb-4">You can at any time change or withdraw your consent from the Cookie Declaration on our website. Learn more about who we are, how you can contact us, and how we process personal data in our Privacy Policy.</p>
-      <p class="mb-4">Your consent applies to the following domains: <span class="font-medium">alanguagestory.com</span></p>
+      <p class="mb-4">Your consent applies to the following domains: <span class="font-medium">lingoletics.com</span></p>
       
       <h3 class="text-lg font-semibold mb-2">What are cookies?</h3>
       <p class="mb-4">Cookies are small text files that are used to store small pieces of information. They are stored on your device when the website is loaded on your browser. These cookies help us make the website function properly, make it more secure, provide better user experience, and understand how the website performs and to analyze what works and where it needs improvement.</p>
@@ -139,7 +139,7 @@ const modalContent = {
       <h3 class="text-lg font-semibold mb-2">Cancellation</h3>
       <div class="mb-4">
         <p class="mb-2"><strong>7 day cooling off period:</strong> In accordance with the above law, you have a 7 day 'cooling off period' in which you have the right to cancel your purchase and receive a refund. You do not need to give a reason for cancelling your purchase. Should you choose to cancel, we will refund your payment within 30 days of your cancellation.</p>
-        <p class="mb-2">Should you wish to cancel your purchase within the 7 days' cooling off' period, please email us at <a href="mailto:info@alanguagestory.com" class="text-orange-600 hover:underline">info@alanguagestory.com</a> or write to us at the following address:</p>
+        <p class="mb-2">Should you wish to cancel your purchase within the 7 days' cooling off' period, please email us at <a href="mailto:info@lingoletics.com" class="text-orange-600 hover:underline">info@lingoletics.com</a> or write to us at the following address:</p>
         <div class="ml-4 mb-2">
           <p>Lingoletics.com</p>
           <p>30 Tithe Barn Road, Stafford, ST163PH</p>
@@ -206,8 +206,8 @@ const modalContent = {
       <p class="mb-4">We'd love to hear from you! Get in touch with us for support, feedback, or any questions about our language learning platform.</p>
       
       <h3 class="text-lg font-semibold mb-2">Email Support</h3>
-      <p class="mb-4">For general inquiries: <a href="mailto:hello@alanguagestory.com" class="text-blue-600 hover:underline">hello@alanguagestory.com</a></p>
-      <p class="mb-4">For technical support: <a href="mailto:support@alanguagestory.com" class="text-blue-600 hover:underline">support@alanguagestory.com</a></p>
+      <p class="mb-4">For general inquiries: <a href="mailto:hello@lingoletics.com" class="text-blue-600 hover:underline">hello@lingoletics.com</a></p>
+      <p class="mb-4">For technical support: <a href="mailto:support@lingoletics.com" class="text-blue-600 hover:underline">support@lingoletics.com</a></p>
       
       <h3 class="text-lg font-semibold mb-2">Business Hours</h3>
       <p class="mb-4">Monday - Friday: 9:00 AM - 6:00 PM (CET)</p>
@@ -2365,7 +2365,7 @@ export default function HomePage() {
                 </p>
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                   <a
-                    href="https://www.facebook.com/sharer/sharer.php?u=https://alanguagestory.com"
+                    href="https://www.facebook.com/sharer/sharer.php?u=https://www.lingoletics.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -2387,7 +2387,7 @@ export default function HomePage() {
                     Instagram
                   </a>
                   <a
-                    href="https://www.linkedin.com/sharing/share-offsite/?url=https://alanguagestory.com"
+                    href="https://www.linkedin.com/sharing/share-offsite/?url=https://www.lingoletics.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"

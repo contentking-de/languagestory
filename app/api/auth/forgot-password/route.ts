@@ -43,8 +43,25 @@ export async function POST(request: NextRequest) {
         used: false
       });
 
-      // Create reset URL
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://alanguagestory.dev';
+      // Create reset URL - use environment variable, or extract from request headers, or use localhost for development
+      let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+      
+      if (!baseUrl) {
+        // Try to extract from request headers
+        const host = request.headers.get('host');
+        const protocol = request.headers.get('x-forwarded-proto') || 
+                        (host?.includes('localhost') ? 'http' : 'https');
+        
+        if (host) {
+          baseUrl = `${protocol}://${host}`;
+        } else {
+          // Fallback: use localhost for development, production domain otherwise
+          baseUrl = process.env.NODE_ENV === 'development' 
+            ? 'http://localhost:3000' 
+            : 'https://www.lingoletics.com';
+        }
+      }
+      
       const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
       // Send password reset email

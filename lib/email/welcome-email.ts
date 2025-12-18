@@ -46,7 +46,7 @@ export async function sendWelcomeEmail({ name, email, role }: WelcomeEmailData) 
             </div>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://alanguagestory.dev'}/dashboard" 
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://www.lingoletics.com')}/dashboard" 
                  style="display: inline-block; background: linear-gradient(135deg, #ea580c 0%, #f97316 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(234, 88, 12, 0.2);">
                 🚀 Start Learning Now
               </a>
@@ -102,7 +102,7 @@ You now have access to all our premium features for the next 14 days, completely
 • AI-powered content creation tools
 
 🚀 Start Learning Now
-Visit your dashboard: ${process.env.NEXT_PUBLIC_APP_URL || 'https://alanguagestory.dev'}/dashboard
+Visit your dashboard: ${process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://www.lingoletics.com')}/dashboard
 
 💡 Getting Started Tips
 • Complete your profile to personalize your experience

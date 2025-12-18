@@ -94,7 +94,8 @@ export async function PATCH(request: NextRequest) {
         .where(eq(invitations.id, invitationId));
 
       // Resend invitation email
-      const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://alanguagestory.dev'}/sign-up?inviteId=${invitation.id}`;
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://www.lingoletics.com');
+      const invitationUrl = `${baseUrl}/sign-up?inviteId=${invitation.id}`;
       
       await sendInvitationEmail({
         email: invitation.email,
