@@ -77,84 +77,49 @@ export function InlineVocabTrainer({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {targetLanguage === 'german' ? (
-          <div className="p-6 border rounded-lg bg-gray-50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Word (German)</p>
+        <div className="p-6 border rounded-lg bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">
+                Word ({targetLanguage === 'french' ? 'French' : targetLanguage === 'german' ? 'German' : targetLanguage === 'spanish' ? 'Spanish' : 'English'})
+              </p>
+              <div className="flex items-center gap-2">
                 <p className="text-2xl font-semibold text-gray-900">{translation || '—'}</p>
-                {current.context_sentence && (
-                  <p className="text-sm text-gray-600 mt-2 italic">"{current.context_sentence}"</p>
-                )}
-              </div>
-              <Badge variant="outline">Lvl {current.difficulty_level}</Badge>
-            </div>
-          </div>
-        ) : (
-          <div className="p-6 border rounded-lg bg-gray-50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Prompt (English)</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-2xl font-semibold text-gray-900">{current.word_english}</p>
+                {translation && (
                   <AudioPlayer
-                    text={current.word_english}
-                    language="english"
+                    text={translation}
+                    language={targetLanguage}
                     type="vocabulary"
                     vocabularyId={current.id}
                     size="sm"
                   />
-                </div>
-                {current.context_sentence && (
-                  <p className="text-sm text-gray-600 mt-2 italic">"{current.context_sentence}"</p>
                 )}
               </div>
-              <Badge variant="outline">Lvl {current.difficulty_level}</Badge>
+              {current.context_sentence && (
+                <p className="text-sm text-gray-600 mt-2 italic">"{current.context_sentence}"</p>
+              )}
             </div>
+            <Badge variant="outline">Lvl {current.difficulty_level}</Badge>
           </div>
-        )}
+        </div>
 
         <div className="p-6 border rounded-lg">
-          {targetLanguage === 'german' ? (
-            <>
-              <p className="text-gray-500 text-sm mb-1">Reveal (English)</p>
-              {showAnswer ? (
-                <div className="flex items-center gap-2">
-                  <p className="text-xl font-medium text-gray-900">{englishWord || '—'}</p>
-                  {englishWord && (
-                    <AudioPlayer
-                      text={englishWord}
-                      language="english"
-                      type="vocabulary"
-                      vocabularyId={current.id}
-                      size="sm"
-                    />
-                  )}
-                </div>
-              ) : (
-                <p className="text-xl text-gray-300 select-none">•••••••</p>
+          <p className="text-gray-500 text-sm mb-1">Reveal (English)</p>
+          {showAnswer ? (
+            <div className="flex items-center gap-2">
+              <p className="text-xl font-medium text-gray-900">{englishWord || '—'}</p>
+              {englishWord && (
+                <AudioPlayer
+                  text={englishWord}
+                  language="english"
+                  type="vocabulary"
+                  vocabularyId={current.id}
+                  size="sm"
+                />
               )}
-            </>
+            </div>
           ) : (
-            <>
-              <p className="text-gray-500 text-sm mb-1">Answer ({targetLanguage})</p>
-              {showAnswer ? (
-                <div className="flex items-center gap-2">
-                  <p className="text-xl font-medium text-gray-900">{translation || '—'}</p>
-                  {translation && (
-                    <AudioPlayer
-                      text={translation}
-                      language={targetLanguage}
-                      type="vocabulary"
-                      vocabularyId={current.id}
-                      size="sm"
-                    />
-                  )}
-                </div>
-              ) : (
-                <p className="text-xl text-gray-300 select-none">•••••••</p>
-              )}
-            </>
+            <p className="text-xl text-gray-300 select-none">•••••••</p>
           )}
         </div>
 

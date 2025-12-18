@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useActionState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,45 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState('');
+  const [invitationEmail, setInvitationEmail] = useState<string>('');
+  const [invitationRole, setInvitationRole] = useState<string>('');
+  const [invitationLoading, setInvitationLoading] = useState(false);
+  const [invitationError, setInvitationError] = useState<string>('');
+  const [emailValue, setEmailValue] = useState<string>(state.email || '');
+
+  // Load invitation data if inviteId is present
+  useEffect(() => {
+    if (mode === 'signup' && inviteId) {
+      setInvitationLoading(true);
+      fetch(`/api/invitations/${inviteId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            setInvitationError(data.error);
+          } else if (data.email) {
+            setInvitationEmail(data.email);
+            setEmailValue(data.email);
+            if (data.role) {
+              setInvitationRole(data.role);
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error loading invitation:', error);
+          setInvitationError('Failed to load invitation details');
+        })
+        .finally(() => {
+          setInvitationLoading(false);
+        });
+    }
+  }, [inviteId, mode]);
+
+  // Update email value when state changes (e.g., after form submission error)
+  useEffect(() => {
+    if (state.email && !invitationEmail) {
+      setEmailValue(state.email);
+    }
+  }, [state.email, invitationEmail]);
 
   // Modal content data
   const modalContent = {
@@ -174,7 +213,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
           <input type="hidden" name="redirect" value={redirect || ''} />
           <input type="hidden" name="priceId" value={priceId || ''} />
           <input type="hidden" name="inviteId" value={inviteId || ''} />
-          {mode === 'signup' && <input type="hidden" name="role" value="teacher" />}
+          {mode === 'signup' && <input type="hidden" name="role" value={invitationRole || 'teacher'} />}
           {mode === 'signup' && (
             <div>
               <Label
@@ -211,12 +250,26 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                 name="email"
                 type="email"
                 autoComplete="email"
-                defaultValue={state.email}
+                value={emailValue}
+                onChange={(e) => !invitationEmail && setEmailValue(e.target.value)}
+                readOnly={!!invitationEmail}
                 required
                 maxLength={50}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your email"
+                className={`appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm ${
+                  invitationEmail ? 'bg-gray-100 cursor-not-allowed' : ''
+                }`}
+                placeholder={invitationLoading ? 'Loading...' : 'Enter your email'}
               />
+              {invitationEmail && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Email address from your invitation
+                </p>
+              )}
+              {invitationError && (
+                <p className="mt-1 text-xs text-red-600">
+                  {invitationError}
+                </p>
+              )}
             </div>
           </div>
 

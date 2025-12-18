@@ -133,12 +133,12 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const existingUser = await db
     .select()
     .from(users)
-    .where(eq(users.email, email))
+    .where(eq(users.email, email.toLowerCase().trim()))
     .limit(1);
 
   if (existingUser.length > 0) {
     return {
-      error: 'Failed to create user. Please try again.',
+      error: 'An account with this email address already exists. Please sign in instead.',
       email,
       password
     };
@@ -163,18 +163,28 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 
   const newUser: NewUser = {
     name,
-    email,
+    email: email.toLowerCase().trim(),
     passwordHash,
     role: role as UserRole,
     institutionId: institutionId ? parseInt(institutionId) : undefined,
     parentId,
   };
 
-  const [createdUser] = await db.insert(users).values(newUser).returning();
+  let createdUser;
+  try {
+    [createdUser] = await db.insert(users).values(newUser).returning();
+  } catch (error) {
+    console.error('Error creating user:', error);
+    return {
+      error: 'Failed to create user account. Please try again or contact support.',
+      email,
+      password
+    };
+  }
 
   if (!createdUser) {
     return {
-      error: 'Failed to create user. Please try again.',
+      error: 'Failed to create user account. Please try again or contact support.',
       email,
       password
     };
@@ -186,45 +196,60 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 
   if (inviteId) {
     // Handle invitation-based signup
-    const [invitation] = await db
+    // First check if invitation exists (without email check to get better error messages)
+    const [invitationById] = await db
       .select()
       .from(invitations)
-      .where(
-        and(
-          eq(invitations.id, parseInt(inviteId)),
-          eq(invitations.email, email),
-          eq(invitations.status, 'pending')
-        )
-      )
+      .where(eq(invitations.id, parseInt(inviteId)))
       .limit(1);
 
-    if (invitation) {
-      // Check if invitation has expired (7 days)
-      const invitationDate = new Date(invitation.invitedAt);
-      const now = new Date();
-      const daysDiff = (now.getTime() - invitationDate.getTime()) / (1000 * 60 * 60 * 24);
-      
-      if (daysDiff > 7) {
-        return { error: 'This invitation has expired. Please ask for a new invitation.' };
-      }
+    if (!invitationById) {
+      return { error: 'Invalid invitation. Please check your invitation link.' };
+    }
 
-      teamId = invitation.teamId;
-      userRole = invitation.role as UserRole;
+    // Check if invitation has expired (7 days)
+    const invitationDate = new Date(invitationById.invitedAt);
+    const now = new Date();
+    const daysDiff = (now.getTime() - invitationDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    if (daysDiff > 7) {
+      return { error: 'This invitation has expired. Please ask for a new invitation.' };
+    }
 
+    // Check if invitation was already accepted
+    if (invitationById.status !== 'pending') {
+      return { error: 'This invitation has already been used. Please contact your administrator for a new invitation.' };
+    }
+
+    // Check if email matches (case-insensitive)
+    if (invitationById.email.toLowerCase() !== email.toLowerCase()) {
+      return { 
+        error: `This invitation is for a different email address. Please use the email address: ${invitationById.email}`,
+        email: invitationById.email
+      };
+    }
+
+    teamId = invitationById.teamId;
+    userRole = invitationById.role as UserRole;
+
+    try {
       await Promise.all([
         db.insert(teamMembers).values({
-          teamId: invitation.teamId,
+          teamId: invitationById.teamId,
           userId: createdUser.id,
-          role: invitation.role,
-          language: invitation.language,
+          role: invitationById.role,
+          language: invitationById.language,
         }),
         db
           .update(invitations)
           .set({ status: 'accepted' })
-          .where(eq(invitations.id, invitation.id)),
+          .where(eq(invitations.id, invitationById.id)),
       ]);
-    } else {
-      return { error: 'Invalid or expired invitation.' };
+    } catch (error) {
+      console.error('Error adding user to team:', error);
+      // Rollback user creation if team member insertion fails
+      await db.delete(users).where(eq(users.id, createdUser.id));
+      return { error: 'Failed to complete registration. Please try again or contact support.' };
     }
   } else {
     // Create new team for individual users
