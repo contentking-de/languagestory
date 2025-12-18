@@ -134,17 +134,17 @@ export default function WelcomePage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link href="/dashboard/content" className="group">
+            <Link href="/dashboard/content/courses" className="group">
               <Button variant="outline" className="w-full h-auto p-4 group-hover:border-orange-300 group-hover:bg-orange-50 transition-all">
                 <div className="text-center">
                   <BookOpen className="h-6 w-6 mx-auto mb-2 text-orange-500" />
-                  <div className="font-medium">Browse Stories</div>
+                  <div className="font-medium">Browse Courses</div>
                   <div className="text-xs text-gray-500">Explore our library</div>
                 </div>
               </Button>
             </Link>
             
-            <Link href="/dashboard/ai-creator" className="group">
+            <Link href="/dashboard/content/lessons" className="group">
               <Button variant="outline" className="w-full h-auto p-4 group-hover:border-blue-300 group-hover:bg-blue-50 transition-all">
                 <div className="text-center">
                   <Play className="h-6 w-6 mx-auto mb-2 text-blue-500" />

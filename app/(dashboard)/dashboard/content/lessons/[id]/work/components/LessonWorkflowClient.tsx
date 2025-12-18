@@ -100,6 +100,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
   const [nextLesson, setNextLesson] = useState<any>(null);
   const [hasNextLesson, setHasNextLesson] = useState(true);
   const [showProgressSteps, setShowProgressSteps] = useState(false);
+  const [pointsEarned, setPointsEarned] = useState(0);
 
   useEffect(() => {
     fetchLessonData();
@@ -314,6 +315,226 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     }
   };
 
+  const awardLessonPoints = async () => {
+    try {
+      const steps = buildWorkflowSteps();
+      let totalPointsAwarded = 0;
+      const maxPointsPerLesson = 300;
+
+      // Award points for each completed step
+      // When the lesson is completed, all steps up to and including the current step are completed
+      for (let i = 0; i <= currentStep && i < steps.length; i++) {
+        const step = steps[i];
+        const stepProgress = progress.find(p => p.id === step.id);
+        
+        if (step.type === 'quiz' && step.quizId) {
+          // Award points for quiz completion
+          const quiz = quizzes.find(q => q.id === step.quizId);
+          const score = stepProgress?.score || 0;
+          const metadata = {
+            score,
+            is_perfect_score: score >= 100,
+          };
+
+          try {
+            const response = await fetch('/api/student/award-points', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                activity_type: 'COMPLETE_QUIZ',
+                reference_id: step.quizId,
+                reference_type: 'quiz',
+                language: lesson?.course_language,
+                metadata,
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              totalPointsAwarded += data.points_awarded || 0;
+            }
+          } catch (error) {
+            console.error('Error awarding quiz points:', error);
+          }
+        } else if (step.type === 'content' && step.title === 'Vocabulary Trainer') {
+          // Award points for vocabulary completion
+          try {
+            const response = await fetch('/api/student/award-points', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                activity_type: 'COMPLETE_VOCABULARY',
+                reference_id: lessonId,
+                reference_type: 'lesson',
+                language: lesson?.course_language,
+                metadata: {
+                  lesson_id: lessonId,
+                },
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              totalPointsAwarded += data.points_awarded || 0;
+            }
+          } catch (error) {
+            console.error('Error awarding vocabulary points:', error);
+          }
+        } else if (step.type === 'game' && step.gameId) {
+          // Award points for game completion
+          try {
+            const response = await fetch('/api/student/award-points', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                activity_type: 'COMPLETE_GAME',
+                reference_id: step.gameId,
+                reference_type: 'game',
+                language: lesson?.course_language,
+                metadata: {
+                  game_id: step.gameId,
+                  lesson_id: lessonId,
+                },
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              totalPointsAwarded += data.points_awarded || 0;
+            }
+          } catch (error) {
+            console.error('Error awarding game points:', error);
+          }
+        } else if (step.type === 'grammar' && step.grammarId) {
+          // Award points for grammar completion
+          try {
+            const response = await fetch('/api/student/award-points', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                activity_type: 'COMPLETE_GRAMMAR',
+                reference_id: step.grammarId,
+                reference_type: 'grammar',
+                language: lesson?.course_language,
+                metadata: {
+                  grammar_id: step.grammarId,
+                  lesson_id: lessonId,
+                },
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              totalPointsAwarded += data.points_awarded || 0;
+            }
+          } catch (error) {
+            console.error('Error awarding grammar points:', error);
+          }
+        } else if (step.type === 'content' && step.title === 'Lesson Content') {
+          // Award points for lesson content completion
+          try {
+            const response = await fetch('/api/student/award-points', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                activity_type: 'COMPLETE_CONTENT',
+                reference_id: lessonId,
+                reference_type: 'lesson',
+                language: lesson?.course_language,
+                metadata: {
+                  lesson_id: lessonId,
+                },
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              totalPointsAwarded += data.points_awarded || 0;
+            }
+          } catch (error) {
+            console.error('Error awarding content points:', error);
+          }
+        } else if (step.type === 'cultural') {
+          // Award points for cultural information completion
+          try {
+            const response = await fetch('/api/student/award-points', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                activity_type: 'COMPLETE_CULTURAL',
+                reference_id: lessonId,
+                reference_type: 'lesson',
+                language: lesson?.course_language,
+                metadata: {
+                  lesson_id: lessonId,
+                },
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              totalPointsAwarded += data.points_awarded || 0;
+            }
+          } catch (error) {
+            console.error('Error awarding cultural points:', error);
+          }
+        }
+      }
+
+      // Award points for completing the entire lesson (only if we haven't exceeded max)
+      if (totalPointsAwarded < maxPointsPerLesson) {
+        try {
+          const response = await fetch('/api/student/award-points', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              activity_type: 'COMPLETE_LESSON',
+              reference_id: lessonId,
+              reference_type: 'lesson',
+              language: lesson?.course_language,
+              metadata: {
+                lesson_id: lessonId,
+                total_steps: steps.length,
+                completed_steps: steps.filter(s => {
+                  const stepProgress = progress.find(p => p.id === s.id);
+                  return stepProgress?.status === 'completed';
+                }).length,
+              },
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            totalPointsAwarded += data.points_awarded || 0;
+          }
+        } catch (error) {
+          console.error('Error awarding lesson points:', error);
+        }
+      }
+
+      // Cap total points at maxPointsPerLesson
+      // Note: This is a soft cap - individual awards may exceed, but we track it
+      return Math.min(totalPointsAwarded, maxPointsPerLesson);
+    } catch (error) {
+      console.error('Error awarding lesson points:', error);
+      return 0;
+    }
+  };
+
   const handleNext = async () => {
     // Mark current step as completed
     await updateProgress(currentStep, 'completed');
@@ -324,7 +545,33 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
       // Mark next step as in progress
       await updateProgress(currentStep + 1, 'in_progress');
     } else {
-      // Lesson completed
+      // Lesson completed - mark the entire lesson as completed
+      await updateProgress(currentStep, 'completed');
+      
+      // Award points through gamification system
+      const earned = await awardLessonPoints();
+      setPointsEarned(earned);
+      
+      // Also create a progress entry for the entire lesson (without quiz_id)
+      // This ensures the lesson is counted in totalLessons
+      try {
+        await fetch('/api/student/progress', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            student_id: userId,
+            lesson_id: lessonId,
+            status: 'completed',
+            time_spent: timeSpent,
+            points_earned: earned,
+          }),
+        });
+      } catch (error) {
+        console.error('Error marking lesson as completed:', error);
+      }
+      
       setIsTimerRunning(false);
       setLessonCompleted(true);
       setShowCompletionModal(true);
@@ -800,7 +1047,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         onContinue={handleContinueToNextLesson}
         onGoHome={handleGoHome}
         lessonTitle={lesson?.title || 'Lesson'}
-        pointsEarned={lesson?.points_value || 0}
+        pointsEarned={pointsEarned}
         hasNextLesson={hasNextLesson}
       />
     </div>

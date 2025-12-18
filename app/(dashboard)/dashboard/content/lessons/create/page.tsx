@@ -48,7 +48,7 @@ function CreateLessonForm() {
     lesson_type: 'story',
     lesson_order: 1,
     estimated_duration: 30,
-    points_value: 350,
+    points_value: 300,
     is_published: false,
     course_id: preselectedCourseId ? parseInt(preselectedCourseId) : 0,
   });
@@ -616,10 +616,10 @@ function CreateLessonForm() {
                   value={formData.points_value}
                   onChange={(e) => setFormData(prev => ({ ...prev, points_value: parseInt(e.target.value) || 0 }))}
                   className="mt-1"
-                  placeholder="10"
+                  placeholder="300"
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Points students will earn for completing this lesson
+                  Maximum points students will earn for completing this lesson
                 </p>
               </div>
 

@@ -147,7 +147,40 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
       }>)
     : last7;
 
-  if (!Array.isArray((progressData as any).recentActivity) && Array.isArray((progressData as any).progressRecords)) {
+  // If recentActivity is not available as array, use point_transactions for accurate points
+  // Always prefer recentTransactions over recentActivity for accurate point calculation
+  if (Array.isArray((progressData as any).recentTransactions) && (progressData as any).recentTransactions.length > 0) {
+    // Use recentTransactions to calculate daily points (most accurate)
+    const mapByDate = new Map(last7.map(d => [d.activity_date, { ...d }]));
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+    
+    for (const transaction of (progressData as any).recentTransactions) {
+      if (!transaction.created_at) continue;
+      const transactionDate = new Date(transaction.created_at);
+      if (transactionDate < sevenDaysAgo) continue;
+      
+      const dateStr = transactionDate.toISOString().split('T')[0];
+      if (mapByDate.has(dateStr) && transaction.points_change > 0) {
+        const agg = mapByDate.get(dateStr)!;
+        agg.points_earned += transaction.points_change || 0;
+        
+        // Also update activity counts based on transaction type
+        if (transaction.activity_type?.includes('QUIZ')) {
+          agg.quizzes_completed += 1;
+        } else if (transaction.activity_type?.includes('LESSON')) {
+          agg.lessons_completed += 1;
+        } else if (transaction.activity_type?.includes('VOCABULARY')) {
+          agg.vocabulary_practiced += 1;
+        } else if (transaction.activity_type?.includes('GAME')) {
+          agg.games_played += 1;
+        }
+      }
+    }
+    recentActivityArr = Array.from(mapByDate.values()).sort((a, b) => a.activity_date.localeCompare(b.activity_date));
+  } else if (!Array.isArray((progressData as any).recentActivity) && Array.isArray((progressData as any).progressRecords)) {
+    // Fallback: use progressRecords (less accurate, but better than nothing)
     const mapByDate = new Map(last7.map(d => [d.activity_date, { ...d }]));
     for (const rec of (progressData as any).progressRecords) {
       if (!rec.last_accessed) continue;
@@ -189,7 +222,7 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm">Total Points</p>
-                <p className="text-2xl font-bold">{(progressData as any).totalPoints ?? (streak?.total_points || 0)}</p>
+                <p className="text-2xl font-bold">{streak?.total_points || 0}</p>
               </div>
               <Star className="h-8 w-8 text-blue-200" />
             </div>
@@ -251,7 +284,7 @@ export function StudentProgressDashboard({ studentId }: StudentProgressProps) {
                 <Star className="h-6 w-6 text-blue-600" />
               </div>
               <p className="text-2xl font-bold text-blue-600">{weeklyStats.totalPoints}</p>
-              <p className="text-sm text-gray-600">Points Earned</p>
+              <p className="text-sm text-gray-600">This Week's Points</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mx-auto mb-2">

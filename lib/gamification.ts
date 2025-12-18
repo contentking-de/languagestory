@@ -18,18 +18,27 @@ import { logActivity } from '@/lib/activity-logger';
 // Points configuration for different activities
 export const POINTS_CONFIG = {
   COMPLETE_QUIZ: {
-    base: 10,
+    base: 20,
     perfect_score_bonus: 20, // 100% score
     time_bonus: 10, // Completed quickly
   },
   COMPLETE_LESSON: {
-    base: 15,
+    base: 20,
   },
   COMPLETE_VOCABULARY: {
-    base: 5,
+    base: 20,
   },
   COMPLETE_GAME: {
-    base: 8,
+    base: 10,
+  },
+  COMPLETE_GRAMMAR: {
+    base: 20,
+  },
+  COMPLETE_CONTENT: {
+    base: 20,
+  },
+  COMPLETE_CULTURAL: {
+    base: 10,
   },
   DAILY_STREAK: {
     day_1_7: 5,    // Points per day for days 1-7
@@ -670,7 +679,7 @@ export async function getStudentProgress(studentId: number) {
       .from(point_transactions)
       .where(eq(point_transactions.student_id, studentId))
       .orderBy(desc(point_transactions.created_at))
-      .limit(10);
+      .limit(50); // Increased limit to capture more transactions for weekly calculation
 
     // Get recent daily activity (last 7 days)
     const sevenDaysAgo = new Date();

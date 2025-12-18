@@ -190,40 +190,42 @@ export function UserProgressSummary({ userId, compact = false }: UserProgressSum
         </div>
 
         {/* Activity Breakdown */}
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          {completionStats?.quizzes_completed && completionStats.quizzes_completed > 0 && (
-            <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-              <div className="flex items-center gap-2">
-                <Target className="h-3 w-3 text-gray-600" />
-                <span className="text-xs text-gray-600">{completionStats.quizzes_completed} Quizzes</span>
+        {completionStats && (
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            {completionStats.quizzes_completed > 0 && (
+              <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
+                <div className="flex items-center gap-2">
+                  <Target className="h-3 w-3 text-gray-600" />
+                  <span className="text-xs text-gray-600">{completionStats.quizzes_completed} Quizzes</span>
+                </div>
               </div>
-            </div>
-          )}
-          {completionStats?.lessons_completed && completionStats.lessons_completed > 0 && (
-            <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-3 w-3 text-gray-600" />
-                <span className="text-xs text-gray-600">{completionStats.lessons_completed} Lessons</span>
+            )}
+            {completionStats.lessons_completed > 0 && (
+              <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-3 w-3 text-gray-600" />
+                  <span className="text-xs text-gray-600">{completionStats.lessons_completed} Lessons</span>
+                </div>
               </div>
-            </div>
-          )}
-          {completionStats?.vocabulary_completed && completionStats.vocabulary_completed > 0 && (
-            <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-              <div className="flex items-center gap-2">
-                <Brain className="h-3 w-3 text-gray-600" />
-                <span className="text-xs text-gray-600">{completionStats.vocabulary_completed} Vocab</span>
+            )}
+            {completionStats.vocabulary_completed > 0 && (
+              <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
+                <div className="flex items-center gap-2">
+                  <Brain className="h-3 w-3 text-gray-600" />
+                  <span className="text-xs text-gray-600">{completionStats.vocabulary_completed} Vocab</span>
+                </div>
               </div>
-            </div>
-          )}
-          {completionStats?.games_completed && completionStats.games_completed > 0 && (
-            <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-              <div className="flex items-center gap-2">
-                <GamepadIcon className="h-3 w-3 text-gray-600" />
-                <span className="text-xs text-gray-600">{completionStats.games_completed} Games</span>
+            )}
+            {completionStats.games_completed > 0 && (
+              <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
+                <div className="flex items-center gap-2">
+                  <GamepadIcon className="h-3 w-3 text-gray-600" />
+                  <span className="text-xs text-gray-600">{completionStats.games_completed} Games</span>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Progress Indicator */}
         <div className="flex items-center justify-center">

@@ -60,11 +60,16 @@ export default async function ProgressPage() {
             <div>
               <h4 className="font-medium mb-2">Earning Points</h4>
               <ul className="space-y-1">
-                <li>• Complete Quiz: 10+ points</li>
+                <li>• Complete Quiz: 20 points (up to 50 with bonuses)</li>
                 <li>• Perfect Score Bonus: +20 points</li>
-                <li>• Complete Lesson: 15 points</li>
-                <li>• Practice Vocabulary: 5 points</li>
-                <li>• Play Games: 8 points</li>
+                <li>• Time Bonus: +10 points</li>
+                <li>• Complete Lesson: 20 points</li>
+                <li>• Practice Vocabulary: 20 points</li>
+                <li>• Complete Grammar: 20 points</li>
+                <li>• Complete Content: 20 points</li>
+                <li>• Play Games: 10 points</li>
+                <li>• Cultural Information: 10 points</li>
+                <li>• Maximum per Lesson: 300 points</li>
               </ul>
             </div>
             <div>
@@ -72,9 +77,13 @@ export default async function ProgressPage() {
               <ul className="space-y-1">
                 <li>• First Quiz: 25 points</li>
                 <li>• Perfect Score: 50 points</li>
+                <li>• First Lesson: 25 points</li>
                 <li>• 7-Day Streak: 100 points</li>
                 <li>• 30-Day Streak: 300 points</li>
-                <li>• Point Milestones: Various rewards</li>
+                <li>• 100-Day Streak: 1000 points</li>
+                <li>• 100 Points Milestone: 10 points</li>
+                <li>• 500 Points Milestone: 50 points</li>
+                <li>• 1000 Points Milestone: 100 points</li>
               </ul>
             </div>
           </div>

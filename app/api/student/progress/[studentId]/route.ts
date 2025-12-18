@@ -3,6 +3,7 @@ import { getUserWithTeamData } from '@/lib/db/queries';
 import { db } from '@/lib/db/drizzle';
 import { student_progress } from '@/lib/db/content-schema';
 import { eq, and } from 'drizzle-orm';
+import { getStudentProgress } from '@/lib/gamification';
 
 export async function GET(
   request: NextRequest,
@@ -32,23 +33,25 @@ export async function GET(
 
       return NextResponse.json(progressRecords);
     } else {
-      // Fetch general progress data for dashboard
+      // Fetch general progress data for dashboard using getStudentProgress
+      // This includes achievements, streaks, transactions, etc.
+      const progressData = await getStudentProgress(parseInt(studentId));
+      
+      // Also get lesson progress for totalLessons calculation
+      // Only count lessons without quiz_id (entire lessons, not individual quiz steps)
       const allProgress = await db
         .select()
         .from(student_progress)
         .where(eq(student_progress.student_id, parseInt(studentId)));
 
-      // Calculate summary statistics
-      const totalLessons = allProgress.filter(p => p.status === 'completed').length;
-      const totalPoints = allProgress.reduce((sum, p) => sum + (p.points_earned || 0), 0);
-      const recentActivity = allProgress
-        .filter(p => p.last_accessed && new Date(p.last_accessed) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
-        .length;
+      const totalLessons = allProgress.filter(p => 
+        p.status === 'completed' && !p.quiz_id
+      ).length;
 
       return NextResponse.json({
+        ...progressData,
         totalLessons,
-        totalPoints,
-        recentActivity,
+        totalPoints: progressData.streak?.total_points || 0,
         progressRecords: allProgress
       });
     }

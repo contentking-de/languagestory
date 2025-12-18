@@ -79,7 +79,7 @@ export default function LessonEditPage() {
     lesson_type: '',
     lesson_order: 1,
     estimated_duration: 30,
-    points_value: 10,
+    points_value: 100,
     is_published: false,
     course_id: 0,
     cover_image: '',
@@ -120,7 +120,7 @@ export default function LessonEditPage() {
           lesson_type: lessonData.lesson_type,
           lesson_order: lessonData.lesson_order,
           estimated_duration: lessonData.estimated_duration || 30,
-          points_value: lessonData.points_value || 10,
+          points_value: lessonData.points_value || 100,
           is_published: lessonData.is_published,
           course_id: lessonData.course_id,
           cover_image: lessonData.cover_image || '',
@@ -448,7 +448,7 @@ export default function LessonEditPage() {
                   className="mt-1"
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Points students will earn for completing this lesson
+                  Maximum points students will earn for completing this lesson
                 </p>
               </div>
 
