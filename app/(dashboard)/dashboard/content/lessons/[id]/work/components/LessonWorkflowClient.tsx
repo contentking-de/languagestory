@@ -626,7 +626,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         // fall through to normal content rendering
       case 'content':
         return (
-          <Card className="max-w-4xl mx-auto">
+          <Card className="max-w-6xl mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5" />
@@ -666,7 +666,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
 
       case 'cultural':
         return (
-          <Card className="max-w-4xl mx-auto">
+          <Card className="max-w-6xl mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Languages className="h-5 w-5" />
@@ -697,7 +697,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
       case 'story':
         const story = lesson?.stories?.find(s => s.id === currentStepData.storyId);
         return (
-          <Card className="max-w-4xl mx-auto">
+          <Card className="max-w-6xl mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5" />
@@ -732,7 +732,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         const quiz = quizzes.find(q => q.id === currentStepData.quizId);
         if (!quiz) {
           return (
-            <Card className="max-w-4xl mx-auto">
+            <Card className="max-w-6xl mx-auto">
               <CardContent className="p-8">
                 <div className="text-center">
                   <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -751,7 +751,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
               const showCulturalPre = quiz?.quiz_type === 'true_false' && !!lesson?.cultural_information;
               if (!showContentPre && !showCulturalPre) return null;
               return (
-                <div className="mx-auto mb-6 max-w-4xl">
+                <div className="mx-auto mb-6 max-w-6xl">
                   {showContentPre && (
                     <Card className="h-full">
                       <CardHeader>
@@ -858,7 +858,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         const game = games.find(g => g.id === currentStepData.gameId);
         if (!game) {
           return (
-            <Card className="max-w-4xl mx-auto">
+            <Card className="max-w-6xl mx-auto">
               <CardContent className="p-8">
                 <div className="text-center">
                   <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />

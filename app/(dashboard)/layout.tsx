@@ -1,10 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useState, Suspense } from 'react';
-import { Button } from '@/components/ui/button';
-import { CircleIcon, Home, LogOut, LogIn, UserPlus, Menu, X, User as UserIcon, ChevronDown, TrendingUp, Settings, Activity, Shield } from 'lucide-react';
-
+import { useState, Suspense, useEffect } from 'react';
+import { Home, LogOut, User as UserIcon, TrendingUp, Settings, Activity, Shield } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -14,17 +12,31 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { signOut } from '@/app/(login)/actions';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { User } from '@/lib/db/schema';
 import useSWR, { mutate } from 'swr';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+// Hook to scroll to top on route change
+function useScrollToTop() {
+  const pathname = usePathname();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+}
+
 function UserMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLearningResourcesOpen, setIsLearningResourcesOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { data: user } = useSWR<User>('/api/user', fetcher);
   const router = useRouter();
+
+  // Prevent hydration mismatch by only rendering dropdowns after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   async function handleSignOut() {
     await signOut();
@@ -32,161 +44,29 @@ function UserMenu() {
     router.push('/');
   }
 
+  // Loading state or not logged in - redirect will happen via middleware
   if (!user) {
     return (
-      <>
-        {/* Desktop Navigation */}
-        <div className="hidden xl:flex items-center space-x-4">
-          <a
-            href="#why-choose-us"
-            className="text-lg font-medium text-gray-700 hover:text-gray-900"
-          >
-            Why Choose Us
-          </a>
-          <a
-            href="#features"
-            className="text-lg font-medium text-gray-700 hover:text-gray-900"
-          >
-            Features
-          </a>
-          
-          {/* Learning Resources Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center text-lg font-medium text-gray-700 hover:text-gray-900 focus:outline-none">
-              Learning Resources
-              <ChevronDown className="ml-1 h-3 w-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuItem asChild>
-                <a href="#short-stories" className="w-full">
-                  Short Stories
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a href="#vocabulary-games" className="w-full">
-                  Vocabulary Games
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a href="#quizzes" className="w-full">
-                  Quizzes
-                </a>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <a
-            href="#pricing"
-            className="text-lg font-medium text-gray-700 hover:text-gray-900"
-          >
-            Plans & Pricing
-          </a>
-          <Button asChild className="rounded-lg bg-orange-500 hover:bg-orange-600 text-lg">
-            <Link href="/sign-in">
-              <LogIn className="h-4 w-4" />
-              Login
-            </Link>
-          </Button>
-          <Button asChild className="rounded-lg btn-signup text-lg">
-            <Link href="/sign-up">
-              <UserPlus className="h-4 w-4" />
-              Sign Up
-            </Link>
-          </Button>
-        </div>
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-full bg-gray-200 animate-pulse" />
+      </div>
+    );
+  }
 
-        {/* Mobile and Tablet Burger Menu Button */}
-        <button
-          className="xl:hidden p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <Menu className="h-6 w-6" />
-          )}
-        </button>
-
-        {/* Mobile and Tablet Menu */}
-        {isMenuOpen && (
-          <div className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg xl:hidden z-50">
-            <div className="px-4 py-6 space-y-4">
-              <a
-                href="#why-choose-us"
-                className="block text-base font-medium text-gray-700 hover:text-gray-900 py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Why Choose Us
-              </a>
-              <a
-                href="#features"
-                className="block text-base font-medium text-gray-700 hover:text-gray-900 py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Features
-              </a>
-              
-              {/* Learning Resources Expandable Section */}
-              <div>
-                <button
-                  className="flex items-center justify-between w-full text-base font-medium text-gray-700 hover:text-gray-900 py-2"
-                  onClick={() => setIsLearningResourcesOpen(!isLearningResourcesOpen)}
-                >
-                  Learning Resources
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isLearningResourcesOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {isLearningResourcesOpen && (
-                  <div className="ml-4 mt-2 space-y-2">
-                    <a
-                      href="#short-stories"
-                      className="block text-sm text-gray-600 hover:text-gray-900 py-1"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Short Stories
-                    </a>
-                    <a
-                      href="#vocabulary-games"
-                      className="block text-sm text-gray-600 hover:text-gray-900 py-1"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Vocabulary Games
-                    </a>
-                    <a
-                      href="#quizzes"
-                      className="block text-sm text-gray-600 hover:text-gray-900 py-1"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Quizzes
-                    </a>
-                  </div>
-                )}
-              </div>
-              
-              <a
-                href="#pricing"
-                className="block text-base font-medium text-gray-700 hover:text-gray-900 py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Plans & Pricing
-              </a>
-              <div className="pt-4 space-y-3">
-                <Button asChild className="w-full rounded-lg bg-orange-500 hover:bg-orange-600 text-base">
-                  <Link href="/sign-in" onClick={() => setIsMenuOpen(false)}>
-                    <LogIn className="h-4 w-4" />
-                    Login
-                  </Link>
-                </Button>
-                <Button asChild className="w-full rounded-lg btn-signup text-base">
-                  <Link href="/sign-up" onClick={() => setIsMenuOpen(false)}>
-                    <UserPlus className="h-4 w-4" />
-                    Sign Up
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </>
+  // Only render dropdown after mount to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-gray-700 hidden sm:block">
+          Welcome {user.name || user.email.split('@')[0]}
+        </span>
+        <Avatar className="cursor-pointer size-9">
+          <AvatarImage alt={user.name || ''} />
+          <AvatarFallback className="bg-orange-500 text-white">
+            <UserIcon className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+      </div>
     );
   }
 
@@ -252,7 +132,7 @@ function UserMenu() {
 function Header() {
   return (
     <header className="border-b border-gray-200 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center">
           <img 
             src="/logo.png" 
@@ -261,7 +141,7 @@ function Header() {
           />
         </Link>
         <div className="flex items-center space-x-4">
-          <Suspense fallback={<div className="h-9" />}>
+          <Suspense fallback={<div className="h-9 w-9 rounded-full bg-gray-200 animate-pulse" />}>
             <UserMenu />
           </Suspense>
         </div>
@@ -270,7 +150,10 @@ function Header() {
   );
 }
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // Scroll to top when navigating between pages
+  useScrollToTop();
+  
   return (
     <section className="flex flex-col min-h-screen">
       <Header />

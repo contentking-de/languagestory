@@ -656,7 +656,7 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
 
   if (loading) {
     return (
-      <Card className="max-w-4xl mx-auto">
+      <Card className="max-w-6xl mx-auto">
         <CardContent className="p-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -669,7 +669,7 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
 
   if (!quiz) {
     return (
-      <Card className="max-w-4xl mx-auto">
+      <Card className="max-w-6xl mx-auto">
         <CardContent className="p-8">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -682,7 +682,7 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
   }
 
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="max-w-6xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileQuestion className="h-5 w-5" />

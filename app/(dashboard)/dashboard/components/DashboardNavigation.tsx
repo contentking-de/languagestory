@@ -192,7 +192,7 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
   };
 
   return (
-    <div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
+    <div className="flex flex-col min-h-[calc(100dvh-68px)] w-full px-4 lg:px-8">
       {/* Mobile and Tablet header */}
       <div className="xl:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4">
         <div className="flex items-center">
