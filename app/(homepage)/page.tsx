@@ -1252,7 +1252,7 @@ export default function HomePage() {
               <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
                 Master French, German, and Spanish through engaging stories with audio, 
                 comprehension exercises, and cultural insights. Perfect for beginner to 
-                intermediate learners who love reading and discovery.
+                intermediate learners who love reading and discovery. <strong>Join the Language Athletics League now!</strong>
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
                 <a href="#pricing">
