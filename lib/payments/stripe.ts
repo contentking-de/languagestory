@@ -273,7 +273,7 @@ export async function getUpcomingInvoice(
   stripeCustomerId: string
 ): Promise<InvoiceData | null> {
   try {
-    const inv = await stripe.invoices.retrieveUpcoming({
+    const inv = await stripe.invoices.createPreview({
       customer: stripeCustomerId,
     });
 
