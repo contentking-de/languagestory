@@ -1964,7 +1964,7 @@ export default function HomePage() {
                 </p>
                 <div className="mt-auto">
                   <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
-                    Enroll Now
+                    Play now
                   </button>
                 </div>
               </div>
@@ -1989,7 +1989,7 @@ export default function HomePage() {
                 </p>
                 <div className="mt-auto">
                   <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
-                    Continue Study
+                    Play now
                   </button>
                 </div>
               </div>
@@ -2014,7 +2014,7 @@ export default function HomePage() {
                 </p>
                 <div className="mt-auto">
                   <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
-                    Continue Study
+                    Play now
                   </button>
                 </div>
               </div>
