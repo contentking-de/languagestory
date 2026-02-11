@@ -269,8 +269,8 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
               </div>
             )}
             
-            {/* Progress Summary - Only show for students */}
-            {userRole === 'student' && (
+            {/* Progress Summary - Show for students and members */}
+            {(userRole === 'student' || userRole === 'member') && (
               <div className="mt-4">
                 <Suspense fallback={<div className="h-32 bg-gray-100 rounded animate-pulse" />}>
                   <UserProgressSummary compact={true} />

@@ -18,8 +18,8 @@ export default async function ProgressPage() {
     redirect('/sign-in');
   }
 
-  // Only allow students, teachers, and parents to view progress
-  const allowedRoles = ['student', 'teacher', 'parent', 'super_admin', 'content_creator'];
+  // Only allow students, members, teachers, and parents to view progress
+  const allowedRoles = ['student', 'member', 'teacher', 'parent', 'super_admin', 'content_creator'];
   if (!allowedRoles.includes(user.role)) {
     redirect('/dashboard');
   }
