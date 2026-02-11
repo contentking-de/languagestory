@@ -858,14 +858,59 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         const gram = lesson?.grammar?.find(g => g.id === currentStepData.grammarId);
         if (!gram) return null;
         return (
-          <InlineGrammar
-            key={`grammar-${gram.id}`}
-            topicId={gram.id}
-            title={gram.title}
-            exercises={gram.exercises || []}
-            onComplete={(s, passed) => updateProgress(currentStep, 'completed', s)}
-            onNext={handleNext}
-          />
+          <div className="mx-auto max-w-6xl">
+            {/* Lesson Content with Audio above grammar exercises */}
+            {lesson?.content && (
+              <div className="border-b border-gray-200 pb-3 mb-4">
+                <Card className="shadow-sm">
+                  <CardHeader className="py-3">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <BookOpen className="h-4 w-4" />
+                      Lesson Content
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 pb-3">
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        {lesson?.cover_image && (
+                          <img
+                            src={lesson.cover_image}
+                            alt="Lesson image"
+                            className="rounded-md w-28 h-28 md:w-40 md:h-40 object-cover flex-shrink-0"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <pre className="whitespace-pre-wrap text-base text-gray-700 font-sans">
+                            {lesson.content}
+                          </pre>
+                        </div>
+                        <AudioPlayer 
+                          text={lesson.content} 
+                          language={lesson?.course_language || 'english'} 
+                          size="md"
+                          lessonId={lessonId}
+                          type="content"
+                          showSpeedControl={true}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Grammar exercises - on lg+: scrollable within fixed height */}
+            <div className="lg:max-h-[50vh] lg:overflow-y-auto pb-4">
+              <InlineGrammar
+                key={`grammar-${gram.id}`}
+                topicId={gram.id}
+                title={gram.title}
+                exercises={gram.exercises || []}
+                onComplete={(s, passed) => updateProgress(currentStep, 'completed', s)}
+                onNext={handleNext}
+              />
+            </div>
+          </div>
         );
 
       case 'game':

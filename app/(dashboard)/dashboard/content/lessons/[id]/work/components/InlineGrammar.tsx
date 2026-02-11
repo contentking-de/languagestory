@@ -147,8 +147,8 @@ export default function InlineGrammar({ topicId, title, exercises, onComplete, o
                 {checked[idx] && !isCorrect && (
                   <div className="text-sm text-gray-600">Correct: {expected}</div>
                 )}
-                {ex.explanation && (
-                  <div className="text-xs text-gray-500">Hint: {ex.explanation}</div>
+                {checked[idx] && !isCorrect && ex.explanation && (
+                  <div className="text-xs text-gray-500">Explanation: {ex.explanation}</div>
                 )}
               </CardContent>
             </Card>
