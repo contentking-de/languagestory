@@ -15,14 +15,18 @@ const ALWAYS_ACCESSIBLE_PATHS = [
 
 interface TrialGuardProps {
   accessStatus: string;
+  userRole?: string;
   children: React.ReactNode;
 }
 
-export function TrialGuard({ accessStatus, children }: TrialGuardProps) {
+export function TrialGuard({ accessStatus, userRole, children }: TrialGuardProps) {
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
+    // Super admins are never restricted by trial/subscription status
+    if (userRole === 'super_admin') return;
+
     if (accessStatus === 'expired') {
       const isAlwaysAccessible = ALWAYS_ACCESSIBLE_PATHS.some(
         path => pathname === path
@@ -31,7 +35,7 @@ export function TrialGuard({ accessStatus, children }: TrialGuardProps) {
         router.replace('/subscribe');
       }
     }
-  }, [accessStatus, pathname, router]);
+  }, [accessStatus, userRole, pathname, router]);
 
   return <>{children}</>;
 }

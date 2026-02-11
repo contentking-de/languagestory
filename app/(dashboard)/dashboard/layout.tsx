@@ -5,6 +5,7 @@ import { teams, teamMembers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { DashboardNavigation } from './components/DashboardNavigation';
 import { TrialGuard } from './components/TrialGuard';
+import { isSuperAdmin } from '@/lib/auth/rbac';
 
 export default async function DashboardLayout({
   children
@@ -36,15 +37,19 @@ export default async function DashboardLayout({
     }
   }
 
+  // Super admins always have full access regardless of subscription status
+  const userIsSuperAdmin = isSuperAdmin(user.role as any);
+  const effectiveAccessStatus = userIsSuperAdmin ? 'active' : (accessStatus?.status || 'expired');
+
   return (
     <DashboardNavigation 
       userRole={user.role}
-      accessStatus={accessStatus?.status || 'expired'}
-      trialDaysRemaining={accessStatus?.trialDaysRemaining ?? null}
-      trialEndsAt={accessStatus?.trialEndsAt?.toISOString() ?? null}
-      planName={accessStatus?.planName ?? null}
+      accessStatus={effectiveAccessStatus}
+      trialDaysRemaining={userIsSuperAdmin ? null : (accessStatus?.trialDaysRemaining ?? null)}
+      trialEndsAt={userIsSuperAdmin ? null : (accessStatus?.trialEndsAt?.toISOString() ?? null)}
+      planName={userIsSuperAdmin ? 'Super Admin' : (accessStatus?.planName ?? null)}
     >
-      <TrialGuard accessStatus={accessStatus?.status || 'expired'}>
+      <TrialGuard accessStatus={effectiveAccessStatus} userRole={user.role}>
         {children}
       </TrialGuard>
     </DashboardNavigation>

@@ -421,6 +421,16 @@ export async function getAccessInfoForCurrentUser(): Promise<AccessInfo | null> 
   const user = await getUser();
   if (!user) return null;
 
+  // Super admins always have full access regardless of subscription status
+  if (user.role === 'super_admin') {
+    return {
+      status: 'active',
+      trialEndsAt: null,
+      trialDaysRemaining: null,
+      planName: 'Super Admin',
+    };
+  }
+
   const result = await db
     .select({
       subscriptionStatus: teams.subscriptionStatus,
