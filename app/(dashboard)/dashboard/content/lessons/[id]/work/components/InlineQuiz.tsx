@@ -712,34 +712,18 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
             {quiz?.quiz_type === 'gap_fill' ? (
               gapFillConfig ? (
                 <>
-                  {/* Pre-Card: Original Complete Text with Audio */}
+                  {/* Audio-only card for gap fill (text removed to prevent cheating) */}
                   <div className="mb-6">
                     <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <FileQuestion className="h-5 w-5" />
-                          Original Complete Text
+                      <CardHeader className="py-3">
+                        <CardTitle className="flex items-center gap-2 text-sm">
+                          <FileQuestion className="h-4 w-4" />
+                          Listen to the text
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <div className="flex items-start gap-3 bg-gray-50 p-4 rounded-lg">
-                          {(() => {
-                            const cfgAny: any = gapFillConfig as any;
-                            const sourceText =
-                              gapFillConfig.original_text ||
-                              cfgAny?.gf_original_text ||
-                              gapFillConfig.text_with_gaps ||
-                              cfgAny?.gf_text_content ||
-                              '';
-                            // If original is missing, derive by removing placeholders
-                            const derived = (sourceText || '')
-                              .replace(/\{([^}]+)\}/g, '$1')
-                              .replace(/\[BLANK\]/g, '');
-                            const displayText = gapFillConfig.original_text || cfgAny?.gf_original_text ? sourceText : derived;
-                            return (
-                              <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">{displayText}</div>
-                            );
-                          })()}
+                      <CardContent className="pt-0 pb-3">
+                        <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                          <p className="flex-1 text-sm text-gray-500">Listen to the full text to help you fill in the gaps.</p>
                           {(() => {
                             const cfgAny: any = gapFillConfig as any;
                             const sourceText =
@@ -758,7 +742,7 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
                                 language={lessonLanguage || 'english'}
                                 size="md"
                                 type="content"
-                              showSpeedControl={true}
+                                showSpeedControl={true}
                               />
                             );
                           })()}

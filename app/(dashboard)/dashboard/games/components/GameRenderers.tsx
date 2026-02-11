@@ -342,16 +342,6 @@ export function HangmanGame({ config, onComplete }: HangmanGameProps) {
         <p className="text-lg font-medium mt-2">{currentHint}</p>
       </div>
 
-      {/* Hangman Drawing */}
-      <div className="flex justify-center">
-        <div className="w-32 h-32 border-2 border-gray-300 rounded-lg flex items-center justify-center">
-          <div className="text-4xl">
-            {wrongGuesses >= 1 && '😵'}
-            {wrongGuesses === 0 && '😊'}
-          </div>
-        </div>
-      </div>
-
       {/* Word Display */}
       <div className="text-center">
         <div className="text-3xl font-mono font-bold tracking-widest mb-4">
