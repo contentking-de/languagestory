@@ -169,13 +169,10 @@ export function MemoryGame({ config, onComplete }: MemoryGameProps) {
         </div>
       )}
 
-      {/* Game Grid */}
+      {/* Game Grid - 4 cols on mobile, 5 cols on desktop for a shorter layout */}
       <div 
-        className="grid gap-2 mx-auto"
-        style={{ 
-          gridTemplateColumns: `repeat(${Math.min(Math.ceil(Math.sqrt(config.cards.length * 2)), 4)}, 1fr)`,
-          maxWidth: '600px'
-        }}
+        className="grid gap-2 mx-auto grid-cols-4 lg:grid-cols-5"
+        style={{ maxWidth: '700px' }}
       >
         {shuffledCards.map((card, index) => {
           const isFlipped = flippedCards.includes(index);
@@ -696,9 +693,21 @@ export function WordSearchGame({ config, onComplete }: WordSearchGameProps) {
   const gridRef = useRef<{ grid: string[][], wordPositions: { [key: string]: number[][] } } | null>(null);
   
   if (!gridRef.current) {
-    // Use a more manageable grid size: 10 columns x 15 rows instead of 15x15
-    const cols = 10;
-    const rows = Math.ceil((config.gridSize || 15) * 1.5); // More rows to compensate for fewer columns
+    // Determine grid dimensions based on viewport: wide+short on desktop, narrow+tall on mobile
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+    const longestWord = Math.max(...config.words.map(w => w.length));
+    
+    let cols: number, rows: number;
+    if (isDesktop) {
+      // Desktop: wide grid (double columns, fewer rows)
+      cols = Math.max(longestWord + 4, 20);
+      rows = Math.max(Math.ceil((config.gridSize || 15) * 0.75), longestWord + 2, 10);
+    } else {
+      // Mobile: narrow tall grid
+      cols = Math.max(10, longestWord + 2);
+      rows = Math.ceil((config.gridSize || 15) * 1.5);
+    }
+    
     const grid = Array(rows).fill(null).map(() => Array(cols).fill(''));
     const wordPositions: { [key: string]: number[][] } = {};
     
@@ -927,11 +936,11 @@ export function WordSearchGame({ config, onComplete }: WordSearchGameProps) {
       </div>
 
       {/* Word Search Grid */}
-      <div className="flex justify-center overflow-x-auto px-4">
+      <div className="flex justify-center overflow-x-auto px-2 sm:px-4">
         <div 
-          className="grid gap-0.5 sm:gap-1 p-4"
+          className="grid gap-0.5 sm:gap-1 p-2 sm:p-4"
           style={{ 
-            gridTemplateColumns: `repeat(${grid[0].length}, 28px)`,
+            gridTemplateColumns: `repeat(${grid[0].length}, minmax(28px, 36px))`,
             width: 'fit-content'
           }}
         >
@@ -940,7 +949,7 @@ export function WordSearchGame({ config, onComplete }: WordSearchGameProps) {
               <div
                 key={`${rowIndex}-${colIndex}`}
                 className={`
-                  w-7 h-7 sm:w-8 sm:h-8
+                  w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9
                   flex items-center justify-center 
                   text-xs sm:text-sm font-bold cursor-pointer rounded
                   transition-all duration-200 select-none overflow-hidden
