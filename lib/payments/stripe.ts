@@ -250,18 +250,18 @@ export async function getInvoicesForCustomer(
   });
 
   return invoices.data.map((inv) => ({
-    id: inv.id,
-    number: inv.number,
-    status: inv.status,
+    id: inv.id || '',
+    number: inv.number ?? null,
+    status: inv.status ?? null,
     currency: inv.currency,
     amountDue: inv.amount_due,
     amountPaid: inv.amount_paid,
     created: inv.created,
     periodStart: inv.period_start,
     periodEnd: inv.period_end,
-    hostedInvoiceUrl: inv.hosted_invoice_url,
-    invoicePdf: inv.invoice_pdf,
-    description: inv.description,
+    hostedInvoiceUrl: inv.hosted_invoice_url ?? null,
+    invoicePdf: inv.invoice_pdf ?? null,
+    description: inv.description ?? null,
     planName: inv.lines.data[0]?.description || null,
   }));
 }
