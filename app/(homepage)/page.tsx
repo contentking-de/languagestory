@@ -31,6 +31,7 @@ import {
 import { FlagIcon } from '@/components/ui/flag-icon';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { QuizTeaserModal } from '@/components/quiz-teaser-modal';
 
 // Modal content data
 const modalContent = {
@@ -1219,7 +1220,14 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState('school');
   const [modalOpen, setModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState('');
-  
+  const [quizTeaserOpen, setQuizTeaserOpen] = useState(false);
+  const [quizTeaserType, setQuizTeaserType] = useState<'true_false' | 'multiple_choice' | 'gap_fill'>('true_false');
+
+  const openQuizTeaser = (type: 'true_false' | 'multiple_choice' | 'gap_fill') => {
+    setQuizTeaserType(type);
+    setQuizTeaserOpen(true);
+  };
+
   // Accessibility settings state
   const [accessibilitySettings, setAccessibilitySettings] = useState({
     fontSize: 100, // percentage
@@ -1850,7 +1858,10 @@ export default function HomePage() {
                   Fast-paced questions to reinforce learning and build confidence!
                 </p>
                 <div className="mt-auto">
-                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                  <button
+                    onClick={() => openQuizTeaser('true_false')}
+                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
+                  >
                     Start Quiz
                   </button>
                 </div>
@@ -1875,7 +1886,10 @@ export default function HomePage() {
                   Detailed questions with instant feedback to enhance your learning!
                 </p>
                 <div className="mt-auto">
-                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                  <button
+                    onClick={() => openQuizTeaser('multiple_choice')}
+                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
+                  >
                     Start Quiz
                   </button>
                 </div>
@@ -1900,7 +1914,10 @@ export default function HomePage() {
                   Interactive exercises that improve retention and practical application!
                 </p>
                 <div className="mt-auto">
-                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                  <button
+                    onClick={() => openQuizTeaser('gap_fill')}
+                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
+                  >
                     Start Quiz
                   </button>
                 </div>
@@ -2572,6 +2589,13 @@ export default function HomePage() {
       <AccessibilityWidget settings={accessibilitySettings} setSettings={setAccessibilitySettings} />
       {/* Consent Preferences Component */}
       <ConsentPreferences />
+
+      {/* Quiz Teaser Modal */}
+      <QuizTeaserModal
+        isOpen={quizTeaserOpen}
+        onClose={() => setQuizTeaserOpen(false)}
+        quizType={quizTeaserType}
+      />
     </main>
   );
 }
