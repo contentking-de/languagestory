@@ -39,4 +39,5 @@ next-env.d.ts
 # Docker
 postgres_data/
 .env*.local
-public/media/
+public/media/*
+!public/media/done-success.mp3
