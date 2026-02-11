@@ -1752,6 +1752,313 @@ export function VocabRunGame({ config, onComplete }: VocabRunGameProps) {
   );
 }
 
+// Word Match Game
+interface WordMatchGameProps {
+  config: {
+    pairs: Array<{ id: string; word: string; translation: string }>;
+    gameSize: number;
+    showTimer: boolean;
+  };
+  onComplete?: (score: number) => void;
+}
+
+export function WordMatchGame({ config, onComplete }: WordMatchGameProps) {
+  // Validate config
+  if (!config || !config.pairs || !Array.isArray(config.pairs) || config.pairs.length === 0) {
+    return (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <Play className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500">Invalid game configuration</p>
+        </div>
+      </div>
+    );
+  }
+
+  const gameSize = config.pairs.length;
+
+  const [selectedWord, setSelectedWord] = useState<number | null>(null);
+  const [selectedTranslation, setSelectedTranslation] = useState<number | null>(null);
+  const [matchedPairs, setMatchedPairs] = useState<Set<number>>(new Set());
+  const [wrongPair, setWrongPair] = useState<{ word: number; translation: number } | null>(null);
+  const [gameCompleted, setGameCompleted] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  const [gameStarted, setGameStarted] = useState(false);
+
+  // Build word list and shuffled translation list
+  const { words, translations } = useMemo(() => {
+    const wordList = config.pairs.map((p, i) => ({ id: i, text: p.word }));
+    const translationList = config.pairs
+      .map((p, i) => ({ id: i, text: p.translation }))
+      .sort(() => Math.random() - 0.5);
+    return { words: wordList, translations: translationList };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.pairs, gameCompleted]); // re-shuffle on game reset
+
+  // Timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (gameStarted && !gameCompleted && config.showTimer) {
+      timer = setInterval(() => {
+        setTimeElapsed((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [gameStarted, gameCompleted, config.showTimer]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Check for a match given a word index and translation index
+  const checkMatch = (wordIdx: number, transIdx: number) => {
+    setAttempts((prev) => prev + 1);
+
+    const wordItem = words[wordIdx];
+    const translationItem = translations[transIdx];
+
+    if (wordItem.id === translationItem.id) {
+      // Correct match!
+      setMatchedPairs((prev) => {
+        const newMatched = new Set(prev);
+        newMatched.add(wordItem.id);
+        if (newMatched.size === gameSize) {
+          setGameCompleted(true);
+          const accuracy = gameSize / (attempts + 1);
+          const timeScore = Math.max(0, 100 - Math.floor(timeElapsed / 10));
+          const accuracyScore = Math.round(accuracy * 100);
+          const finalScore = Math.round((timeScore + accuracyScore) / 2);
+          onComplete?.(finalScore);
+        }
+        return newMatched;
+      });
+      setStreak((prev) => {
+        const newStreak = prev + 1;
+        setBestStreak((best) => Math.max(best, newStreak));
+        return newStreak;
+      });
+
+      setTimeout(() => {
+        setSelectedWord(null);
+        setSelectedTranslation(null);
+      }, 400);
+    } else {
+      // Wrong match
+      setStreak(0);
+      setWrongPair({ word: wordIdx, translation: transIdx });
+      setTimeout(() => {
+        setSelectedWord(null);
+        setSelectedTranslation(null);
+        setWrongPair(null);
+      }, 800);
+    }
+  };
+
+  const handleWordClick = (index: number) => {
+    if (matchedPairs.has(words[index].id)) return;
+    if (wrongPair) return;
+    if (!gameStarted) setGameStarted(true);
+    if (selectedTranslation !== null) {
+      setSelectedWord(index);
+      checkMatch(index, selectedTranslation);
+    } else {
+      setSelectedWord(index);
+    }
+  };
+
+  const handleTranslationClick = (index: number) => {
+    if (matchedPairs.has(translations[index].id)) return;
+    if (wrongPair) return;
+    if (!gameStarted) setGameStarted(true);
+    if (selectedWord !== null) {
+      setSelectedTranslation(index);
+      checkMatch(selectedWord, index);
+    } else {
+      setSelectedTranslation(index);
+    }
+  };
+
+  const resetGame = () => {
+    setSelectedWord(null);
+    setSelectedTranslation(null);
+    setMatchedPairs(new Set());
+    setWrongPair(null);
+    setGameCompleted(false);
+    setAttempts(0);
+    setStreak(0);
+    setBestStreak(0);
+    setTimeElapsed(0);
+    setGameStarted(false);
+  };
+
+  const getScoreStars = () => {
+    const accuracy = attempts > 0 ? (gameSize / attempts) * 100 : 0;
+    if (accuracy >= 90) return 3;
+    if (accuracy >= 70) return 2;
+    return 1;
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Game Header */}
+      <div className="flex flex-col sm:flex-row items-center justify-between bg-gradient-to-r from-orange-500 to-amber-500 text-white p-3 sm:p-4 rounded-lg gap-3 sm:gap-0">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="text-center">
+            <div className="text-xs sm:text-sm opacity-90">Pairs</div>
+            <div className="text-lg sm:text-xl font-bold">{matchedPairs.size}/{gameSize}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs sm:text-sm opacity-90">Attempts</div>
+            <div className="text-lg sm:text-xl font-bold">{attempts}</div>
+          </div>
+          {config.showTimer && (
+            <div className="text-center">
+              <div className="text-xs sm:text-sm opacity-90">Time</div>
+              <div className="text-lg sm:text-xl font-bold">{formatTime(timeElapsed)}</div>
+            </div>
+          )}
+          {streak > 1 && (
+            <div className="text-sm font-semibold bg-white/20 px-3 py-1 rounded-full animate-pulse">
+              {streak} streak!
+            </div>
+          )}
+        </div>
+        <Button onClick={resetGame} variant="outline" size="sm" className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-xs">
+          <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          Reset
+        </Button>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full bg-gray-200 rounded-full h-2">
+        <div
+          className="bg-gradient-to-r from-orange-400 to-orange-600 h-2 rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${(matchedPairs.size / gameSize) * 100}%` }}
+        />
+      </div>
+
+      {/* Matching columns */}
+      {!gameCompleted && (
+        <div className="grid grid-cols-2 gap-4">
+          {/* Words column (target language) */}
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 text-center">
+              Word
+            </p>
+            {words.map((word, index) => {
+              const isMatched = matchedPairs.has(word.id);
+              const isSelected = selectedWord === index;
+              const isWrong = wrongPair?.word === index;
+
+              return (
+                <button
+                  key={`word-${word.id}`}
+                  onClick={() => handleWordClick(index)}
+                  disabled={isMatched}
+                  className={`w-full px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 border-2 ${
+                    isMatched
+                      ? 'bg-green-50 border-green-300 text-green-700 opacity-60 cursor-default'
+                      : isWrong
+                        ? 'bg-red-50 border-red-400 text-red-700'
+                        : isSelected
+                          ? 'bg-orange-50 border-orange-400 text-orange-700 shadow-md ring-2 ring-orange-200'
+                          : 'bg-white border-gray-200 text-gray-800 hover:border-orange-300 hover:bg-orange-50/50 hover:shadow-sm cursor-pointer'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{word.text}</span>
+                    {isMatched && <Check className="h-4 w-4 text-green-500" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Translations column (English) */}
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 text-center">
+              Translation
+            </p>
+            {translations.map((translation, index) => {
+              const isMatched = matchedPairs.has(translation.id);
+              const isSelected = selectedTranslation === index;
+              const isWrong = wrongPair?.translation === index;
+
+              return (
+                <button
+                  key={`trans-${translation.id}-${index}`}
+                  onClick={() => handleTranslationClick(index)}
+                  disabled={isMatched}
+                  className={`w-full px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 border-2 ${
+                    isMatched
+                      ? 'bg-green-50 border-green-300 text-green-700 opacity-60 cursor-default'
+                      : isWrong
+                        ? 'bg-red-50 border-red-400 text-red-700'
+                        : isSelected
+                          ? 'bg-blue-50 border-blue-400 text-blue-700 shadow-md ring-2 ring-blue-200'
+                          : 'bg-white border-gray-200 text-gray-800 hover:border-blue-300 hover:bg-blue-50/50 hover:shadow-sm cursor-pointer'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{translation.text}</span>
+                    {isMatched && <Check className="h-4 w-4 text-green-500" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Game Completion */}
+      {gameCompleted && (
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center p-4 sm:p-6 rounded-lg">
+          <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-xl sm:text-2xl font-bold mb-2">Well Done!</h3>
+
+          {/* Stars */}
+          <div className="flex gap-1 justify-center mb-4">
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                className={`text-2xl transition-all duration-300 ${
+                  s <= getScoreStars() ? 'text-yellow-300 scale-110' : 'text-white/30'
+                }`}
+              >
+                ★
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm mb-4">
+            <div>
+              <div className="opacity-90">Time</div>
+              <div className="font-bold">{formatTime(timeElapsed)}</div>
+            </div>
+            <div>
+              <div className="opacity-90">Attempts</div>
+              <div className="font-bold">{attempts}</div>
+            </div>
+            <div>
+              <div className="opacity-90">Best Streak</div>
+              <div className="font-bold">{bestStreak}</div>
+            </div>
+          </div>
+          <Button onClick={resetGame} className="bg-white/20 border-white/30 text-white hover:bg-white/30">
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Play Again
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Listen & Type Game
 interface ListenTypeItem { id: string; word: string; language: string; vocabularyId?: number }
 interface ListenTypeConfig { items: ListenTypeItem[] }

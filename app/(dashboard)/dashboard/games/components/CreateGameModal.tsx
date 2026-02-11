@@ -21,7 +21,8 @@ import {
   Clock,
   Star,
   Shuffle,
-  Link
+  Link,
+  Layers
 } from 'lucide-react';
 import { GameConfigEditor, getConfigKeyForType } from './GameConfigEditors';
 
@@ -67,6 +68,11 @@ interface GameConfig {
   listenType?: {
     items: Array<{ id: string; word: string; language: string; vocabularyId?: number }>
   };
+  wordMatch?: {
+    pairs: Array<{ id: string; word: string; translation: string }>;
+    gameSize: number;
+    showTimer: boolean;
+  };
 }
 
 const gameTypes = [
@@ -78,6 +84,7 @@ const gameTypes = [
   { value: 'flashcards', label: 'Flashcards', icon: Star, description: 'Interactive flashcards for vocabulary practice' },
   { value: 'vocab_run', label: 'Vocab Run', icon: Target, description: 'Answer 12 quick MC questions with a frog jumping on lily pads' },
   { value: 'listen_type', label: 'Listen & Type', icon: BookOpen, description: 'Listen to the word audio and type what you hear' },
+  { value: 'word_match', label: 'Word Match', icon: Layers, description: 'Match words with their translations in two columns' },
 ];
 
 export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameModalProps) {
@@ -260,6 +267,53 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGameType, formData.lesson_id, formData.language]);
 
+  // Auto-fill helpers for Word Match games from lesson vocabulary
+  const autoFillWordMatchFromLesson = async (selectedLessonId: string) => {
+    try {
+      if (!selectedLessonId) return;
+      const res = await fetch(`/api/lessons/${selectedLessonId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const vocab: Array<any> = Array.isArray(data?.vocabulary) ? data.vocabulary : [];
+      if (vocab.length === 0) return;
+
+      // Shuffle and take up to 8 pairs
+      const shuffled = [...vocab].sort(() => Math.random() - 0.5);
+      const sample = shuffled.slice(0, Math.min(8, shuffled.length));
+
+      const lang = (formData.language || '').toLowerCase();
+      const langKey = lang === 'german' ? 'word_german' : lang === 'french' ? 'word_french' : lang === 'spanish' ? 'word_spanish' : 'word_german';
+
+      const pairs = sample.map((v, idx) => ({
+        id: `${v.id || idx}`,
+        word: v[langKey] || v.word_english,
+        translation: v.word_english,
+      }));
+
+      setGameConfig(prev => ({
+        ...prev,
+        wordMatch: {
+          pairs,
+          gameSize: pairs.length,
+          showTimer: prev.wordMatch?.showTimer ?? true,
+        },
+      }));
+    } catch (e) {
+      console.error('Failed to auto-fill word match from lesson vocabulary:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      selectedGameType === 'word_match' &&
+      formData.lesson_id &&
+      (!gameConfig.wordMatch || !gameConfig.wordMatch.pairs || gameConfig.wordMatch.pairs.length === 0)
+    ) {
+      autoFillWordMatchFromLesson(formData.lesson_id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGameType, formData.lesson_id, formData.language]);
+
   // Auto-generate Vocab Run questions from lesson vocabulary (12 questions, 3 options each)
   const autoFillVocabRunFromLesson = async (selectedLessonId: string) => {
     try {
@@ -402,6 +456,21 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
       const emptyPairs = gameConfig.wordAssociation.pairs.filter(pair => !pair.word1.trim() || !pair.word2.trim());
       if (emptyPairs.length > 0) {
         alert('Please fill in all word pair fields (both words)');
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (selectedGameType === 'word_match' && (!gameConfig.wordMatch || !gameConfig.wordMatch.pairs || gameConfig.wordMatch.pairs.length === 0)) {
+      alert('Please add at least one word-translation pair for word match');
+      setLoading(false);
+      return;
+    }
+
+    if (selectedGameType === 'word_match' && gameConfig.wordMatch?.pairs) {
+      const emptyPairs = gameConfig.wordMatch.pairs.filter(pair => !pair.word.trim() || !pair.translation.trim());
+      if (emptyPairs.length > 0) {
+        alert('Please fill in all word match pair fields (word and translation)');
         setLoading(false);
         return;
       }
@@ -672,6 +741,14 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
                             Generate Vocabulary for Listen & Type
                           </>
                         )}
+                      </Button>
+                    </div>
+                  )}
+                  {selectedGameType === 'word_match' && formData.lesson_id && (
+                    <div>
+                      <Button type="button" variant="outline" size="sm" onClick={() => autoFillWordMatchFromLesson(formData.lesson_id)}>
+                        <Shuffle className="h-4 w-4 mr-2" />
+                        Auto-fill from Lesson Vocabulary
                       </Button>
                     </div>
                   )}

@@ -28,7 +28,8 @@ import {
   FlashcardsGame, 
   WordSearchGame, 
   WordMixupGame, 
-  WordAssociationGame 
+  WordAssociationGame,
+  WordMatchGame 
 } from '../../components/GameRenderers';
 
 interface DatabaseGame {
@@ -233,6 +234,8 @@ export function GameDetailClient({ userRole }: GameDetailClientProps) {
           return <WordMixupGame config={parsedConfig.wordMixup || parsedConfig} />;
         case 'word_association':
           return <WordAssociationGame config={parsedConfig.wordAssociation || parsedConfig} />;
+        case 'word_match':
+          return <WordMatchGame config={parsedConfig.wordMatch || parsedConfig} />;
         default:
           return (
             <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">

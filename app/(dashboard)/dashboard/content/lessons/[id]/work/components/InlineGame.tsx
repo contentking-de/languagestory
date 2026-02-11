@@ -21,7 +21,8 @@ import {
   WordMixupGame, 
   WordAssociationGame, 
   VocabRunGame,
-  ListenTypeGame 
+  ListenTypeGame,
+  WordMatchGame 
 } from '@/app/(dashboard)/dashboard/games/components/GameRenderers';
 
 interface Game {
@@ -474,6 +475,16 @@ export const InlineGame = memo(({ gameId, onComplete, onNext }: InlineGameProps)
           <ListenTypeGame
             key={`listen-${game.id}`}
             config={cfg}
+            onComplete={() => handleGameComplete(100)}
+          />
+        );
+      }
+      case 'word_match': {
+        const wmCfg = (gameConfig?.wordMatch || gameConfig);
+        return (
+          <WordMatchGame
+            key={`wordmatch-${game.id}`}
+            config={wmCfg}
             onComplete={() => handleGameComplete(100)}
           />
         );

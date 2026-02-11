@@ -55,6 +55,12 @@ export type VocabRunConfig = {
   questions: VocabRunQuestion[];
 };
 
+export type WordMatchConfig = {
+  pairs: Array<{ id: string; word: string; translation: string }>;
+  gameSize: number;
+  showTimer: boolean;
+};
+
 export type GameConfig = {
   memory?: MemoryConfig;
   hangman?: HangmanConfig;
@@ -64,6 +70,7 @@ export type GameConfig = {
   flashcards?: FlashcardsConfig;
   vocabRun?: VocabRunConfig;
   listenType?: { items: Array<{ id: string; word: string; language: string }> };
+  wordMatch?: WordMatchConfig;
 };
 
 export function getConfigKeyForType(gameType: string): keyof GameConfig | undefined {
@@ -84,6 +91,8 @@ export function getConfigKeyForType(gameType: string): keyof GameConfig | undefi
       return 'vocabRun';
     case 'listen_type':
       return 'listenType';
+    case 'word_match':
+      return 'wordMatch';
     default:
       return undefined;
   }
@@ -115,6 +124,8 @@ export function GameConfigEditor({
       return <VocabRunGameEditor config={config} onChange={onChange} />;
     case 'listen_type':
       return <ListenTypeEditor config={config} onChange={onChange} />;
+    case 'word_match':
+      return <WordMatchGameEditor config={config} onChange={onChange} />;
     default:
       return <div>Select a supported game type to edit its configuration.</div>;
   }
@@ -493,6 +504,90 @@ export function WordMixupGameEditor({ config, onChange }: { config?: WordMixupCo
             className="rounded border-gray-300"
           />
           <Label htmlFor="allowHints">Allow Hints</Label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function WordMatchGameEditor({ config, onChange }: { config?: WordMatchConfig; onChange: (config: WordMatchConfig) => void }) {
+  const [pairs, setPairs] = useState<Array<{ id: string; word: string; translation: string }>>(
+    config?.pairs || [{ id: '1', word: '', translation: '' }]
+  );
+  const [showTimer, setShowTimer] = useState(config?.showTimer ?? true);
+
+  // Keep local state in sync with parent-provided config (e.g., auto-fill from lesson)
+  useEffect(() => {
+    if (config?.pairs && config.pairs.length > 0) {
+      setPairs(config.pairs);
+    }
+  }, [config?.pairs]);
+
+  const addPair = () => {
+    const newPairs = [...pairs, { id: Date.now().toString(), word: '', translation: '' }];
+    setPairs(newPairs);
+    onChange({ pairs: newPairs, gameSize: newPairs.length, showTimer });
+  };
+
+  const removePair = (index: number) => {
+    const newPairs = pairs.filter((_, i) => i !== index);
+    setPairs(newPairs);
+    onChange({ pairs: newPairs, gameSize: newPairs.length, showTimer });
+  };
+
+  const updatePair = (index: number, field: 'word' | 'translation', value: string) => {
+    const newPairs = [...pairs];
+    newPairs[index] = { ...newPairs[index], [field]: value };
+    setPairs(newPairs);
+    onChange({ pairs: newPairs, gameSize: newPairs.length, showTimer });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold">Word-Translation Pairs</h4>
+        <Button type="button" variant="outline" size="sm" onClick={addPair}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Pair
+        </Button>
+      </div>
+      <p className="text-sm text-gray-500">
+        Add word-translation pairs. Players will match words on the left with their translations on the right.
+      </p>
+      <div className="space-y-3">
+        {pairs.map((pair, index) => (
+          <div key={pair.id} className="border rounded-lg p-3 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label>Word (Target Language)</Label>
+                <Input value={pair.word} onChange={(e) => updatePair(index, 'word', e.target.value)} placeholder="e.g. la casa" />
+              </div>
+              <div>
+                <Label>Translation (English)</Label>
+                <Input value={pair.translation} onChange={(e) => updatePair(index, 'translation', e.target.value)} placeholder="e.g. the house" />
+              </div>
+            </div>
+            {pairs.length > 1 && (
+              <Button type="button" variant="ghost" size="sm" onClick={() => removePair(index)} className="text-red-500 hover:text-red-700 text-xs">
+                Remove
+              </Button>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center space-x-2">
+          <input
+            id="wordMatchShowTimer"
+            type="checkbox"
+            checked={showTimer}
+            onChange={(e) => {
+              setShowTimer(e.target.checked);
+              onChange({ pairs, gameSize: pairs.length, showTimer: e.target.checked });
+            }}
+            className="rounded border-gray-300"
+          />
+          <Label htmlFor="wordMatchShowTimer">Show Timer</Label>
         </div>
       </div>
     </div>
