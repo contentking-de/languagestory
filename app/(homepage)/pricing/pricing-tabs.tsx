@@ -338,7 +338,7 @@ export function PricingTabs({ pricing }: { pricing: StructuredPricingData }) {
                 plan={proPlan}
                 highlighted
                 badge="PROFESSIONAL"
-                subtitle="More than 4 classes and up to 300 seats"
+                subtitle="Up to 40 classes and 1200 seats"
                 features={[
                   'For larger schools & institutions',
                   'All stories, games & teaching resources',

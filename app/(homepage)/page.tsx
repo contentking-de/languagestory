@@ -2307,7 +2307,7 @@ export default function HomePage() {
                   PROFESSIONAL
                 </div>
                 <h3 className="text-xl font-bold mb-1">Professional Plan</h3>
-                <p className="text-sm text-orange-100 mb-4">More than 4 classes and up to 300 seats</p>
+                <p className="text-sm text-orange-100 mb-4">Up to 40 classes and 1200 seats</p>
                 <div className="mb-4">
                   <p className="text-sm text-orange-200">from</p>
                   <span className="text-3xl font-bold">£59.99</span>
