@@ -233,19 +233,19 @@ export async function awardPoints(
                 metadata: metadata ? JSON.stringify(metadata) : null,
               });
 
-              // Update streak and daily activity with improvement points
-              await updateLearningStreaks(studentId, improvementPoints);
-              await updateDailyActivity(studentId, 'IMPROVEMENT_BONUS', improvementPoints, language);
-              
-              // Record the completion with improvement
-              await recordCompletedActivity(
-                studentId, 
-                referenceType, 
-                referenceId, 
-                improvementPoints, 
-                metadata, 
-                existingRecord
-              );
+              // Update streak, daily activity and record completion in parallel
+              await Promise.all([
+                updateLearningStreaks(studentId, improvementPoints),
+                updateDailyActivity(studentId, 'IMPROVEMENT_BONUS', improvementPoints, language),
+                recordCompletedActivity(
+                  studentId, 
+                  referenceType, 
+                  referenceId, 
+                  improvementPoints, 
+                  metadata, 
+                  existingRecord
+                ),
+              ]);
 
               console.log(`✅ Awarded ${improvementPoints} improvement points to student ${studentId}`);
               return improvementPoints;
@@ -296,28 +296,20 @@ export async function awardPoints(
       metadata: metadata ? JSON.stringify(metadata) : null,
     });
 
-    // Update total points in learning streaks
-    await updateLearningStreaks(studentId, pointsToAward);
+    // Run independent operations in parallel for better performance
+    await Promise.all([
+      updateLearningStreaks(studentId, pointsToAward),
+      updateDailyActivity(studentId, activityType, pointsToAward, language),
+      ...(referenceId && referenceType
+        ? [recordCompletedActivity(studentId, referenceType, referenceId, pointsToAward, metadata)]
+        : []),
+    ]);
 
-    // Update daily activity
-    await updateDailyActivity(studentId, activityType, pointsToAward, language);
-
-    // Record this as a completed activity (first time)
-    if (referenceId && referenceType) {
-      await recordCompletedActivity(
-        studentId, 
-        referenceType, 
-        referenceId, 
-        pointsToAward, 
-        metadata
-      );
-    }
-
-    // Check for achievements
+    // Check for achievements (depends on updated streak data from above)
     await checkAchievements(studentId, activityType, metadata);
 
-    // Log the activity
-    await logActivity(ActivityType.EARN_POINTS);
+    // Log the activity (fire-and-forget, don't block)
+    logActivity(ActivityType.EARN_POINTS);
 
     console.log(`✅ Awarded ${pointsToAward} points to student ${studentId} for ${activityType}`);
     return pointsToAward;
