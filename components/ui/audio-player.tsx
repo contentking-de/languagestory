@@ -40,6 +40,17 @@ export function AudioPlayer({
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Cleanup: stop audio when component unmounts (e.g. step change)
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
   // Reset audio state when key props change (text, type, lessonId, vocabularyId, topicId)
   useEffect(() => {
     console.log('AudioPlayer: Props changed, resetting audio state', { text: text?.slice(0, 50), type, lessonId, vocabularyId, topicId });
