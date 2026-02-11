@@ -41,3 +41,5 @@ postgres_data/
 .env*.local
 public/media/*
 !public/media/done-success.mp3
+!public/media/reached.mp3
+!public/media/failed.mp3

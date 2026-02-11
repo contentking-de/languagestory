@@ -1462,21 +1462,6 @@ export function VocabRunGame({ config, onComplete }: VocabRunGameProps) {
   const [revealedRows, setRevealedRows] = useState<Set<number>>(new Set());
   const [frogLeftPx, setFrogLeftPx] = useState<number | null>(null);
   const fieldRef = useRef<HTMLDivElement | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-
-  const getAudioCtx = () => {
-    if (typeof window === 'undefined') return null;
-    if (!audioCtxRef.current) {
-      const Ctx: any = (window as any).AudioContext || (window as any).webkitAudioContext;
-      if (!Ctx) return null;
-      audioCtxRef.current = new Ctx();
-    }
-    return audioCtxRef.current;
-  };
-
-  // Stretch factor to slow down short SFX (higher = slower/longer)
-  const sfxStretch = 1.8;
-
   // Success sound for successful jumps (plays MP3 file)
   const playChime = () => {
     try {
@@ -1486,172 +1471,22 @@ export function VocabRunGame({ config, onComplete }: VocabRunGameProps) {
     } catch {}
   };
 
-  const playFrogCroak = () => {
-    const ctx = getAudioCtx();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    // Helper to create one croak burst (formant-filtered, AM-modulated, with slight pitch glide)
-    const createBurst = (startOffset: number, baseFreq: number, dur: number, brighter = false) => {
-      const start = now + startOffset;
-
-      // Source 1: low triangle for body
-      const osc = ctx.createOscillator();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(baseFreq, start);
-      // Positive rising inflection, dann sanft zurück
-      osc.frequency.linearRampToValueAtTime(baseFreq * 1.12, start + dur * 0.35);
-      osc.frequency.exponentialRampToValueAtTime(Math.max(130, baseFreq * 0.9), start + dur);
-
-      // Source 2: very subtle noise for rasp
-      const bufferSize = Math.floor(ctx.sampleRate * dur);
-      const nb = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const ch = nb.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) ch[i] = (Math.random() * 2 - 1) * 0.02; // etwas weniger Rauschen
-      const noise = ctx.createBufferSource();
-      noise.buffer = nb;
-
-      // Formants (bandpass filters) to mimic croak resonance
-      const bp1 = ctx.createBiquadFilter();
-      bp1.type = 'bandpass';
-      bp1.frequency.setValueAtTime(brighter ? 380 : 320, start);
-      bp1.Q.setValueAtTime(7.5, start);
-
-      const bp2 = ctx.createBiquadFilter();
-      bp2.type = 'bandpass';
-      bp2.frequency.setValueAtTime(brighter ? 820 : 680, start);
-      bp2.Q.setValueAtTime(4.5, start);
-
-      // Lowpass to tame highs
-      const lp = ctx.createBiquadFilter();
-      lp.type = 'lowpass';
-      lp.frequency.setValueAtTime(brighter ? 1800 : 1400, start);
-
-      // Amplitude envelope
-      const env = ctx.createGain();
-      env.gain.setValueAtTime(0, start);
-      env.gain.linearRampToValueAtTime(1.0, start + 0.035 * sfxStretch);
-      env.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-
-      // Amplitude modulation (tremolo) ~20-28 Hz
-      const trem = ctx.createOscillator();
-      trem.type = 'sine';
-      trem.frequency.setValueAtTime(24, start);
-      const tremGain = ctx.createGain();
-      tremGain.gain.setValueAtTime(0.35, start); // weniger stark, freundlicher
-      trem.connect(tremGain);
-      tremGain.connect(env.gain);
-
-      // Cheer-Tone Layer (leiser, höherer Dreieckston) für positiven Charakter
-      const cheer = ctx.createOscillator();
-      cheer.type = 'triangle';
-      cheer.frequency.setValueAtTime(baseFreq * 3.2, start);
-      cheer.frequency.linearRampToValueAtTime(baseFreq * 3.6, start + dur * 0.5);
-      const cheerGain = ctx.createGain();
-      cheerGain.gain.setValueAtTime(0, start);
-      cheerGain.gain.linearRampToValueAtTime(0.12, start + 0.03 * sfxStretch);
-      cheerGain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-
-      // Routing
-      osc.connect(bp1);
-      osc.connect(bp2);
-      noise.connect(bp1);
-      noise.connect(bp2);
-      bp1.connect(lp);
-      bp2.connect(lp);
-      lp.connect(env);
-      env.connect(ctx.destination);
-      cheer.connect(env);
-
-      // Schedule
-      trem.start(start);
-      osc.start(start);
-      noise.start(start);
-      cheer.start(start);
-      trem.stop(start + dur);
-      osc.stop(start + dur);
-      noise.stop(start + dur);
-      cheer.stop(start + dur);
-    };
-
-    // Two-burst "rib-bit" style croak, stretched by sfxStretch
-    const burstDur1 = 0.24 * sfxStretch;
-    const burstDur2 = 0.32 * sfxStretch;
-    createBurst(0, 230, burstDur1, true);                  // heller, "rib"
-    createBurst(0.14 * sfxStretch, 190, burstDur2, true);  // ebenfalls hell, "bit"
-  };
-
+  // Fail sound for wrong answers (plays MP3 file)
   const playSplash = () => {
-    const ctx = getAudioCtx();
-    if (!ctx) return;
-    const duration = 0.9 * sfxStretch;
-    const now = ctx.currentTime;
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.001, now);
-    gain.gain.linearRampToValueAtTime(0.2, now + 0.06 * sfxStretch);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    // White noise buffer
-    const bufferSize = Math.floor(ctx.sampleRate * duration);
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize); // quick decay
-    }
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-
-    // Slight filtering for watery feel
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(1400, now);
-    filter.Q.setValueAtTime(0.7, now);
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    noise.start(now);
-    noise.stop(now + duration);
+    try {
+      const audio = new Audio('/media/failed.mp3');
+      audio.volume = 0.8;
+      audio.play().catch(() => {});
+    } catch {}
   };
 
+  // Victory sound when beach is reached (plays MP3 file)
   const playClap = () => {
-    const ctx = getAudioCtx();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    const makeBurst = (startOffset: number) => {
-      const duration = 0.28 * sfxStretch;
-      const start = now + startOffset;
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.001, start);
-      gain.gain.linearRampToValueAtTime(0.35, start + 0.04 * sfxStretch);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-
-      // Noise source
-      const bufferSize = Math.floor(ctx.sampleRate * duration);
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-
-      // Bandpass for clap
-      const bp = ctx.createBiquadFilter();
-      bp.type = 'bandpass';
-      bp.frequency.setValueAtTime(1500, start);
-      bp.Q.setValueAtTime(1.2, start);
-
-      noise.connect(bp);
-      bp.connect(gain);
-      gain.connect(ctx.destination);
-      noise.start(start);
-      noise.stop(start + duration);
-    };
-
-    // 3 slower bursts to simulate clapping
-    makeBurst(0);
-    makeBurst(0.12 * sfxStretch);
-    makeBurst(0.24 * sfxStretch);
+    try {
+      const audio = new Audio('/media/reached.mp3');
+      audio.volume = 0.8;
+      audio.play().catch(() => {});
+    } catch {}
   };
 
   const resetVocabRun = () => {
