@@ -1477,59 +1477,13 @@ export function VocabRunGame({ config, onComplete }: VocabRunGameProps) {
   // Stretch factor to slow down short SFX (higher = slower/longer)
   const sfxStretch = 1.8;
 
-  // Bright, positive chime for successful jumps
+  // Success sound for successful jumps (plays MP3 file)
   const playChime = () => {
-    const ctx = getAudioCtx();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-
-    // Envelope
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.0001, now);
-    env.gain.linearRampToValueAtTime(0.9, now + 0.015 * sfxStretch);
-    env.gain.exponentialRampToValueAtTime(0.0001, now + 0.9 * sfxStretch);
-
-    // Slight highpass to brighten
-    const hp = ctx.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.setValueAtTime(400, now);
-
-    // Small stereo feel
-    const splitter = ctx.createChannelSplitter(2);
-    const merger = ctx.createChannelMerger(2);
-
-    // Bell-like partials (major triad stacked): C6, E6, G6
-    const freqs = [1047, 1319, 1568];
-    const gains = [0.9, 0.6, 0.5];
-    const oscs: OscillatorNode[] = [];
-    const partialGain = ctx.createGain();
-    partialGain.gain.setValueAtTime(0.9, now);
-
-    freqs.forEach((f, i) => {
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(f, now);
-      // subtle upward glide for sparkle
-      osc.frequency.linearRampToValueAtTime(f * 1.02, now + 0.25 * sfxStretch);
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(gains[i], now);
-      osc.connect(g);
-      g.connect(partialGain);
-      oscs.push(osc);
-    });
-
-    // Light stereo spread
-    partialGain.connect(splitter);
-    splitter.connect(merger, 0, 0);
-    splitter.connect(merger, 1, 1);
-    merger.connect(hp);
-    hp.connect(env);
-    env.connect(ctx.destination);
-
-    oscs.forEach((o) => {
-      o.start(now);
-      o.stop(now + 1.0 * sfxStretch);
-    });
+    try {
+      const audio = new Audio('/media/done-success.mp3');
+      audio.volume = 0.8;
+      audio.play().catch(() => {});
+    } catch {}
   };
 
   const playFrogCroak = () => {
