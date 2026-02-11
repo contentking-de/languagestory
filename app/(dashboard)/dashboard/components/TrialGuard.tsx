@@ -10,6 +10,7 @@ const ALWAYS_ACCESSIBLE_PATHS = [
   '/dashboard/security',  // Password change
   '/dashboard/activity',  // Activity log
   '/dashboard/welcome',   // Welcome page
+  '/dashboard/billing',   // Billing / invoices
 ];
 
 interface TrialGuardProps {

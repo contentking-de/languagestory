@@ -65,7 +65,7 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
         { href: '/dashboard', icon: Users, label: 'Team Management' },
         { href: '/dashboard/roles', icon: UserCheck, label: 'Roles' }
       ]
-    }
+    },
   ];
 
   // Admin tools for Super Admin only
@@ -100,7 +100,7 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
         { href: '/dashboard', icon: Users, label: 'Team Management' },
         { href: '/dashboard/roles', icon: UserCheck, label: 'Roles' }
       ]
-    }
+    },
   ];
 
   // Minimal navigation for Students (without Team/Roles)

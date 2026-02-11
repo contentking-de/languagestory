@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, Suspense, useEffect } from 'react';
-import { Home, LogOut, User as UserIcon, TrendingUp, Settings, Activity, Shield } from 'lucide-react';
+import { Home, LogOut, User as UserIcon, TrendingUp, Settings, Activity, Shield, Receipt } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -114,6 +114,12 @@ function UserMenu() {
           <Link href="/dashboard/security" className="flex w-full items-center">
             <Shield className="mr-2 h-4 w-4" />
             <span>Security</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer">
+          <Link href="/dashboard/billing" className="flex w-full items-center">
+            <Receipt className="mr-2 h-4 w-4" />
+            <span>Billing</span>
           </Link>
         </DropdownMenuItem>
         <form action={handleSignOut} className="w-full">

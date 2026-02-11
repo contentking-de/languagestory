@@ -217,6 +217,87 @@ export async function handleSubscriptionChange(
   }
 }
 
+// ─── Invoice / Billing ────────────────────────────────────────────────────────
+
+export interface InvoiceData {
+  id: string;
+  number: string | null;
+  status: string | null;
+  currency: string;
+  amountDue: number;
+  amountPaid: number;
+  created: number; // unix timestamp
+  periodStart: number;
+  periodEnd: number;
+  hostedInvoiceUrl: string | null;
+  invoicePdf: string | null;
+  description: string | null;
+  planName: string | null;
+}
+
+/**
+ * Fetches all invoices for a Stripe customer, sorted newest-first.
+ */
+export async function getInvoicesForCustomer(
+  stripeCustomerId: string,
+  limit: number = 24
+): Promise<InvoiceData[]> {
+  const invoices = await stripe.invoices.list({
+    customer: stripeCustomerId,
+    limit,
+    status: 'paid',
+    expand: ['data.subscription'],
+  });
+
+  return invoices.data.map((inv) => ({
+    id: inv.id,
+    number: inv.number,
+    status: inv.status,
+    currency: inv.currency,
+    amountDue: inv.amount_due,
+    amountPaid: inv.amount_paid,
+    created: inv.created,
+    periodStart: inv.period_start,
+    periodEnd: inv.period_end,
+    hostedInvoiceUrl: inv.hosted_invoice_url,
+    invoicePdf: inv.invoice_pdf,
+    description: inv.description,
+    planName: inv.lines.data[0]?.description || null,
+  }));
+}
+
+/**
+ * Fetches upcoming invoice (next billing) for a customer, if any.
+ */
+export async function getUpcomingInvoice(
+  stripeCustomerId: string
+): Promise<InvoiceData | null> {
+  try {
+    const inv = await stripe.invoices.retrieveUpcoming({
+      customer: stripeCustomerId,
+    });
+
+    return {
+      id: 'upcoming',
+      number: null,
+      status: 'upcoming',
+      currency: inv.currency,
+      amountDue: inv.amount_due,
+      amountPaid: 0,
+      created: inv.created,
+      periodStart: inv.period_start,
+      periodEnd: inv.period_end,
+      hostedInvoiceUrl: null,
+      invoicePdf: null,
+      description: null,
+      planName: inv.lines.data[0]?.description || null,
+    };
+  } catch {
+    // No upcoming invoice (e.g. no active subscription)
+    return null;
+  }
+}
+
 export async function getStripePrices() {
   const prices = await stripe.prices.list({
     expand: ['data.product'],
