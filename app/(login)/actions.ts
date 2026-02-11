@@ -121,7 +121,7 @@ const signUpSchema = z.object({
     const validation = validatePassword(password);
     return { message: validation.error || 'Password does not meet security requirements' };
   }),
-  role: z.enum(['student', 'teacher']).default('teacher'),
+  role: z.enum(['student', 'teacher', 'member']).default('teacher'),
   institutionId: z.string().optional(),
   parentEmail: z.string().email().optional(), // For linking parent-child accounts
   inviteId: z.string().optional()
@@ -257,12 +257,17 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
       ? `${createdUser.name || createdUser.email}'s Classes`
       : `${createdUser.name || createdUser.email}'s Learning`;
 
+    // Set trial end date to 14 days from now
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
     [createdTeam] = await db
       .insert(teams)
       .values({
         name: teamName,
         subscriptionType: institutionId ? 'institution' : 'individual',
         institutionId: institutionId ? parseInt(institutionId) : undefined,
+        trialEndsAt,
       })
       .returning();
 

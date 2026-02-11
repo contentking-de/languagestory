@@ -21,7 +21,7 @@ export default async function PricingPage() {
           Access all short stories, games, quizzes, and teaching resources across French, German, and Spanish
         </p>
         <p className="mt-2 text-sm text-orange-600 font-medium">
-          All plans include a 14-day free trial
+          Sign up for a free 14-day trial -- no credit card required
         </p>
       </div>
 

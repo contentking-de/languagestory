@@ -338,3 +338,101 @@ export async function getTeamForUser() {
 
   return result?.team || null;
 }
+
+// ─── Access Status (Trial / Subscription) ─────────────────────────────────────
+
+export type AccessStatus = 'trial' | 'active' | 'expired' | 'canceled';
+
+export interface AccessInfo {
+  status: AccessStatus;
+  trialEndsAt: Date | null;
+  trialDaysRemaining: number | null;
+  planName: string | null;
+}
+
+/**
+ * Determines the current access status for a team.
+ * Priority: active subscription > trialing subscription > app-level trial > expired
+ */
+export function getAccessStatus(team: {
+  subscriptionStatus: string | null;
+  trialEndsAt: Date | null;
+  planName: string | null;
+}): AccessInfo {
+  // Active paid subscription
+  if (team.subscriptionStatus === 'active') {
+    return {
+      status: 'active',
+      trialEndsAt: team.trialEndsAt,
+      trialDaysRemaining: null,
+      planName: team.planName,
+    };
+  }
+
+  // Stripe-level trialing (legacy, for existing subscriptions)
+  if (team.subscriptionStatus === 'trialing') {
+    return {
+      status: 'active',
+      trialEndsAt: team.trialEndsAt,
+      trialDaysRemaining: null,
+      planName: team.planName,
+    };
+  }
+
+  // App-level trial (new flow: no Stripe yet)
+  if (team.trialEndsAt) {
+    const now = new Date();
+    const trialEnd = new Date(team.trialEndsAt);
+    const daysRemaining = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (daysRemaining > 0) {
+      return {
+        status: 'trial',
+        trialEndsAt: trialEnd,
+        trialDaysRemaining: daysRemaining,
+        planName: null,
+      };
+    }
+  }
+
+  // Canceled subscription
+  if (team.subscriptionStatus === 'canceled' || team.subscriptionStatus === 'unpaid') {
+    return {
+      status: 'canceled',
+      trialEndsAt: team.trialEndsAt,
+      trialDaysRemaining: null,
+      planName: null,
+    };
+  }
+
+  // Everything else = expired (trial ended, no subscription)
+  return {
+    status: 'expired',
+    trialEndsAt: team.trialEndsAt,
+    trialDaysRemaining: null,
+    planName: null,
+  };
+}
+
+/**
+ * Gets the access info for the currently logged-in user's team.
+ */
+export async function getAccessInfoForCurrentUser(): Promise<AccessInfo | null> {
+  const user = await getUser();
+  if (!user) return null;
+
+  const result = await db
+    .select({
+      subscriptionStatus: teams.subscriptionStatus,
+      trialEndsAt: teams.trialEndsAt,
+      planName: teams.planName,
+    })
+    .from(teams)
+    .innerJoin(teamMembers, eq(teams.id, teamMembers.teamId))
+    .where(eq(teamMembers.userId, user.id))
+    .limit(1);
+
+  if (result.length === 0) return null;
+
+  return getAccessStatus(result[0]);
+}

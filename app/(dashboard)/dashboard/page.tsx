@@ -48,33 +48,55 @@ function SubscriptionSkeleton() {
 }
 
 function ManageSubscription() {
-  const { data: teamData } = useSWR<TeamDataWithMembers>('/api/team', fetcher);
+  const { data: teamData } = useSWR<TeamDataWithMembers & { accessStatus?: string; trialDaysRemaining?: number | null }>('/api/team', fetcher);
+
+  const accessStatus = teamData?.accessStatus;
+  const trialDaysRemaining = teamData?.trialDaysRemaining;
+  const trialEndsAt = teamData?.trialEndsAt ? new Date(teamData.trialEndsAt) : null;
+  const hasActiveSubscription = teamData?.subscriptionStatus === 'active';
 
   return (
     <Card className="mb-8">
       <CardHeader>
-        <CardTitle>Team Subscription</CardTitle>
+        <CardTitle>Subscription</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* Current plan info */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
             <div className="mb-4 sm:mb-0">
               <p className="font-medium">
-                Current Plan: {teamData?.planName || 'Free'}
+                Current Plan: {hasActiveSubscription ? (teamData?.planName || 'Active Plan') : 'Free Trial'}
               </p>
               <p className="text-sm text-muted-foreground">
-                {teamData?.subscriptionStatus === 'active'
-                  ? 'Billed monthly'
+                {hasActiveSubscription
+                  ? 'Active subscription'
                   : teamData?.subscriptionStatus === 'trialing'
-                  ? 'Trial period'
+                  ? 'Stripe trial period'
+                  : accessStatus === 'trial' && trialDaysRemaining !== null
+                  ? `Trial ends in ${trialDaysRemaining} day${trialDaysRemaining !== 1 ? 's' : ''}${
+                      trialEndsAt
+                        ? ` (${trialEndsAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })})`
+                        : ''
+                    }`
+                  : accessStatus === 'expired'
+                  ? 'Trial has ended - please choose a plan'
                   : 'No active subscription'}
               </p>
             </div>
-            <form action={customerPortalAction}>
-              <Button type="submit" variant="outline">
-                Manage Subscription
-              </Button>
-            </form>
+            <div className="flex gap-2">
+              {hasActiveSubscription ? (
+                <form action={customerPortalAction}>
+                  <Button type="submit" variant="outline">
+                    Manage Subscription
+                  </Button>
+                </form>
+              ) : (
+                <Button asChild className="bg-orange-600 hover:bg-orange-700 text-white">
+                  <a href="/pricing">Choose a Plan</a>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
@@ -543,19 +565,28 @@ function InviteTeamMember() {
 }
 
 export default function SettingsPage() {
+  const { data: user } = useSWR<User>('/api/user', fetcher);
+  const isMember = user?.role === 'member';
+
   return (
     <section className="flex-1 p-4 lg:p-8">
-      <h1 className="text-lg lg:text-2xl font-medium mb-6">Team Settings</h1>
+      <h1 className="text-lg lg:text-2xl font-medium mb-6">
+        {isMember ? 'My Subscription' : 'Team Settings'}
+      </h1>
       <Suspense fallback={<SubscriptionSkeleton />}>
         <ManageSubscription />
       </Suspense>
-      <Suspense fallback={<TeamMembersSkeleton />}>
-        <TeamMembers />
-      </Suspense>
-      <InvitedUsers />
-      <Suspense fallback={<InviteTeamMemberSkeleton />}>
-        <InviteTeamMember />
-      </Suspense>
+      {!isMember && (
+        <>
+          <Suspense fallback={<TeamMembersSkeleton />}>
+            <TeamMembers />
+          </Suspense>
+          <InvitedUsers />
+          <Suspense fallback={<InviteTeamMemberSkeleton />}>
+            <InviteTeamMember />
+          </Suspense>
+        </>
+      )}
     </section>
   );
 }

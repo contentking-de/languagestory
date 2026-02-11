@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
-import { Loader2, X, Eye, EyeOff, Check, X as XIcon } from 'lucide-react';
+import { Loader2, X, Eye, EyeOff, Check, X as XIcon, GraduationCap, BookOpen } from 'lucide-react';
 import { signIn, signUp } from './actions';
 import { ActionState } from '@/lib/auth/middleware';
 import { validatePassword } from '@/lib/utils';
@@ -39,6 +39,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
   const [invitationLoading, setInvitationLoading] = useState(false);
   const [invitationError, setInvitationError] = useState<string>('');
   const [emailValue, setEmailValue] = useState<string>(state.email || '');
+  const [selectedRole, setSelectedRole] = useState<'teacher' | 'member'>('teacher');
 
   // Load invitation data if inviteId is present
   useEffect(() => {
@@ -213,7 +214,45 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
           <input type="hidden" name="redirect" value={redirect || ''} />
           <input type="hidden" name="priceId" value={priceId || ''} />
           <input type="hidden" name="inviteId" value={inviteId || ''} />
-          {mode === 'signup' && <input type="hidden" name="role" value={invitationRole || 'teacher'} />}
+          {mode === 'signup' && invitationRole && (
+            <input type="hidden" name="role" value={invitationRole} />
+          )}
+          {mode === 'signup' && !invitationRole && (
+            <div>
+              <Label className="block text-sm font-medium text-gray-700 mb-2">
+                How will you use Lingoletics?
+              </Label>
+              <input type="hidden" name="role" value={selectedRole} />
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('teacher')}
+                  className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
+                    selectedRole === 'teacher'
+                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  <GraduationCap className="h-6 w-6 mb-2" />
+                  <span className="text-sm font-medium">Teacher / School</span>
+                  <span className="text-xs mt-1 text-center">Manage classes & students</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('member')}
+                  className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
+                    selectedRole === 'member'
+                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  <BookOpen className="h-6 w-6 mb-2" />
+                  <span className="text-sm font-medium">Private Learner</span>
+                  <span className="text-xs mt-1 text-center">Learn languages for myself</span>
+                </button>
+              </div>
+            </div>
+          )}
           {mode === 'signup' && (
             <div>
               <Label

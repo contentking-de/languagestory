@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserProgressSummary } from '@/components/user-progress-summary';
 import { 
   Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight,
-  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage, Ticket, FileText, MessageCircle, UserCircle
+  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage, Ticket, FileText, MessageCircle, UserCircle, Clock, AlertTriangle
 } from 'lucide-react';
 
 interface NavItem {
@@ -19,10 +19,14 @@ interface NavItem {
 
 interface DashboardNavigationProps {
   userRole: string;
+  accessStatus: string;
+  trialDaysRemaining: number | null;
+  trialEndsAt: string | null;
+  planName: string | null;
   children: React.ReactNode;
 }
 
-export function DashboardNavigation({ userRole, children }: DashboardNavigationProps) {
+export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining, trialEndsAt, planName, children }: DashboardNavigationProps) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>(['/dashboard/content']);
@@ -119,9 +123,31 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
     { href: '/dashboard/classmates', icon: UserCircle, label: 'Classmates' }
   ];
 
+  // Navigation for Endusers / Members (private learners - no team management)
+  const memberNavItems: NavItem[] = [
+    { href: '/dashboard/welcome', icon: Heart, label: 'Welcome' },
+    { 
+      href: '/dashboard/content', 
+      icon: BookOpen, 
+      label: 'Content',
+      subItems: [
+        { href: '/dashboard/content/courses', icon: GraduationCap, label: 'Courses' },
+        { href: '/dashboard/content/lessons', icon: BookOpen, label: 'Lessons' },
+        { href: '/dashboard/content/quizzes', icon: FileQuestion, label: 'Quizzes' },
+        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' },
+        { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
+        { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
+        { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
+      ]
+    },
+    { href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
+  ];
+
   // Determine which navigation to use based on role
   const navItems = (userRole === 'super_admin' || userRole === 'content_creator') 
     ? fullNavItems 
+    : userRole === 'member'
+    ? memberNavItems
     : userRole === 'student'
     ? studentNavItems
     : teacherNavItems;
@@ -255,7 +281,49 @@ export function DashboardNavigation({ userRole, children }: DashboardNavigationP
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-0 xl:p-4">{children}</main>
+        <main className="flex-1 overflow-y-auto p-0 xl:p-4">
+          {/* Trial Banner */}
+          {accessStatus === 'trial' && trialDaysRemaining !== null && (
+            <div className={`mx-4 mt-4 xl:mx-0 xl:mt-0 mb-4 rounded-lg border px-4 py-3 flex items-center justify-between ${
+              trialDaysRemaining > 7
+                ? 'bg-green-50 border-green-200 text-green-800'
+                : trialDaysRemaining > 3
+                ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                : 'bg-red-50 border-red-200 text-red-800'
+            }`}>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm font-medium">
+                  {trialDaysRemaining === 1
+                    ? 'Your free trial ends tomorrow!'
+                    : `Your free trial ends in ${trialDaysRemaining} days`}
+                  {trialEndsAt && (
+                    <span className="font-normal text-xs ml-1">
+                      ({new Date(trialEndsAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })})
+                    </span>
+                  )}
+                </span>
+              </div>
+              <Link href="/pricing" className="text-sm font-medium underline hover:no-underline whitespace-nowrap ml-4">
+                Choose a plan
+              </Link>
+            </div>
+          )}
+          {accessStatus === 'expired' && (
+            <div className="mx-4 mt-4 xl:mx-0 xl:mt-0 mb-4 rounded-lg border bg-red-50 border-red-200 text-red-800 px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm font-medium">
+                  Your free trial has ended. Choose a plan to continue using all features.
+                </span>
+              </div>
+              <Link href="/subscribe" className="text-sm font-medium bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 whitespace-nowrap ml-4">
+                Subscribe now
+              </Link>
+            </div>
+          )}
+          {children}
+        </main>
       </div>
     </div>
   );

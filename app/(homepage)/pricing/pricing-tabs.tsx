@@ -47,7 +47,7 @@ function CheckoutButton() {
         </>
       ) : (
         <>
-          Start Free Trial
+          Subscribe Now
           <ArrowRight className="h-4 w-4" />
         </>
       )}
@@ -70,7 +70,7 @@ function CheckoutButtonOutline() {
         </>
       ) : (
         <>
-          Start Free Trial
+          Subscribe Now
           <ArrowRight className="h-4 w-4" />
         </>
       )}
@@ -144,7 +144,7 @@ function PlanCard({
             type="submit"
             className="w-full bg-white text-orange-600 font-bold py-3 px-4 rounded-lg hover:bg-orange-50 transition-colors flex items-center justify-center gap-2"
           >
-            Start Free Trial
+            Subscribe Now
             <ArrowRight className="h-4 w-4" />
           </button>
         ) : (
@@ -412,7 +412,7 @@ export function PricingTabs({ pricing }: { pricing: StructuredPricingData }) {
           <span className="text-xs">🔒 SSL Encrypted</span>
           <span className="text-xs">💳 Powered by Stripe</span>
           <span className="text-xs">↩️ Cancel anytime</span>
-          <span className="text-xs">🎁 14-day free trial</span>
+          <span className="text-xs">🎁 14-day free trial on signup</span>
         </div>
       </div>
     </>

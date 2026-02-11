@@ -41,7 +41,7 @@ export const PERMISSIONS: Record<UserRole, PermissionAction[]> = {
   student: [
     'invite_users' // Students can now invite parents
   ],
-  member: []
+  member: ['view_progress']
 };
 
 // Check if user has permission for a specific action
