@@ -32,6 +32,7 @@ import { FlagIcon } from '@/components/ui/flag-icon';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { QuizTeaserModal } from '@/components/quiz-teaser-modal';
+import { VocabTeaserModal } from '@/components/vocab-teaser-modal';
 
 // Modal content data
 const modalContent = {
@@ -1222,10 +1223,17 @@ export default function HomePage() {
   const [activeModal, setActiveModal] = useState('');
   const [quizTeaserOpen, setQuizTeaserOpen] = useState(false);
   const [quizTeaserType, setQuizTeaserType] = useState<'true_false' | 'multiple_choice' | 'gap_fill'>('true_false');
+  const [vocabTeaserOpen, setVocabTeaserOpen] = useState(false);
+  const [vocabTeaserLanguage, setVocabTeaserLanguage] = useState<'spanish' | 'german' | 'french'>('spanish');
 
   const openQuizTeaser = (type: 'true_false' | 'multiple_choice' | 'gap_fill') => {
     setQuizTeaserType(type);
     setQuizTeaserOpen(true);
+  };
+
+  const openVocabTeaser = (language: 'spanish' | 'german' | 'french') => {
+    setVocabTeaserLanguage(language);
+    setVocabTeaserOpen(true);
   };
 
   // Accessibility settings state
@@ -1947,7 +1955,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Spanish Games */}
             <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
-              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
+              <div className="h-48 bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center relative">
                 <div className="text-center text-gray-700">
                   <h4 className="text-2xl font-bold mb-2">Spanish</h4>
                   <p className="text-gray-600">vocabulary games</p>
@@ -1963,7 +1971,10 @@ export default function HomePage() {
                   from our stories. Perfect for building vocabulary and improving retention.
                 </p>
                 <div className="mt-auto">
-                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                  <button
+                    onClick={() => openVocabTeaser('spanish')}
+                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
+                  >
                     Play now
                   </button>
                 </div>
@@ -1972,7 +1983,7 @@ export default function HomePage() {
 
             {/* German Games */}
             <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
-              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
+              <div className="h-48 bg-gradient-to-br from-gray-100 to-red-100 flex items-center justify-center relative">
                 <div className="text-center text-gray-700">
                   <h4 className="text-2xl font-bold mb-2">German</h4>
                   <p className="text-gray-600">vocabulary games</p>
@@ -1988,7 +1999,10 @@ export default function HomePage() {
                   Strengthen your language skills through interactive practice.
                 </p>
                 <div className="mt-auto">
-                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                  <button
+                    onClick={() => openVocabTeaser('german')}
+                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
+                  >
                     Play now
                   </button>
                 </div>
@@ -1997,7 +2011,7 @@ export default function HomePage() {
 
             {/* French Games */}
             <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
-              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
+              <div className="h-48 bg-gradient-to-br from-blue-50 to-red-100 flex items-center justify-center relative">
                 <div className="text-center text-gray-700">
                   <h4 className="text-2xl font-bold mb-2">French</h4>
                   <p className="text-gray-600">vocabulary games</p>
@@ -2013,7 +2027,10 @@ export default function HomePage() {
                   Practice and reinforce new words in a fun, engaging way.
                 </p>
                 <div className="mt-auto">
-                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                  <button
+                    onClick={() => openVocabTeaser('french')}
+                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
+                  >
                     Play now
                   </button>
                 </div>
@@ -2595,6 +2612,13 @@ export default function HomePage() {
         isOpen={quizTeaserOpen}
         onClose={() => setQuizTeaserOpen(false)}
         quizType={quizTeaserType}
+      />
+
+      {/* Vocabulary Teaser Modal */}
+      <VocabTeaserModal
+        isOpen={vocabTeaserOpen}
+        onClose={() => setVocabTeaserOpen(false)}
+        language={vocabTeaserLanguage}
       />
     </main>
   );
