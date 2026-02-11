@@ -1,14 +1,53 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { games, lessons, courses } from '@/lib/db/content-schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, or, ilike, isNotNull, isNull, sql, count } from 'drizzle-orm';
 import { logGameActivityServer } from '@/lib/activity-logger-server';
 import { getUserWithTeamData } from '@/lib/db/queries';
 
-// GET: Fetch all games from database
-export async function GET() {
+// GET: Fetch games with pagination and server-side filtering
+export async function GET(request: Request) {
   try {
-    const allGames = await db
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')));
+    const search = searchParams.get('search') || '';
+    const gameType = searchParams.get('game_type') || '';
+    const lessonFilter = searchParams.get('lesson') || ''; // 'assigned' | 'unassigned' | ''
+    const offset = (page - 1) * limit;
+
+    // Build WHERE conditions
+    const conditions = [eq(games.is_active, true)];
+
+    if (search) {
+      conditions.push(
+        or(
+          ilike(games.title, `%${search}%`),
+          ilike(games.author_name, `%${search}%`)
+        )!
+      );
+    }
+
+    if (gameType) {
+      conditions.push(eq(games.game_type, gameType as typeof games.game_type.enumValues[number]));
+    }
+
+    if (lessonFilter === 'assigned') {
+      conditions.push(isNotNull(games.lesson_id));
+    } else if (lessonFilter === 'unassigned') {
+      conditions.push(isNull(games.lesson_id));
+    }
+
+    const whereClause = and(...conditions);
+
+    // Get total count for pagination
+    const [{ total: totalCount }] = await db
+      .select({ total: count() })
+      .from(games)
+      .where(whereClause);
+
+    // Fetch paginated games (lightweight - no game_config/embed_html)
+    const paginatedGames = await db
       .select({
         id: games.id,
         title: games.title,
@@ -16,7 +55,6 @@ export async function GET() {
         game_type: games.game_type,
         original_url: games.original_url,
         normalized_url: games.normalized_url,
-        embed_html: games.embed_html,
         thumbnail_url: games.thumbnail_url,
         author_name: games.author_name,
         author_url: games.author_url,
@@ -33,7 +71,6 @@ export async function GET() {
         course_title: courses.title,
         course_language: courses.language,
         tags: games.tags,
-        game_config: games.game_config,
         is_active: games.is_active,
         is_featured: games.is_featured,
         added_by: games.added_by,
@@ -44,10 +81,18 @@ export async function GET() {
       .from(games)
       .leftJoin(lessons, eq(games.lesson_id, lessons.id))
       .leftJoin(courses, eq(lessons.course_id, courses.id))
-      .where(eq(games.is_active, true))
-      .orderBy(desc(games.created_at));
+      .where(whereClause)
+      .orderBy(desc(games.created_at))
+      .limit(limit)
+      .offset(offset);
 
-    return NextResponse.json(allGames);
+    return NextResponse.json({
+      data: paginatedGames,
+      total: totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+    });
   } catch (error) {
     console.error('Error fetching games from database:', error);
     return NextResponse.json(

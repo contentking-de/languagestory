@@ -3,8 +3,29 @@ import { db } from '@/lib/db/drizzle';
 import { lessons, courses } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const fields = searchParams.get('fields');
+
+    // Minimal mode: only return fields needed for dropdowns/selectors (much faster)
+    if (fields === 'minimal') {
+      const lessonsData = await db
+        .select({
+          id: lessons.id,
+          title: lessons.title,
+          course_id: lessons.course_id,
+          course_title: courses.title,
+          course_language: courses.language,
+        })
+        .from(lessons)
+        .leftJoin(courses, eq(lessons.course_id, courses.id))
+        .orderBy(courses.language, lessons.lesson_order);
+
+      return NextResponse.json(lessonsData);
+    }
+
+    // Full mode: return all fields
     const lessonsData = await db
       .select({
         id: lessons.id,

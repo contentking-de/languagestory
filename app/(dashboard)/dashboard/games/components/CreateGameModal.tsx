@@ -112,11 +112,11 @@ export function CreateGameModal({ isOpen, onClose, onGameCreated }: CreateGameMo
     setStep('config');
   };
 
-  // Load lessons for assignment
+  // Load lessons for assignment (minimal fields for fast dropdown)
   useEffect(() => {
     const loadLessons = async () => {
       try {
-        const response = await fetch('/api/lessons');
+        const response = await fetch('/api/lessons?fields=minimal');
         if (response.ok) {
           const data = await response.json();
           setLessons(data || []);

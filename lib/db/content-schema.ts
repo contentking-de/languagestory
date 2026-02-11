@@ -54,7 +54,7 @@ export const gameCategoryEnum = pgEnum('game_category', [
 ]);
 
 export const gameTypeEnum = pgEnum('game_type', [
-  'wordwall', 'memory', 'hangman', 'word_search', 'crossword', 'flashcards',
+  'memory', 'hangman', 'word_search', 'crossword', 'flashcards',
   'fill_blank', 'multiple_choice', 'drag_drop', 'word_mixup', 'word_association', 'custom',
   'vocab_run', 'listen_type', 'word_match'
 ]);
@@ -233,7 +233,7 @@ export const games = pgTable('games', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 200 }).notNull(),
   description: text('description'),
-  game_type: gameTypeEnum('game_type').default('wordwall'), // Type of game
+  game_type: gameTypeEnum('game_type').default('memory'), // Type of game
   original_url: varchar('original_url', { length: 500 }), // Optional for custom games
   normalized_url: varchar('normalized_url', { length: 500 }), // Optional for custom games
   embed_html: text('embed_html'), // Optional for custom games

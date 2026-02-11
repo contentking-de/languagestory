@@ -104,7 +104,7 @@ export default function GameEditPage() {
         setFormData({
           title: gameData.title || '',
           description: gameData.description || '',
-          game_type: gameData.game_type || 'wordwall',
+          game_type: gameData.game_type || 'memory',
           game_config: gameData.game_config || null,
           category: gameData.category || '',
           language: gameData.language || '',
@@ -259,7 +259,6 @@ export default function GameEditPage() {
                       <SelectValue placeholder="Select game type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="wordwall">🎮 Wordwall</SelectItem>
                       <SelectItem value="memory">🧠 Memory</SelectItem>
                       <SelectItem value="hangman">🎯 Hangman</SelectItem>
                       <SelectItem value="word_search">🔍 Word Search</SelectItem>
@@ -406,7 +405,7 @@ export default function GameEditPage() {
               </div>
 
               {/* Editable Game Configuration */}
-              {formData.game_type !== 'wordwall' && (
+              {formData.game_type && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -438,7 +437,7 @@ export default function GameEditPage() {
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h3 className="font-medium text-blue-800 mb-2">Game Information</h3>
                 <div className="text-sm text-blue-700 space-y-1">
-                  <p><strong>Game Type:</strong> {game.game_type || 'wordwall'}</p>
+                  <p><strong>Game Type:</strong> {game.game_type || 'unknown'}</p>
                   <p><strong>Provider:</strong> {game.provider_name}</p>
                   <p><strong>Author:</strong> {game.author_name || 'Unknown'}</p>
                   <p><strong>Usage Count:</strong> {game.usage_count} times</p>

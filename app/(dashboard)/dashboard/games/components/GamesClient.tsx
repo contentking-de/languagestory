@@ -10,7 +10,6 @@ import {
   Plus,
   Search,
   Play,
-  ExternalLink,
   Loader2,
   Users,
   Star,
@@ -60,25 +59,6 @@ interface DatabaseGame {
   updated_at: string;
 }
 
-interface WordwallGame {
-  version: string;
-  type: string;
-  width: number;
-  height: number;
-  title: string;
-  html: string;
-  thumbnail_url: string;
-  thumbnail_width: number;
-  thumbnail_height: number;
-  author_name: string;
-  author_url: string;
-  provider_name: string;
-  provider_url: string;
-  original_url?: string;
-  success?: boolean;
-  error?: string;
-}
-
 interface Lesson {
   id: number;
   title: string;
@@ -96,33 +76,66 @@ export function GamesClient({ userRole }: GamesClientProps) {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  // Removed Wordwall creation states
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [expandedGame, setExpandedGame] = useState<number | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [gameTypeFilter, setGameTypeFilter] = useState('all');
   const [lessonFilter, setLessonFilter] = useState('all');
   const [assigningLesson, setAssigningLesson] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   // Render-Optimierung: Nur das geöffnete Select rendert sein Content-Portals
   const [openSelectForGameId, setOpenSelectForGameId] = useState<number | null>(null);
+  const [loadingGameDetail, setLoadingGameDetail] = useState<number | null>(null);
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalGames, setTotalGames] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const PAGE_SIZE = 50;
 
   // Check if user can create/edit games
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
 
-  // Removed sample games loader for production cleanliness
+  // Debounce search input to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to first page on new search
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  // Load games from database on component mount
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [gameTypeFilter, lessonFilter]);
+
+  // Load games when page, search, or filters change
   useEffect(() => {
     loadGamesFromDatabase();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, debouncedSearch, gameTypeFilter, lessonFilter]);
+
+  // Load lessons once on mount
+  useEffect(() => {
     loadLessons();
   }, []);
 
   const loadGamesFromDatabase = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/games');
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: PAGE_SIZE.toString(),
+      });
+      if (debouncedSearch) params.set('search', debouncedSearch);
+      if (gameTypeFilter !== 'all') params.set('game_type', gameTypeFilter);
+      if (lessonFilter !== 'all') params.set('lesson', lessonFilter);
+
+      const response = await fetch(`/api/games?${params}`);
       if (response.ok) {
-        const data = await response.json();
-        setGames(data);
+        const result = await response.json();
+        setGames(result.data);
+        setTotalGames(result.total);
+        setTotalPages(result.totalPages);
       } else {
         console.error('Failed to load games');
       }
@@ -135,7 +148,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
 
   const loadLessons = async () => {
     try {
-      const response = await fetch('/api/lessons');
+      const response = await fetch('/api/lessons?fields=minimal');
       if (response.ok) {
         const data = await response.json();
         setLessons(data);
@@ -150,8 +163,8 @@ export function GamesClient({ userRole }: GamesClientProps) {
   const assignLessonToGame = async (gameId: number, lessonId: number | null) => {
     try {
       setAssigningLesson(gameId);
-      const response = await fetch(`/api/games/wordwall/${gameId}`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/games/${gameId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -159,7 +172,6 @@ export function GamesClient({ userRole }: GamesClientProps) {
       });
       
       if (response.ok) {
-        // Reload games to get updated data
         loadGamesFromDatabase();
       } else {
         console.error('Failed to assign lesson to game');
@@ -171,70 +183,66 @@ export function GamesClient({ userRole }: GamesClientProps) {
     }
   };
 
-  // loadSampleGames removed
-
-  // addGameFromUrl removed
-
-  // addGame removed
-
-  // testUrl removed
-
   const incrementGameUsage = async (gameId: number) => {
     try {
-      await fetch(`/api/games/wordwall/${gameId}`, {
-        method: 'PATCH',
+      await fetch(`/api/games/${gameId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ usage_count: 1 }),
+        body: JSON.stringify({ usage_count_increment: 1 }),
       });
     } catch (error) {
       console.error('Error incrementing usage:', error);
     }
   };
 
-  const toggleGameExpanded = (index: number) => {
-    setExpandedGame(expandedGame === index ? null : index);
+  const toggleGameExpanded = async (index: number) => {
+    if (expandedGame === index) {
+      setExpandedGame(null);
+      return;
+    }
+    setExpandedGame(index);
+
+    // Lazy-load game_config and embed_html if not yet loaded
+    const game = games[index];
+    if (game && !game.game_config && !game.embed_html) {
+      setLoadingGameDetail(game.id);
+      try {
+        const response = await fetch(`/api/games/${game.id}`);
+        if (response.ok) {
+          const fullGame = await response.json();
+          setGames(prev => prev.map(g =>
+            g.id === game.id
+              ? { ...g, game_config: fullGame.game_config, embed_html: fullGame.embed_html }
+              : g
+          ));
+        }
+      } catch (error) {
+        console.error('Error loading game details:', error);
+      } finally {
+        setLoadingGameDetail(null);
+      }
+    }
   };
 
-  const getGameCategory = (title: string) => {
-    const lowerTitle = title.toLowerCase();
-    if (lowerTitle.includes('quiz') || lowerTitle.includes('test')) return 'Quiz';
-    if (lowerTitle.includes('word') || lowerTitle.includes('vocabulary')) return 'Vocabulary';
-    if (lowerTitle.includes('grammar') || lowerTitle.includes('sentence')) return 'Grammar';
-    if (lowerTitle.includes('reading') || lowerTitle.includes('comprehension')) return 'Reading';
-    if (lowerTitle.includes('math') || lowerTitle.includes('number')) return 'Mathematics';
-    if (lowerTitle.includes('science') || lowerTitle.includes('biology')) return 'Science';
-    if (lowerTitle.includes('history') || lowerTitle.includes('social')) return 'History';
-    return 'General';
+
+  const gameTypeLabels: Record<string, { label: string; icon: string; color: string }> = {
+    memory: { label: 'Memory', icon: '🧠', color: 'bg-purple-100 text-purple-800' },
+    hangman: { label: 'Hangman', icon: '🎯', color: 'bg-red-100 text-red-800' },
+    word_search: { label: 'Word Search', icon: '🔍', color: 'bg-green-100 text-green-800' },
+    word_mixup: { label: 'Word Mixup', icon: '🔀', color: 'bg-blue-100 text-blue-800' },
+    word_association: { label: 'Word Association', icon: '🔗', color: 'bg-teal-100 text-teal-800' },
+    word_match: { label: 'Word Match', icon: '🔄', color: 'bg-orange-100 text-orange-800' },
+    flashcards: { label: 'Flashcards', icon: '⭐', color: 'bg-yellow-100 text-yellow-800' },
+    vocab_run: { label: 'Vocab Run', icon: '🐸', color: 'bg-emerald-100 text-emerald-800' },
+    listen_type: { label: 'Listen & Type', icon: '🎧', color: 'bg-pink-100 text-pink-800' },
+    crossword: { label: 'Crossword', icon: '✏️', color: 'bg-gray-100 text-gray-800' },
+    custom: { label: 'Custom', icon: '🎮', color: 'bg-gray-100 text-gray-800' },
   };
 
-  const getCategoryIcon = (category: string) => {
-    const icons: { [key: string]: string } = {
-      'Quiz': '🎯',
-      'Vocabulary': '📚',
-      'Grammar': '📝',
-      'Reading': '📖',
-      'Mathematics': '🔢',
-      'Science': '🔬',
-      'History': '🏛️',
-      'General': '🎮'
-    };
-    return icons[category] || '🎮';
-  };
-
-  const getCategoryColor = (category: string) => {
-    const colors: { [key: string]: string } = {
-      'Quiz': 'bg-blue-100 text-blue-800',
-      'Vocabulary': 'bg-green-100 text-green-800',
-      'Grammar': 'bg-purple-100 text-purple-800',
-      'Reading': 'bg-orange-100 text-orange-800',
-      'Mathematics': 'bg-red-100 text-red-800',
-      'Science': 'bg-teal-100 text-teal-800',
-      'History': 'bg-yellow-100 text-yellow-800',
-      'General': 'bg-gray-100 text-gray-800'
-    };
-    return colors[category] || 'bg-gray-100 text-gray-800';
+  const getGameTypeInfo = (gameType: string) => {
+    return gameTypeLabels[gameType] || { label: gameType, icon: '🎮', color: 'bg-gray-100 text-gray-800' };
   };
 
   const getLanguageFlag = (language: string) => {
@@ -246,25 +254,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
     return flags[language as keyof typeof flags] || '🌐';
   };
 
-  // Filter games based on search term and filters
-  const filteredGames = games.filter(game => {
-    const matchesSearch = !searchTerm || 
-      game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (game.author_name && game.author_name.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesCategory = categoryFilter === 'all' || game.category === categoryFilter;
-    
-    const matchesLesson = lessonFilter === 'all' || 
-      (lessonFilter === 'assigned' && game.lesson_id) ||
-      (lessonFilter === 'unassigned' && !game.lesson_id);
-    
-    return matchesSearch && matchesCategory && matchesLesson;
-  });
-
-  const uniqueCategories = [...new Set(games.map(game => game.category))];
-  const uniqueAuthors = [...new Set(games.map(game => game.author_name).filter(Boolean))];
-  const totalUsage = games.reduce((sum, game) => sum + game.usage_count, 0);
-  const featuredGames = games.filter(game => game.is_featured);
+  // Games are now server-side filtered and paginated
   const assignedGames = games.filter(game => game.lesson_id).length;
 
   if (loading) {
@@ -325,13 +315,13 @@ export function GamesClient({ userRole }: GamesClientProps) {
       </div>
 
       {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Games</p>
-                <p className="text-2xl font-bold text-indigo-600">{games.length}</p>
+                <p className="text-2xl font-bold text-indigo-600">{totalGames}</p>
               </div>
               <Gamepad2 className="h-8 w-8 text-indigo-500" />
             </div>
@@ -342,8 +332,9 @@ export function GamesClient({ userRole }: GamesClientProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Categories</p>
-                <p className="text-2xl font-bold text-blue-600">{uniqueCategories.length}</p>
+                <p className="text-sm font-medium text-gray-600">On this page</p>
+                <p className="text-2xl font-bold text-blue-600">{games.length}</p>
+                <p className="text-xs text-gray-500">Page {currentPage} of {totalPages || 1}</p>
               </div>
               <Filter className="h-8 w-8 text-blue-500" />
             </div>
@@ -354,21 +345,9 @@ export function GamesClient({ userRole }: GamesClientProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Plays</p>
-                <p className="text-2xl font-bold text-green-600">{totalUsage}</p>
-              </div>
-              <Play className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
                 <p className="text-sm font-medium text-gray-600">Assigned to Lessons</p>
                 <p className="text-2xl font-bold text-yellow-600">{assignedGames}</p>
-                <p className="text-xs text-gray-500">{games.length - assignedGames} unassigned</p>
+                <p className="text-xs text-gray-500">on this page</p>
               </div>
               <BookOpen className="h-8 w-8 text-yellow-500" />
             </div>
@@ -394,16 +373,16 @@ export function GamesClient({ userRole }: GamesClientProps) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-600 mb-1 block">Category</label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <label className="text-sm font-medium text-gray-600 mb-1 block">Game Type</label>
+              <Select value={gameTypeFilter} onValueChange={setGameTypeFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
+                  <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {uniqueCategories.map(category => (
-                    <SelectItem key={category} value={category}>
-                      {getCategoryIcon(category)} {category}
+                  <SelectItem value="all">All Types</SelectItem>
+                  {Object.entries(gameTypeLabels).map(([value, { label, icon }]) => (
+                    <SelectItem key={value} value={value}>
+                      {icon} {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -429,7 +408,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
                 variant="outline" 
                 onClick={() => {
                   setSearchTerm('');
-                  setCategoryFilter('all');
+                  setGameTypeFilter('all');
                   setLessonFilter('all');
                 }}
                 className="w-full"
@@ -442,19 +421,17 @@ export function GamesClient({ userRole }: GamesClientProps) {
         </CardContent>
       </Card>
 
-      {/* Wordwall creation removed */}
-
       {/* Games Grid */}
-      {filteredGames.length > 0 ? (
+      {games.length > 0 ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600">
-              Showing {filteredGames.length} of {games.length} games
+              Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, totalGames)} of {totalGames} games
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredGames.map((game, index) => {
+            {games.map((game, index) => {
               const isExpanded = expandedGame === index;
               return (
                 <Card key={game.id} className="hover:shadow-lg transition-shadow">
@@ -470,8 +447,8 @@ export function GamesClient({ userRole }: GamesClientProps) {
                         {game.is_featured && (
                           <Star className="h-5 w-5 text-yellow-500" />
                         )}
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(game.category)}`}>
-                          {getCategoryIcon(game.category)} {game.category}
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${getGameTypeInfo(game.game_type).color}`}>
+                          {getGameTypeInfo(game.game_type).icon} {getGameTypeInfo(game.game_type).label}
                         </span>
                       </div>
                     </div>
@@ -490,14 +467,6 @@ export function GamesClient({ userRole }: GamesClientProps) {
                         <Play className="h-4 w-4 mr-2" />
                         {isExpanded ? 'Hide Game' : 'Play Game'}
                       </Button>
-                      {game.game_type === 'wordwall' && game.original_url && (
-                        <a href={game.original_url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="outline" size="sm">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            View on Wordwall
-                          </Button>
-                        </a>
-                      )}
                     </div>
 
                     {/* Action Buttons */}
@@ -595,19 +564,19 @@ export function GamesClient({ userRole }: GamesClientProps) {
                     )}
 
                     {/* Embedded Game */}
-                    {isExpanded && (
+                    {isExpanded && loadingGameDetail === game.id && (
+                      <div className="border rounded-lg overflow-hidden bg-gray-50 p-8 flex items-center justify-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                        <span className="ml-3 text-gray-500">Loading game...</span>
+                      </div>
+                    )}
+                    {isExpanded && loadingGameDetail !== game.id && (
                       <div className={
                         game.game_type === 'vocab_run'
                           ? 'border rounded-lg overflow-hidden bg-transparent p-0'
                           : 'border rounded-lg overflow-hidden bg-gray-50 p-4'
                       }>
-                        {game.game_type === 'wordwall' && game.embed_html ? (
-                          <div 
-                            className="w-full"
-                            dangerouslySetInnerHTML={{ __html: game.embed_html }}
-                            style={{ minHeight: `${game.height || 400}px` }}
-                          />
-                        ) : game.game_type === 'memory' && game.game_config?.memory ? (
+                        {game.game_type === 'memory' && game.game_config?.memory ? (
                           <MemoryGame config={game.game_config.memory} />
                         ) : game.game_type === 'hangman' && game.game_config?.hangman ? (
                           <HangmanGame config={game.game_config.hangman} />
@@ -638,10 +607,10 @@ export function GamesClient({ userRole }: GamesClientProps) {
                     <div className="space-y-3 text-sm">
                       <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                         <div>
-                          <span className="font-medium">Type:</span> {game.game_type}
+                          <span className="font-medium">Type:</span> {getGameTypeInfo(game.game_type).icon} {getGameTypeInfo(game.game_type).label}
                         </div>
                         <div>
-                          <span className="font-medium">Category:</span> {game.category}
+                          <span className="font-medium">Language:</span> {game.language ? getLanguageFlag(game.language) + ' ' + game.language : '—'}
                         </div>
                         <div>
                           <span className="font-medium">Difficulty:</span> {game.difficulty_level}/5
@@ -700,24 +669,92 @@ export function GamesClient({ userRole }: GamesClientProps) {
               );
             })}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setCurrentPage(1); setExpandedGame(null); }}
+                disabled={currentPage === 1}
+              >
+                First
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); setExpandedGame(null); }}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              
+              {/* Page numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 7) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 4) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    pageNum = totalPages - 6 + i;
+                  } else {
+                    pageNum = currentPage - 3 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={pageNum === currentPage ? 'default' : 'outline'}
+                      size="sm"
+                      className="w-9 h-9"
+                      onClick={() => { setCurrentPage(pageNum); setExpandedGame(null); }}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); setExpandedGame(null); }}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setCurrentPage(totalPages); setExpandedGame(null); }}
+                disabled={currentPage === totalPages}
+              >
+                Last
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <Card className="text-center py-12">
           <CardContent>
             <Gamepad2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {games.length === 0 ? 'No games added yet' : 'No games match your filters'}
+              {totalGames === 0 && !debouncedSearch && gameTypeFilter === 'all' && lessonFilter === 'all'
+                ? 'No games added yet'
+                : 'No games match your filters'}
             </h3>
             <p className="text-gray-600 mb-6">
-              {games.length === 0 
-                ? canCreateEdit ? 'Add your first Wordwall game using the form above.' : 'No games are available yet.'
-                : 'Try adjusting your search or category filters.'}
+              {totalGames === 0 && !debouncedSearch && gameTypeFilter === 'all' && lessonFilter === 'all'
+                ? canCreateEdit ? 'Add your first game using the button above.' : 'No games are available yet.'
+                : 'Try adjusting your search or filter settings.'}
             </p>
             <Button 
               variant="outline"
               onClick={() => {
                 setSearchTerm('');
-                setCategoryFilter('all');
+                setGameTypeFilter('all');
                 setLessonFilter('all');
               }}
             >

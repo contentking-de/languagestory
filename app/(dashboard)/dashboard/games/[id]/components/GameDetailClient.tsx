@@ -10,7 +10,6 @@ import {
   ArrowLeft,
   Edit,
   Play,
-  ExternalLink,
   BookOpen,
   Calendar,
   Globe,
@@ -183,20 +182,6 @@ export function GameDetailClient({ userRole }: GameDetailClientProps) {
   const renderGameComponent = () => {
     if (!game) return null;
 
-    // For Wordwall games, use embed_html if available
-    if (game.game_type === 'wordwall' && game.embed_html) {
-      return (
-        <div 
-          className="w-full bg-gray-100 rounded-lg overflow-hidden"
-          style={{ 
-            minHeight: game.height ? `${game.height}px` : '400px',
-            maxHeight: '600px'
-          }}
-          dangerouslySetInnerHTML={{ __html: game.embed_html }}
-        />
-      );
-    }
-
     // For custom games, render the appropriate component
     if (game.game_config) {
       // Parse game_config if it's a string
@@ -329,19 +314,6 @@ export function GameDetailClient({ userRole }: GameDetailClientProps) {
           </div>
         </div>
         <div className="flex gap-2">
-          {game.game_type === 'wordwall' && game.original_url && (
-            <a 
-              href={game.original_url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex"
-            >
-              <Button variant="outline">
-                <ExternalLink className="h-4 w-4 mr-2" />
-                View on Wordwall
-              </Button>
-            </a>
-          )}
           {canCreateEdit && (
             <>
               <Link href={`/dashboard/games/${game.id}/edit`}>

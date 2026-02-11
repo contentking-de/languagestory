@@ -1601,7 +1601,7 @@ export default function HomePage() {
                     </svg>
                   </div>
                   <h4 className="text-xl font-semibold text-gray-900 mb-4 text-center">Interactive Quizzes & Games</h4>
-                  <p className="text-gray-600 text-center text-base sm:text-xl lg:text-lg xl:text-xl">Engaging Wordwall games and interactive activities to reinforce learning through play and gamification.</p>
+                  <p className="text-gray-600 text-center text-base sm:text-xl lg:text-lg xl:text-xl">Interactive games and activities to reinforce learning through play and gamification.</p>
                 </div>
 
                 <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
@@ -1937,7 +1937,7 @@ export default function HomePage() {
               Games are a great way to learn new vocabulary and consolidate prior knowledge.
             </h3>
             <p className="text-lg text-gray-600 max-w-4xl mx-auto mb-8">
-              Using Wordwall, we have created some fun games for you to try out. 
+              We have created some fun games for you to try out. 
               Enroll in the course below for the language you would like to practice. 
               All the vocabulary games are linked to the stories, to help your understanding of each page. Have fun!
             </p>

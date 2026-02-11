@@ -45,72 +45,16 @@ interface InlineGameProps {
   onNext: () => void;
 }
 
-interface WordwallIframeProps {
-  embedHtml: string;
-  width?: number;
-  height?: number;
-  onLoad: () => void;
-  onError: () => void;
-}
-
-const WordwallIframe = memo(({ embedHtml, width, height, onLoad, onError }: WordwallIframeProps) => {
-  const iframeRef = useRef<HTMLDivElement | null>(null);
-  const isInitialized = useRef(false);
-  
-  useEffect(() => {
-    if (iframeRef.current && !isInitialized.current) {
-      console.log('WordwallIframe: Initializing iframe');
-      isInitialized.current = true;
-      
-      // Try to find iframe within the embedded content
-      const iframe = iframeRef.current.querySelector('iframe');
-      if (iframe) {
-        console.log('WordwallIframe: Found iframe in embed content:', iframe);
-        iframe.onload = () => {
-          console.log('WordwallIframe: Iframe loaded successfully');
-          onLoad();
-        };
-        iframe.onerror = () => {
-          console.log('WordwallIframe: Iframe failed to load');
-          onError();
-        };
-      } else {
-        // If no iframe found, assume content loaded immediately
-        console.log('WordwallIframe: No iframe found, assuming content loaded');
-        setTimeout(() => onLoad(), 1000);
-      }
-    }
-  }, [onLoad, onError]);
-
-  return (
-    <div 
-      dangerouslySetInnerHTML={{ __html: embedHtml }}
-      className="w-full h-full"
-      ref={iframeRef}
-    />
-  );
-});
-
-WordwallIframe.displayName = 'WordwallIframe';
-
 export const InlineGame = memo(({ gameId, onComplete, onNext }: InlineGameProps) => {
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   const [passed, setPassed] = useState<boolean | null>(null);
-  const [iframeLoaded, setIframeLoaded] = useState(false);
-  const [iframeError, setIframeError] = useState(false);
 
   useEffect(() => {
     fetchGameData();
   }, [gameId]);
-
-  // Reset iframe states when game changes
-  useEffect(() => {
-    setIframeLoaded(false);
-    setIframeError(false);
-  }, [game?.id]);
 
   const fetchGameData = async () => {
     try {
@@ -155,8 +99,6 @@ export const InlineGame = memo(({ gameId, onComplete, onNext }: InlineGameProps)
     setGameCompleted(false);
     setScore(null);
     setPassed(null);
-    setIframeLoaded(false);
-    setIframeError(false);
   }, []);
 
   const renderGame = useMemo(() => {
@@ -166,136 +108,6 @@ export const InlineGame = memo(({ gameId, onComplete, onNext }: InlineGameProps)
           <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Game Not Found</h3>
           <p className="text-gray-600">The game could not be loaded.</p>
-        </div>
-      );
-    }
-
-    // Handle Wordwall games (external embedded games)
-    if (game.game_type === 'wordwall') {
-      if (!game.embed_html) {
-        return (
-          <div className="space-y-4">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <div className="text-sm text-yellow-800">
-                <strong>Embed Code Not Found:</strong> This Wordwall game doesn't have embed code.
-              </div>
-            </div>
-            
-            {game.original_url ? (
-              <div className="text-center">
-                <a 
-                  href={game.original_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <Play className="h-4 w-4" />
-                  Open Game in New Tab
-                </a>
-              </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-gray-600">No game URL available.</p>
-              </div>
-            )}
-            
-            <div className="flex justify-center">
-              <Button
-                onClick={() => handleGameComplete(100)}
-                className="flex items-center gap-2"
-              >
-                <CheckCircle className="h-4 w-4" />
-                Mark as Completed
-              </Button>
-            </div>
-          </div>
-        );
-      }
-
-      // Show error state if iframe failed to load
-      if (iframeError) {
-        return (
-          <div className="space-y-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <div className="text-sm text-red-800">
-                <strong>Loading Error:</strong> The game failed to load. You can try opening it in a new tab.
-              </div>
-            </div>
-            
-            {game.original_url && (
-              <div className="text-center">
-                <a 
-                  href={game.original_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <Play className="h-4 w-4" />
-                  Open Game in New Tab
-                </a>
-              </div>
-            )}
-            
-            <div className="flex justify-center">
-              <Button
-                onClick={() => handleGameComplete(100)}
-                className="flex items-center gap-2"
-              >
-                <CheckCircle className="h-4 w-4" />
-                Mark as Completed
-              </Button>
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div className="text-sm text-blue-800">
-              <strong>External Game:</strong> This is a Wordwall game. Click the "Complete Game" button when you're done playing.
-            </div>
-          </div>
-          
-          <div className="flex justify-center">
-            <div 
-              className="border border-gray-300 rounded-lg overflow-hidden"
-              style={{
-                width: game.width ? `${game.width}px` : '100%',
-                maxWidth: '100%',
-                height: game.height ? `${game.height}px` : '600px'
-              }}
-            >
-              {!iframeLoaded && (
-                <div className="flex items-center justify-center bg-gray-100 h-full">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                    <p className="text-sm text-gray-600">Loading game...</p>
-                    <p className="text-xs text-gray-500 mt-1">This may take a few seconds</p>
-                  </div>
-                </div>
-              )}
-              {iframeLoaded && (
-                <WordwallIframe
-                  embedHtml={game.embed_html}
-                  width={game.width}
-                  height={game.height}
-                  onLoad={() => setIframeLoaded(true)}
-                  onError={() => setIframeError(true)}
-                />
-              )}
-            </div>
-          </div>
-          
-          <div className="flex justify-center">
-            <Button
-              onClick={() => handleGameComplete(100)}
-              className="flex items-center gap-2"
-            >
-              <CheckCircle className="h-4 w-4" />
-              Complete Game
-            </Button>
-          </div>
         </div>
       );
     }
@@ -489,10 +301,6 @@ export const InlineGame = memo(({ gameId, onComplete, onNext }: InlineGameProps)
           />
         );
       }
-      case 'wordwall':
-        // Wordwall games are handled above in the renderGame function
-        // This case should never be reached, but included for completeness
-        return null;
       default:
         return (
           <div className="text-center py-8">
