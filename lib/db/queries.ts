@@ -102,6 +102,7 @@ export async function updateTeamSubscription(
     stripeProductId: string | null;
     planName: string | null;
     subscriptionStatus: string;
+    subscriptionType?: 'individual' | 'institution' | 'family';
   }
 ) {
   await db
@@ -111,6 +112,48 @@ export async function updateTeamSubscription(
       updatedAt: new Date()
     })
     .where(eq(teams.id, teamId));
+}
+
+/**
+ * Updates the role of the team owner (first member) in both the users
+ * table and the team_members table. Used when a subscription changes
+ * to assign the correct role (e.g. institution_admin or member).
+ */
+export async function updateUserAndTeamMemberRole(
+  teamId: number,
+  newRole: 'super_admin' | 'institution_admin' | 'teacher' | 'student' | 'parent' | 'content_creator' | 'member'
+) {
+  // Find the team owner (first team member / the one who subscribed)
+  const members = await db
+    .select({ userId: teamMembers.userId })
+    .from(teamMembers)
+    .where(eq(teamMembers.teamId, teamId))
+    .orderBy(teamMembers.joinedAt)
+    .limit(1);
+
+  if (members.length === 0) {
+    console.error('No team members found for team:', teamId);
+    return;
+  }
+
+  const ownerId = members[0].userId;
+
+  // Update user role
+  await db
+    .update(users)
+    .set({ role: newRole, updatedAt: new Date() })
+    .where(eq(users.id, ownerId));
+
+  // Update team_members role
+  await db
+    .update(teamMembers)
+    .set({ role: newRole })
+    .where(
+      and(
+        eq(teamMembers.teamId, teamId),
+        eq(teamMembers.userId, ownerId)
+      )
+    );
 }
 
 export async function getUserWithTeam(userId: number) {

@@ -311,88 +311,79 @@ const modalContent = {
     content: `
       <h2 class="text-xl font-bold mb-4">Shopping Area</h2>
       
-      <p class="mb-6">Choose the perfect subscription plan for your language learning needs. Access all short stories and teaching resources across French, German, and Spanish.</p>
+      <p class="mb-6">Choose the perfect subscription plan for your language learning needs. Access all short stories and teaching resources across French, German, and Spanish. All plans include a <strong>14-day free trial</strong>.</p>
       
       <h3 class="text-lg font-semibold mb-4 text-orange-600">Individual Plans</h3>
+      <p class="text-sm text-gray-600 mb-3">Perfect for individual learners, parents, and families.</p>
       
-      <div class="bg-gray-50 p-4 rounded-lg mb-4">
-        <h4 class="font-semibold mb-2">Monthly Plan - £7.99/30 days</h4>
+      <div class="bg-gray-50 p-4 rounded-lg mb-3">
+        <h4 class="font-semibold mb-2">Monthly – £7.99/month</h4>
         <ul class="list-disc list-inside mb-3 text-sm">
-          <li>Access for 30 Days</li>
-          <li>Valid for single user</li>
-          <li>Access to stories, games and quizzes</li>
+          <li>All stories in French, German & Spanish</li>
+          <li>Games, quizzes & vocabulary exercises</li>
+          <li>Audio narration • Cancel anytime</li>
         </ul>
-        <button class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 text-sm">Choose Your Course</button>
+        <a href="/pricing" class="inline-block bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 text-sm">Start Free Trial</a>
       </div>
       
-      <div class="bg-orange-50 border-2 border-orange-300 p-4 rounded-lg mb-4 relative pt-8">
+      <div class="bg-orange-50 border-2 border-orange-300 p-4 rounded-lg mb-3 relative pt-8">
         <div class="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 rounded text-xs font-bold">BEST VALUE</div>
-        <h4 class="font-semibold mb-2">Quarterly Plan - £19.99/3 months</h4>
+        <h4 class="font-semibold mb-2">Quarterly – £19.99/3 months</h4>
         <ul class="list-disc list-inside mb-3 text-sm">
-          <li>Access for 3 Months</li>
-          <li>Valid for single user</li>
-          <li>Access to stories, games and quizzes</li>
+          <li>All stories in French, German & Spanish</li>
+          <li>Games, quizzes & vocabulary exercises</li>
+          <li>Audio narration • Progress tracking • Cancel anytime</li>
         </ul>
-        <button class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 text-sm">Choose Your Course</button>
+        <a href="/pricing" class="inline-block bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 text-sm">Start Free Trial</a>
       </div>
       
       <div class="bg-gray-50 p-4 rounded-lg mb-6">
-        <h4 class="font-semibold mb-2">Annual Plan - £49.99/year</h4>
+        <h4 class="font-semibold mb-2">Yearly – £49.99/year</h4>
         <ul class="list-disc list-inside mb-3 text-sm">
-          <li>Access for 1 Year</li>
-          <li>Valid for single user</li>
-          <li>Access to stories, games and quizzes</li>
+          <li>All stories in French, German & Spanish</li>
+          <li>Games, quizzes & vocabulary exercises</li>
+          <li>Audio narration • Cancel anytime</li>
         </ul>
-        <button class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 text-sm">Choose Your Course</button>
+        <a href="/pricing" class="inline-block bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 text-sm">Start Free Trial</a>
       </div>
       
-      <h3 class="text-lg font-semibold mb-4 text-orange-600">School Plans</h3>
+      <h3 class="text-lg font-semibold mb-4 text-orange-600">Institutional Plans</h3>
+      <p class="text-sm text-gray-600 mb-3">For schools, language centres, and educational institutions.</p>
       
-      <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-lg mb-3 relative pt-8">
-        <div class="absolute top-2 right-2 bg-yellow-400 text-orange-900 px-2 py-1 rounded text-xs font-bold">POPULAR</div>
-        <h4 class="font-semibold mb-2">All Access Pass - £199.99/year</h4>
-        <ul class="list-disc list-inside mb-3 text-sm text-orange-100">
-          <li>One Year Subscription</li>
-          <li>900 seats for students & staff</li>
-          <li>Students logins</li>
-          <li>All stories and resources</li>
-        </ul>
-        <button class="bg-white text-orange-600 px-4 py-2 rounded-lg hover:bg-orange-50 text-sm font-semibold">Subscribe Now</button>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-        <div class="bg-gray-50 p-3 rounded-lg">
-          <h5 class="font-semibold mb-1 text-sm">German - £79.99/year</h5>
-          <ul class="text-xs text-gray-600 mb-2">
-            <li>• 900 seats</li>
-            <li>• German stories & resources</li>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <div class="inline-block bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-xs font-bold mb-2">SMALL</div>
+          <h4 class="font-semibold mb-1">Small School Plan</h4>
+          <p class="text-xs text-gray-500 mb-2">Ideal for small schools & tutoring centres</p>
+          <p class="font-bold text-lg mb-2">from £24.99<span class="text-xs font-normal text-gray-500"> / month</span></p>
+          <ul class="text-xs text-gray-600 mb-3">
+            <li>• All stories, games & teaching resources</li>
+            <li>• Student login management</li>
+            <li>• Progress tracking</li>
+            <li>• Also available quarterly (£69.99) & yearly (£249.00)</li>
           </ul>
-          <button class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-600">Subscribe</button>
+          <a href="/pricing" class="inline-block border-2 border-orange-500 text-orange-600 px-4 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold">Start Free Trial</a>
         </div>
         
-        <div class="bg-gray-50 p-3 rounded-lg">
-          <h5 class="font-semibold mb-1 text-sm">French - £79.99/year</h5>
-          <ul class="text-xs text-gray-600 mb-2">
-            <li>• 900 seats</li>
-            <li>• French stories & resources</li>
+        <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-lg relative pt-8">
+          <div class="absolute top-2 right-2 bg-yellow-400 text-orange-900 px-2 py-0.5 rounded text-xs font-bold">PROFESSIONAL</div>
+          <h4 class="font-semibold mb-1">Professional Plan</h4>
+          <p class="text-xs text-orange-100 mb-2">For larger schools & institutions</p>
+          <p class="font-bold text-lg mb-2">from £59.99<span class="text-xs font-normal text-orange-200"> / month</span></p>
+          <ul class="text-xs text-orange-100 mb-3">
+            <li>• Everything in Small, plus:</li>
+            <li>• Unlimited student & staff logins</li>
+            <li>• Advanced analytics & reporting</li>
+            <li>• Also available quarterly (£149.99) & yearly (£499.00)</li>
           </ul>
-          <button class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-600">Subscribe</button>
-        </div>
-        
-        <div class="bg-gray-50 p-3 rounded-lg">
-          <h5 class="font-semibold mb-1 text-sm">Spanish - £79.99/year</h5>
-          <ul class="text-xs text-gray-600 mb-2">
-            <li>• 900 seats</li>
-            <li>• Spanish stories & resources</li>
-          </ul>
-          <button class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-600">Subscribe</button>
+          <a href="/pricing" class="inline-block bg-white text-orange-600 px-4 py-1.5 rounded-lg hover:bg-orange-50 text-sm font-semibold">Start Free Trial</a>
         </div>
       </div>
       
       <div class="bg-gray-100 p-4 rounded-lg">
         <h3 class="text-sm font-semibold mb-2">Need Help?</h3>
-        <p class="text-sm mb-3">Contact us for custom pricing and features designed specifically for educational institutions.</p>
-        <p class="text-xs text-gray-600">We accept all major credit cards, PayPal, and bank transfers. 14-day free trial available for all plans.</p>
+        <p class="text-sm mb-3">Contact us for custom pricing and features designed specifically for your institution.</p>
+        <p class="text-xs text-gray-600">We accept all major credit cards. 14-day free trial available for all plans.</p>
       </div>
     `
   }
@@ -1218,7 +1209,7 @@ function ConsentPreferences() {
 }
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState('school');
+  const [activeTab, setActiveTab] = useState('individual');
   const [modalOpen, setModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState('');
   const [quizTeaserOpen, setQuizTeaserOpen] = useState(false);
@@ -2158,7 +2149,10 @@ export default function HomePage() {
               Choose Your Learning Plan
             </h2>
             <p className="mt-4 text-lg text-gray-600">
-              Access to all short stories and teaching resources across all three languages
+              Access all short stories and teaching resources across French, German, and Spanish
+            </p>
+            <p className="mt-2 text-sm text-orange-600 font-medium">
+              All plans include a 14-day free trial
             </p>
           </div>
 
@@ -2171,24 +2165,6 @@ export default function HomePage() {
                 ? 'bg-gray-700'
                 : 'bg-gray-100'
             }`}>
-              <button 
-                className={`px-6 py-2 rounded-md font-medium transition-colors ${
-                  activeTab === 'school' 
-                    ? accessibilitySettings.colorScheme === 'high-contrast'
-                      ? 'bg-white text-black shadow-sm'
-                      : accessibilitySettings.colorScheme === 'dark'
-                      ? 'bg-gray-800 text-white shadow-sm'
-                      : 'bg-white text-gray-900 shadow-sm'
-                    : accessibilitySettings.colorScheme === 'high-contrast'
-                    ? 'text-white hover:text-gray-300'
-                    : accessibilitySettings.colorScheme === 'dark'
-                    ? 'text-gray-300 hover:text-white'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-                onClick={() => setActiveTab('school')}
-              >
-                School Plans
-              </button>
               <button 
                 className={`px-6 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'individual' 
@@ -2205,149 +2181,148 @@ export default function HomePage() {
                 }`}
                 onClick={() => setActiveTab('individual')}
               >
-                Individual Plans
+                Individual
+              </button>
+              <button 
+                className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                  activeTab === 'school' 
+                    ? accessibilitySettings.colorScheme === 'high-contrast'
+                      ? 'bg-white text-black shadow-sm'
+                      : accessibilitySettings.colorScheme === 'dark'
+                      ? 'bg-gray-800 text-white shadow-sm'
+                      : 'bg-white text-gray-900 shadow-sm'
+                    : accessibilitySettings.colorScheme === 'high-contrast'
+                    ? 'text-white hover:text-gray-300'
+                    : accessibilitySettings.colorScheme === 'dark'
+                    ? 'text-gray-300 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                onClick={() => setActiveTab('school')}
+              >
+                Schools &amp; Institutions
               </button>
             </div>
           </div>
-
-          {/* School Plans */}
-          {activeTab === 'school' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-            {/* All Access Pass */}
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-6 text-white relative">
-              <div className="absolute top-0 right-0 bg-yellow-400 text-orange-900 px-3 py-1 rounded-bl-lg rounded-tr-lg text-sm font-bold">
-                POPULAR
-              </div>
-              <h3 className="text-xl font-bold mb-2">All Access Pass</h3>
-              <div className="mb-4">
-                <span className="text-3xl font-bold">£199.99</span>
-                <span className="text-orange-100"> / year</span>
-              </div>
-              <ul className="space-y-2 mb-6 text-orange-100">
-                <li>• One Year Subscription</li>
-                <li>• 900 seats for students & staff</li>
-                <li>• Students logins</li>
-                <li>• All stories and resources</li>
-              </ul>
-              <button className="w-full bg-white text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
-                Subscribe Now
-              </button>
-            </div>
-
-            {/* German Plan */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">German</h3>
-              <div className="mb-4">
-                <span className="text-3xl font-bold text-gray-900">£79.99</span>
-                <span className="text-gray-500"> / year</span>
-              </div>
-              <ul className="space-y-2 mb-6 text-gray-600">
-                <li>• One year subscription</li>
-                <li>• 900 seats for students & staff</li>
-                <li>• Student logins</li>
-                <li>• German stories & resources</li>
-              </ul>
-              <button className="w-full border-2 border-orange-500 text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
-                Subscribe Now
-              </button>
-            </div>
-
-            {/* French Plan */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">French</h3>
-              <div className="mb-4">
-                <span className="text-3xl font-bold text-gray-900">£79.99</span>
-                <span className="text-gray-500"> / year</span>
-              </div>
-              <ul className="space-y-2 mb-6 text-gray-600">
-                <li>• One Year Subscription</li>
-                <li>• 900 seats for students & staff</li>
-                <li>• Student logins</li>
-                <li>• French stories & resources</li>
-              </ul>
-              <button className="w-full border-2 border-orange-500 text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
-                Subscribe Now
-              </button>
-            </div>
-
-            {/* Spanish Plan */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Spanish</h3>
-              <div className="mb-4">
-                <span className="text-3xl font-bold text-gray-900">£79.99</span>
-                <span className="text-gray-500"> / year</span>
-              </div>
-              <ul className="space-y-2 mb-6 text-gray-600">
-                <li>• One year subscription</li>
-                <li>• 900 seats for students & staff</li>
-                <li>• Student logins</li>
-                <li>• Spanish stories & resources</li>
-              </ul>
-              <button className="w-full border-2 border-orange-500 text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
-                Subscribe Now
-              </button>
-            </div>
-          </div>
-          )}
 
           {/* Individual Plans */}
           {activeTab === 'individual' && (
           <div className="mb-16">
-            <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">Individual Membership Plans</h3>
+            <p className="text-center text-gray-600 mb-8">Perfect for individual learners, parents, and families</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               
               {/* Monthly Plan */}
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">
+              <div className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-orange-300 transition-all hover:shadow-md">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Monthly</h3>
                 <div className="mb-4">
                   <span className="text-3xl font-bold text-gray-900">£7.99</span>
-                  <span className="text-gray-500"> / 30 Days</span>
+                  <span className="text-gray-500"> / month</span>
                 </div>
-                <ul className="space-y-2 mb-6 text-gray-600">
-                  <li>• Access for 30 Days</li>
-                  <li>• Valid for single user</li>
-                  <li>• Access to stories, games and quizzes</li>
+                <ul className="space-y-2 mb-6 text-gray-600 text-sm">
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> All stories in French, German &amp; Spanish</li>
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> Games, quizzes &amp; vocabulary exercises</li>
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> Audio narration for all stories</li>
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> Cancel anytime</li>
                 </ul>
-                <button className="w-full border-2 border-orange-500 text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
-                  Choose Your Course
-                </button>
+                <a href="/pricing" className="block w-full border-2 border-orange-500 text-orange-600 font-bold py-2.5 px-4 rounded-lg hover:bg-orange-50 transition-colors text-center">
+                  Start Free Trial
+                </a>
               </div>
 
               {/* Quarterly Plan */}
-              <div className="bg-white border-2 border-orange-300 rounded-lg p-6 relative pt-8">
-                <div className="absolute top-0 right-0 bg-orange-500 text-white px-3 py-1 rounded-bl-lg rounded-tr-lg text-sm font-bold">
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white relative shadow-xl scale-[1.02]">
+                <div className="absolute -top-3 right-4 bg-yellow-400 text-orange-900 px-3 py-1 rounded-full text-xs font-bold">
                   BEST VALUE
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Quarterly</h3>
+                <h3 className="text-xl font-bold mb-2">Quarterly</h3>
                 <div className="mb-4">
-                  <span className="text-3xl font-bold text-gray-900">£19.99</span>
-                  <span className="text-gray-500"> / 3 Months</span>
+                  <span className="text-3xl font-bold">£19.99</span>
+                  <span className="text-orange-100"> / 3 months</span>
                 </div>
-                <ul className="space-y-2 mb-6 text-gray-600">
-                  <li>• Access for 3 Months</li>
-                  <li>• Valid for single user</li>
-                  <li>• Access to stories, games and quizzes</li>
+                <ul className="space-y-2 mb-6 text-orange-50 text-sm">
+                  <li className="flex items-start gap-2"><span className="text-yellow-300 mt-0.5">✓</span> All stories in French, German &amp; Spanish</li>
+                  <li className="flex items-start gap-2"><span className="text-yellow-300 mt-0.5">✓</span> Games, quizzes &amp; vocabulary exercises</li>
+                  <li className="flex items-start gap-2"><span className="text-yellow-300 mt-0.5">✓</span> Audio narration for all stories</li>
+                  <li className="flex items-start gap-2"><span className="text-yellow-300 mt-0.5">✓</span> Track your learning progress</li>
+                  <li className="flex items-start gap-2"><span className="text-yellow-300 mt-0.5">✓</span> Cancel anytime</li>
                 </ul>
-                <button className="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors">
-                  Choose Your Course
-                </button>
+                <a href="/pricing" className="block w-full bg-white text-orange-600 font-bold py-2.5 px-4 rounded-lg hover:bg-orange-50 transition-colors text-center">
+                  Start Free Trial
+                </a>
               </div>
 
               {/* Annual Plan */}
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-colors">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Annually</h3>
+              <div className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-orange-300 transition-all hover:shadow-md">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Yearly</h3>
                 <div className="mb-4">
                   <span className="text-3xl font-bold text-gray-900">£49.99</span>
                   <span className="text-gray-500"> / year</span>
                 </div>
-                <ul className="space-y-2 mb-6 text-gray-600">
-                  <li>• Access for 1 Year</li>
-                  <li>• Valid for single user</li>
-                  <li>• Access to stories, games and quizzes</li>
+                <ul className="space-y-2 mb-6 text-gray-600 text-sm">
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> All stories in French, German &amp; Spanish</li>
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> Games, quizzes &amp; vocabulary exercises</li>
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> Audio narration for all stories</li>
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> Cancel anytime</li>
                 </ul>
-                <button className="w-full border-2 border-orange-500 text-orange-600 font-bold py-2 px-4 rounded-lg hover:bg-orange-50 transition-colors">
-                  Choose Your Course
-                </button>
+                <a href="/pricing" className="block w-full border-2 border-orange-500 text-orange-600 font-bold py-2.5 px-4 rounded-lg hover:bg-orange-50 transition-colors text-center">
+                  Start Free Trial
+                </a>
+              </div>
+            </div>
+          </div>
+          )}
+
+          {/* School / Institutional Plans */}
+          {activeTab === 'school' && (
+          <div className="mb-16">
+            <p className="text-center text-gray-600 mb-8">For schools, language centres, and educational institutions</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+
+              {/* Small Plan */}
+              <div className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-orange-300 transition-all hover:shadow-md relative">
+                <div className="absolute -top-3 right-4 bg-gray-700 text-white px-3 py-1 rounded-full text-xs font-bold">
+                  SMALL
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-1">Small School Plan</h3>
+                <p className="text-sm text-gray-500 mb-4">Up to 4 classes and 120 seats</p>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-500">from</p>
+                  <span className="text-3xl font-bold text-gray-900">£24.99</span>
+                  <span className="text-gray-500"> / month</span>
+                </div>
+                <ul className="space-y-2 mb-6 text-gray-600 text-sm">
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> All stories, games &amp; teaching resources</li>
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> Student login management</li>
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> Progress tracking for all students</li>
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> Monthly, quarterly &amp; yearly billing</li>
+                  <li className="flex items-start gap-2"><span className="text-orange-500 mt-0.5">✓</span> Email support</li>
+                </ul>
+                <a href="/pricing" className="block w-full border-2 border-orange-500 text-orange-600 font-bold py-2.5 px-4 rounded-lg hover:bg-orange-50 transition-colors text-center">
+                  Start Free Trial
+                </a>
+              </div>
+
+              {/* Professional Plan */}
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white relative shadow-xl">
+                <div className="absolute -top-3 right-4 bg-yellow-400 text-orange-900 px-3 py-1 rounded-full text-xs font-bold">
+                  PROFESSIONAL
+                </div>
+                <h3 className="text-xl font-bold mb-1">Professional Plan</h3>
+                <p className="text-sm text-orange-100 mb-4">More than 4 classes and up to 300 seats</p>
+                <div className="mb-4">
+                  <p className="text-sm text-orange-200">from</p>
+                  <span className="text-3xl font-bold">£59.99</span>
+                  <span className="text-orange-100"> / month</span>
+                </div>
+                <ul className="space-y-2 mb-6 text-orange-50 text-sm">
+                  <li className="flex items-start gap-2"><span className="text-yellow-300 mt-0.5">✓</span> Everything in Small, plus:</li>
+                  <li className="flex items-start gap-2"><span className="text-yellow-300 mt-0.5">✓</span> Unlimited student &amp; staff logins</li>
+                  <li className="flex items-start gap-2"><span className="text-yellow-300 mt-0.5">✓</span> Advanced analytics &amp; reporting</li>
+                  <li className="flex items-start gap-2"><span className="text-yellow-300 mt-0.5">✓</span> Class management tools</li>
+                  <li className="flex items-start gap-2"><span className="text-yellow-300 mt-0.5">✓</span> Priority support</li>
+                </ul>
+                <a href="/pricing" className="block w-full bg-white text-orange-600 font-bold py-2.5 px-4 rounded-lg hover:bg-orange-50 transition-colors text-center">
+                  Start Free Trial
+                </a>
               </div>
             </div>
           </div>
