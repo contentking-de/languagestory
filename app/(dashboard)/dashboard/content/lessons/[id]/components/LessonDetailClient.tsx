@@ -696,29 +696,31 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
             const ContentCard = (
               <Card key={`content-${lesson.id}`}>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    Lesson Content
-                  </CardTitle>
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      Lesson Content
+                    </CardTitle>
+                    {lesson.content && (
+                      <AudioPlayer 
+                        text={lesson.content} 
+                        language={lesson.course_language || 'english'} 
+                        size="md"
+                        lessonId={lesson.id}
+                        type="content"
+                        showSpeedControl={true}
+                      />
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {lesson.content ? (
                     <div className="prose max-w-none">
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="flex items-start gap-3">
-                          <div className="flex-1">
-                            <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
-                              {lesson.content}
-                            </pre>
-                          </div>
-                          <AudioPlayer 
-                            text={lesson.content} 
-                            language={lesson.course_language || 'english'} 
-                            size="md"
-                            lessonId={lesson.id}
-                            type="content"
-                            showSpeedControl={true}
-                          />
+                        <div className="flex-1">
+                          <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
+                            {lesson.content}
+                          </pre>
                         </div>
                       </div>
                     </div>
@@ -773,26 +775,26 @@ export function LessonDetailClient({ userRole }: LessonDetailClientProps) {
             const CulturalCard = lesson.cultural_information ? (
               <Card key={`cultural-${lesson.id}`} className="mt-6">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Languages className="h-5 w-5" />
-                    Cultural Information
-                  </CardTitle>
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle className="flex items-center gap-2">
+                      <Languages className="h-5 w-5" />
+                      Cultural Information
+                    </CardTitle>
+                    <AudioPlayer 
+                      text={lesson.cultural_information} 
+                      language={lesson.course_language || 'english'} 
+                      size="md"
+                      lessonId={lesson.id}
+                      type="cultural"
+                      showSpeedControl={true}
+                    />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="prose max-w-none">
                     <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
-                          {lesson.cultural_information}
-                        </div>
-                        <AudioPlayer 
-                          text={lesson.cultural_information} 
-                          language={lesson.course_language || 'english'} 
-                          size="md"
-                          lessonId={lesson.id}
-                          type="cultural"
-                          showSpeedControl={true}
-                        />
+                      <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
+                        {lesson.cultural_information}
                       </div>
                     </div>
                   </div>

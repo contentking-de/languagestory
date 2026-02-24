@@ -87,19 +87,28 @@ export function LessonCompletionModal({
         
         <CardContent className="space-y-6">
           {/* Points earned */}
-          {pointsEarned > 0 && (
-            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Star className="h-5 w-5 text-yellow-600" />
-                <span className="text-lg font-bold text-yellow-800">
-                  +{pointsEarned} Points Earned!
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4 text-center">
+            {pointsEarned > 0 ? (
+              <div className="animate-in fade-in zoom-in duration-500">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Star className="h-5 w-5 text-yellow-600" />
+                  <span className="text-lg font-bold text-yellow-800">
+                    +{pointsEarned} Points Earned!
+                  </span>
+                </div>
+                <p className="text-sm text-yellow-700">
+                  Great job! Keep up the excellent work.
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2 py-1">
+                <Star className="h-5 w-5 text-yellow-400 animate-pulse" />
+                <span className="text-sm font-medium text-yellow-700 animate-pulse">
+                  Calculating points...
                 </span>
               </div>
-              <p className="text-sm text-yellow-700">
-                Great job! Keep up the excellent work.
-              </p>
-            </div>
-          )}
+            )}
+          </div>
           
           {/* Action buttons */}
           <div className="space-y-3">

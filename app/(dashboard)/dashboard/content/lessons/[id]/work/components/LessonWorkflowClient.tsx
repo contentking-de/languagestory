@@ -434,35 +434,30 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
       // Mark next step as in progress
       await updateProgress(currentStep + 1, 'in_progress');
     } else {
-      // Lesson completed
-      // Start fetching next lesson immediately (runs in parallel with point awarding)
-      const nextLessonPromise = fetchNextLesson();
-      
-      // Award points through gamification system (single batch API call)
-      const earned = await awardLessonPoints();
-      setPointsEarned(earned);
-      
-      // Create lesson-level progress entry (fire-and-forget, doesn't block UI)
-      fetch('/api/student/progress', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          student_id: userId,
-          lesson_id: lessonId,
-          status: 'completed',
-          time_spent: timeSpent,
-          points_earned: earned,
-        }),
-      }).catch(error => console.error('Error marking lesson as completed:', error));
-      
-      // Ensure next lesson info is ready for the modal
-      await nextLessonPromise;
-      
+      // Lesson completed — show modal immediately, run API calls in background
       setIsTimerRunning(false);
       setLessonCompleted(true);
       setShowCompletionModal(true);
+
+      // All API calls run in parallel, updating state as they resolve
+      fetchNextLesson();
+
+      awardLessonPoints().then(earned => {
+        setPointsEarned(earned);
+
+        // Create lesson-level progress entry (fire-and-forget)
+        fetch('/api/student/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_id: userId,
+            lesson_id: lessonId,
+            status: 'completed',
+            time_spent: timeSpent,
+            points_earned: earned,
+          }),
+        }).catch(error => console.error('Error marking lesson as completed:', error));
+      });
     }
   };
 
@@ -514,35 +509,37 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         return (
           <Card className="max-w-6xl mx-auto">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Lesson Content
-              </CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  Lesson Content
+                </CardTitle>
+                <AudioPlayer 
+                  text={lesson?.content || ''} 
+                  language={lesson?.course_language || 'english'} 
+                  size="md"
+                  lessonId={lessonId}
+                  type="content"
+                  showSpeedControl={true}
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="prose max-w-none">
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-start gap-3">
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
                     {lesson?.cover_image && (
                       <img
                         src={lesson.cover_image}
                         alt="Lesson image"
-                        className="rounded-md w-56 h-56 md:w-64 md:h-64 object-cover flex-shrink-0"
+                        className="rounded-md w-full sm:w-56 sm:h-56 md:w-64 md:h-64 object-cover flex-shrink-0"
                       />
                     )}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
                         {lesson?.content}
                       </pre>
                     </div>
-                    <AudioPlayer 
-                      text={lesson?.content || ''} 
-                      language={lesson?.course_language || 'english'} 
-                      size="md"
-                      lessonId={lessonId}
-                      type="content"
-                      showSpeedControl={true}
-                    />
                   </div>
                 </div>
               </div>
@@ -554,26 +551,26 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         return (
           <Card className="max-w-6xl mx-auto">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Languages className="h-5 w-5" />
-                Cultural Information
-              </CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2">
+                  <Languages className="h-5 w-5" />
+                  Cultural Information
+                </CardTitle>
+                <AudioPlayer 
+                  text={lesson?.cultural_information || ''} 
+                  language={lesson?.course_language || 'english'} 
+                  size="md"
+                  lessonId={lessonId}
+                  type="cultural"
+                  showSpeedControl={true}
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="prose max-w-none">
                 <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
-                      {lesson?.cultural_information}
-                    </div>
-                    <AudioPlayer 
-                      text={lesson?.cultural_information || ''} 
-                      language={lesson?.course_language || 'english'} 
-                      size="md"
-                      lessonId={lessonId}
-                      type="cultural"
-                      showSpeedControl={true}
-                    />
+                  <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
+                    {lesson?.cultural_information}
                   </div>
                 </div>
               </div>
@@ -585,28 +582,28 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         return (
           <Card className="max-w-6xl mx-auto">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                {story?.title || 'Short Story'}
-              </CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  {story?.title || 'Short Story'}
+                </CardTitle>
+                <AudioPlayer 
+                  text={story?.content || ''} 
+                  language={lesson?.course_language || 'english'} 
+                  size="md"
+                  lessonId={lessonId}
+                  type="story"
+                  topicId={story?.id}
+                  uniqueId={story ? `story-${story.id}` : undefined}
+                  showSpeedControl={true}
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="prose max-w-none">
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
-                      {story?.content}
-                    </div>
-                    <AudioPlayer 
-                      text={story?.content || ''} 
-                      language={lesson?.course_language || 'english'} 
-                      size="md"
-                      lessonId={lessonId}
-                      type="story"
-                      topicId={story?.id}
-                      uniqueId={story ? `story-${story.id}` : undefined}
-                      showSpeedControl={true}
-                    />
+                  <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
+                    {story?.content}
                   </div>
                 </div>
               </div>
@@ -659,34 +656,36 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                 {showContentPre && (
                   <Card className="shadow-sm">
                     <CardHeader className="py-3">
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <BookOpen className="h-4 w-4" />
-                        Lesson Content
-                      </CardTitle>
+                      <div className="flex items-center justify-between gap-2">
+                        <CardTitle className="flex items-center gap-2 text-sm">
+                          <BookOpen className="h-4 w-4" />
+                          Lesson Content
+                        </CardTitle>
+                        <AudioPlayer 
+                          text={lesson?.content || ''} 
+                          language={lesson?.course_language || 'english'} 
+                          size="md"
+                          lessonId={lessonId}
+                          type="content"
+                          showSpeedControl={true}
+                        />
+                      </div>
                     </CardHeader>
                     <CardContent className="pt-0 pb-3">
                       <div className="bg-gray-50 p-3 rounded-lg">
-                        <div className="flex items-start gap-3">
+                        <div className="flex flex-col sm:flex-row items-start gap-3">
                           {lesson?.cover_image && (
                             <img
                               src={lesson.cover_image}
                               alt="Lesson image"
-                              className="rounded-md w-28 h-28 md:w-40 md:h-40 object-cover flex-shrink-0"
+                              className="rounded-md w-full sm:w-28 sm:h-28 md:w-40 md:h-40 object-cover flex-shrink-0"
                             />
                           )}
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <pre className="whitespace-pre-wrap text-base text-gray-700 font-sans">
                               {lesson?.content}
                             </pre>
                           </div>
-                          <AudioPlayer 
-                            text={lesson?.content || ''} 
-                            language={lesson?.course_language || 'english'} 
-                            size="md"
-                            lessonId={lessonId}
-                            type="content"
-                            showSpeedControl={true}
-                          />
                         </div>
                       </div>
                     </CardContent>
@@ -695,25 +694,25 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                 {showCulturalPre && (
                   <Card className="shadow-sm">
                     <CardHeader className="py-3">
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <Languages className="h-4 w-4" />
-                        Cultural Information
-                      </CardTitle>
+                      <div className="flex items-center justify-between gap-2">
+                        <CardTitle className="flex items-center gap-2 text-sm">
+                          <Languages className="h-4 w-4" />
+                          Cultural Information
+                        </CardTitle>
+                        <AudioPlayer 
+                          text={lesson?.cultural_information || ''} 
+                          language={lesson?.course_language || 'english'} 
+                          size="md"
+                          lessonId={lessonId}
+                          type="cultural"
+                          showSpeedControl={true}
+                        />
+                      </div>
                     </CardHeader>
                     <CardContent className="pt-0 pb-3">
                       <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
-                        <div className="flex items-start gap-3">
-                          <div className="flex-1 whitespace-pre-wrap text-base text-gray-700">
-                            {lesson?.cultural_information}
-                          </div>
-                          <AudioPlayer 
-                            text={lesson?.cultural_information || ''} 
-                            language={lesson?.course_language || 'english'} 
-                            size="md"
-                            lessonId={lessonId}
-                            type="cultural"
-                            showSpeedControl={true}
-                          />
+                        <div className="flex-1 whitespace-pre-wrap text-base text-gray-700">
+                          {lesson?.cultural_information}
                         </div>
                       </div>
                     </CardContent>
@@ -750,34 +749,36 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
               <div className="border-b border-gray-200 pb-3 mb-4">
                 <Card className="shadow-sm">
                   <CardHeader className="py-3">
-                    <CardTitle className="flex items-center gap-2 text-sm">
-                      <BookOpen className="h-4 w-4" />
-                      Lesson Content
-                    </CardTitle>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="flex items-center gap-2 text-sm">
+                        <BookOpen className="h-4 w-4" />
+                        Lesson Content
+                      </CardTitle>
+                      <AudioPlayer 
+                        text={lesson.content} 
+                        language={lesson?.course_language || 'english'} 
+                        size="md"
+                        lessonId={lessonId}
+                        type="content"
+                        showSpeedControl={true}
+                      />
+                    </div>
                   </CardHeader>
                   <CardContent className="pt-0 pb-3">
                     <div className="bg-gray-50 p-3 rounded-lg">
-                      <div className="flex items-start gap-3">
+                      <div className="flex flex-col sm:flex-row items-start gap-3">
                         {lesson?.cover_image && (
                           <img
                             src={lesson.cover_image}
                             alt="Lesson image"
-                            className="rounded-md w-28 h-28 md:w-40 md:h-40 object-cover flex-shrink-0"
+                            className="rounded-md w-full sm:w-28 sm:h-28 md:w-40 md:h-40 object-cover flex-shrink-0"
                           />
                         )}
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <pre className="whitespace-pre-wrap text-base text-gray-700 font-sans">
                             {lesson.content}
                           </pre>
                         </div>
-                        <AudioPlayer 
-                          text={lesson.content} 
-                          language={lesson?.course_language || 'english'} 
-                          size="md"
-                          lessonId={lessonId}
-                          type="content"
-                          showSpeedControl={true}
-                        />
                       </div>
                     </div>
                   </CardContent>
