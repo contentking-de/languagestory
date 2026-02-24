@@ -23,7 +23,8 @@ import {
   XCircle,
   Edit,
   Trash2,
-  Eye
+  Eye,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import CreateTicketModal from './CreateTicketModal';
@@ -69,6 +70,7 @@ export default function TicketsClient() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [statusCounts, setStatusCounts] = useState<{ total: number; open: number; in_progress: number; resolved: number; closed: number } | null>(null);
+  const [updatingTicketId, setUpdatingTicketId] = useState<number | null>(null);
 
   // Fetch tickets
   const fetchTickets = async () => {
@@ -99,6 +101,37 @@ export default function TicketsClient() {
 
   const handleTicketCreated = () => {
     fetchTickets();
+  };
+
+  const handleStatusChange = async (ticketId: number, newStatus: string) => {
+    setUpdatingTicketId(ticketId);
+    try {
+      const response = await fetch(`/api/tickets/${ticketId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (response.ok) {
+        setTickets((prev) =>
+          prev.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t))
+        );
+        if (statusCounts) {
+          const oldStatus = tickets.find((t) => t.id === ticketId)?.status;
+          if (oldStatus && oldStatus !== newStatus) {
+            setStatusCounts({
+              ...statusCounts,
+              [oldStatus]: statusCounts[oldStatus as keyof typeof statusCounts] - 1,
+              [newStatus]: (statusCounts[newStatus as keyof typeof statusCounts] ?? 0) + 1,
+            } as typeof statusCounts);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error updating ticket status:', error);
+    } finally {
+      setUpdatingTicketId(null);
+    }
   };
 
   useEffect(() => {
@@ -308,9 +341,27 @@ export default function TicketsClient() {
                         <Badge className={getPriorityColor(ticket.priority)} variant="outline">
                           {ticket.priority}
                         </Badge>
-                        <Badge className={getStatusColor(ticket.status)} variant="outline">
-                          {ticket.status.replace('_', ' ')}
-                        </Badge>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <Select
+                            value={ticket.status}
+                            onValueChange={(value) => handleStatusChange(ticket.id, value)}
+                            disabled={updatingTicketId === ticket.id}
+                          >
+                            <SelectTrigger className={`h-6 w-auto gap-1 px-2 text-xs font-medium border rounded-full ${getStatusColor(ticket.status)}`}>
+                              {updatingTicketId === ticket.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <SelectValue />
+                              )}
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="open">Open</SelectItem>
+                              <SelectItem value="in_progress">In Progress</SelectItem>
+                              <SelectItem value="resolved">Resolved</SelectItem>
+                              <SelectItem value="closed">Closed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       
                       <h3 className="font-medium text-gray-900 mb-1">
