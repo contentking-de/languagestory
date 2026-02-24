@@ -64,6 +64,7 @@ export function QuizPreviewClient({ userRole }: QuizPreviewClientProps) {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [gapAnswers, setGapAnswers] = useState<{[key: string]: string}>({});
   const [draggedWord, setDraggedWord] = useState<string | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
 
   useEffect(() => {
     if (quizId) {
@@ -175,6 +176,28 @@ export function QuizPreviewClient({ userRole }: QuizPreviewClientProps) {
     if (draggedWord) {
       handleGapAnswerChange(gapKey, draggedWord);
       setDraggedWord(null);
+    }
+  };
+
+  const handleWordTap = (word: string) => {
+    if (quizCompleted) return;
+    setSelectedWord(prev => prev === word ? null : word);
+  };
+
+  const handleGapTap = (gapKey: string) => {
+    if (quizCompleted) return;
+    if (selectedWord) {
+      handleGapAnswerChange(gapKey, selectedWord);
+      setSelectedWord(null);
+    } else {
+      const currentWord = gapAnswers[gapKey];
+      if (currentWord) {
+        setGapAnswers(prev => {
+          const next = { ...prev };
+          delete next[gapKey];
+          return next;
+        });
+      }
     }
   };
 
@@ -468,10 +491,13 @@ export function QuizPreviewClient({ userRole }: QuizPreviewClientProps) {
                             })()
                           : showAnswers
                           ? 'border-green-500 text-green-700 bg-green-50'
+                          : selectedWord
+                          ? 'border-blue-400 bg-blue-50 hover:bg-blue-100 ring-1 ring-blue-300'
                           : 'border-gray-400 bg-gray-50 hover:bg-gray-100'
                       }`}
                       onDrop={(e) => handleDrop(e, `${question.id}-gap-${partIndex}`)}
                       onDragOver={handleDragOver}
+                      onClick={() => handleGapTap(`${question.id}-gap-${partIndex}`)}
                       data-gap-key={`${question.id}-gap-${partIndex}`}
                     >
                       {showResults
@@ -495,14 +521,19 @@ export function QuizPreviewClient({ userRole }: QuizPreviewClientProps) {
                       key={wordIndex}
                       draggable
                       onDragStart={(e) => handleDragStart(e, word)}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full cursor-move hover:bg-blue-200 transition-colors select-none"
+                      onClick={() => handleWordTap(word)}
+                      className={`px-3 py-1 rounded-full cursor-pointer hover:bg-blue-200 transition-colors select-none ${
+                        selectedWord === word
+                          ? 'bg-blue-500 text-white ring-2 ring-blue-300'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}
                     >
                       {word}
                     </span>
                   ))}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  Drag words to the gaps above
+                  Tap a word, then tap a gap to place it
                 </p>
               </div>
             )}

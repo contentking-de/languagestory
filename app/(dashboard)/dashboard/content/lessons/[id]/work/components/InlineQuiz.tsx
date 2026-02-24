@@ -61,6 +61,7 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [gapAnswers, setGapAnswers] = useState<Record<string, string>>({});
   const [draggedWord, setDraggedWord] = useState<string | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [score, setScore] = useState<number | null>(null);
   const [passed, setPassed] = useState<boolean | null>(null);
@@ -244,14 +245,33 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
   const handleDrop = (e: React.DragEvent, gapKey: string) => {
     e.preventDefault();
     const word = e.dataTransfer.getData('text/plain');
-          setGapAnswers(prev => {
-        const newAnswers = {
-          ...prev,
-          [gapKey]: word
-        };
-        return newAnswers;
-      });
+    setGapAnswers(prev => ({ ...prev, [gapKey]: word }));
     setDraggedWord(null);
+  };
+
+  // Tap-to-select a word from the word bank (mobile-friendly)
+  const handleWordTap = (word: string) => {
+    if (quizCompleted) return;
+    setSelectedWord(prev => prev === word ? null : word);
+  };
+
+  // Tap on a gap to place the selected word (mobile-friendly)
+  const handleGapTap = (gapKey: string) => {
+    if (quizCompleted) return;
+    if (selectedWord) {
+      setGapAnswers(prev => ({ ...prev, [gapKey]: selectedWord }));
+      setSelectedWord(null);
+    } else {
+      // Tap a filled gap to remove the word
+      const currentWord = gapAnswers[gapKey];
+      if (currentWord) {
+        setGapAnswers(prev => {
+          const next = { ...prev };
+          delete next[gapKey];
+          return next;
+        });
+      }
+    }
   };
 
   const submitQuiz = async () => {
@@ -432,14 +452,19 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
                 key={index}
                 draggable
                 onDragStart={(e) => handleDragStart(e, word)}
-                className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full cursor-move hover:bg-blue-200 transition-colors select-none"
+                onClick={() => handleWordTap(word)}
+                className={`px-3 py-1 rounded-full cursor-pointer hover:bg-blue-200 transition-colors select-none ${
+                  selectedWord === word
+                    ? 'bg-blue-500 text-white ring-2 ring-blue-300'
+                    : 'bg-blue-100 text-blue-800'
+                }`}
               >
                 {word}
               </span>
             ))}
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            Drag words to the gaps below
+            Tap a word, then tap a gap to place it
           </p>
         </div>
 
@@ -450,7 +475,6 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
             {useWordFormat 
               ? textWithGaps.split(/(\{[^}]+\})/).map((part, partIndex) => {
                   if (part.match(/\{[^}]+\}/)) {
-                    // Use partIndex instead of finding the gap index to ensure unique keys
                     const gapKey = `gap-${partIndex}`;
                     const correctAnswer = part.replace(/\{|\}/g, '');
                     const userAnswer = gapAnswers[gapKey];
@@ -463,10 +487,13 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
                               ? userAnswer?.toLowerCase().trim() === correctAnswer.toLowerCase().trim()
                                 ? 'border-green-500 text-green-700 bg-green-50' 
                                 : 'border-red-500 text-red-700 bg-red-50'
-                              : 'border-gray-400 bg-gray-50 hover:bg-gray-100'
+                              : selectedWord
+                                ? 'border-blue-400 bg-blue-50 hover:bg-blue-100 ring-1 ring-blue-300'
+                                : 'border-gray-400 bg-gray-50 hover:bg-gray-100'
                           }`}
                           onDrop={(e) => handleDrop(e, gapKey)}
                           onDragOver={handleDragOver}
+                          onClick={() => handleGapTap(gapKey)}
                           data-gap-key={gapKey}
                         >
                           {userAnswer || '_____'}
@@ -478,7 +505,6 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
                 })
               : textWithGaps.split(/(\[BLANK\])/).map((part, partIndex) => {
                   if (part === '[BLANK]') {
-                    // Use partIndex instead of finding the gap index to ensure unique keys
                     const gapKey = `gap-${partIndex}`;
                     const userAnswer = gapAnswers[gapKey];
                     
@@ -490,10 +516,13 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
                               ? userAnswer && wordBankArr.includes(userAnswer)
                                 ? 'border-green-500 text-green-700 bg-gray-50' 
                                 : 'border-red-500 text-red-700 bg-red-50'
-                              : 'border-gray-400 bg-gray-50 hover:bg-gray-100'
+                              : selectedWord
+                                ? 'border-blue-400 bg-blue-50 hover:bg-blue-100 ring-1 ring-blue-300'
+                                : 'border-gray-400 bg-gray-50 hover:bg-gray-100'
                           }`}
                           onDrop={(e) => handleDrop(e, gapKey)}
                           onDragOver={handleDragOver}
+                          onClick={() => handleGapTap(gapKey)}
                           data-gap-key={gapKey}
                         >
                           {userAnswer || '_____'}

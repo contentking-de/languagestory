@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -101,6 +101,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
   const [hasNextLesson, setHasNextLesson] = useState(true);
   const [showProgressSteps, setShowProgressSteps] = useState(false);
   const [pointsEarned, setPointsEarned] = useState(0);
+  const [stepResults, setStepResults] = useState<Record<number, { status: string; score?: number }>>({});
+  const stepResultsRef = useRef<Record<number, { status: string; score?: number }>>({}); 
 
   useEffect(() => {
     fetchLessonData();
@@ -287,12 +289,20 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     const step = buildWorkflowSteps()[stepIndex];
     if (!step) return;
 
+    // Always update local step results immediately (reliable source of truth)
+    const existing = stepResultsRef.current[stepIndex];
+    // Don't overwrite a real score with undefined (e.g. when handleNext marks passive steps)
+    if (existing?.score !== undefined && existing.score > 0 && score === undefined) {
+      stepResultsRef.current = { ...stepResultsRef.current, [stepIndex]: { ...existing, status } };
+    } else {
+      stepResultsRef.current = { ...stepResultsRef.current, [stepIndex]: { status, score } };
+    }
+    setStepResults({ ...stepResultsRef.current });
+
     try {
-      const response = await fetch('/api/student/progress', {
+      await fetch('/api/student/progress', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           student_id: userId,
           lesson_id: lessonId,
@@ -303,13 +313,6 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
           points_earned: score ? Math.round((score / 100) * (step.type === 'quiz' ? quizzes.find(q => q.id === step.quizId)?.points_value || 0 : lesson?.points_value || 0)) : 0
         }),
       });
-
-      if (response.ok) {
-        // Update local progress state
-        setProgress(prev => prev.map((item, index) => 
-          index === stepIndex ? { ...item, status, score } : item
-        ));
-      }
     } catch (error) {
       console.error('Error updating progress:', error);
     }
@@ -329,43 +332,63 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         metadata?: Record<string, unknown>;
       }> = [];
 
+      let properlyCompletedInteractive = 0;
+      let totalInteractive = 0;
+
       for (let i = 0; i <= currentStep && i < steps.length; i++) {
         const step = steps[i];
-        const stepProgress = progress.find(p => p.id === step.id);
+        const result = stepResultsRef.current[i];
+        const score = result?.score;
+        const wasEngaged = score !== undefined && score > 0;
 
         if (step.type === 'quiz' && step.quizId) {
-          const score = stepProgress?.score || 0;
-          activities.push({
-            activity_type: 'COMPLETE_QUIZ',
-            reference_id: step.quizId,
-            reference_type: 'quiz',
-            language: lesson?.course_language,
-            metadata: { score, is_perfect_score: score >= 100 },
-          });
+          totalInteractive++;
+          if (wasEngaged) {
+            properlyCompletedInteractive++;
+            activities.push({
+              activity_type: 'COMPLETE_QUIZ',
+              reference_id: step.quizId,
+              reference_type: 'quiz',
+              language: lesson?.course_language,
+              metadata: { score, is_perfect_score: score >= 100, score_scaled: true },
+            });
+          }
         } else if (step.type === 'content' && step.title === 'Vocabulary Trainer') {
-          activities.push({
-            activity_type: 'COMPLETE_VOCABULARY',
-            reference_id: lessonId,
-            reference_type: 'lesson',
-            language: lesson?.course_language,
-            metadata: { lesson_id: lessonId },
-          });
+          totalInteractive++;
+          if (wasEngaged) {
+            properlyCompletedInteractive++;
+            activities.push({
+              activity_type: 'COMPLETE_VOCABULARY',
+              reference_id: lessonId,
+              reference_type: 'lesson',
+              language: lesson?.course_language,
+              metadata: { lesson_id: lessonId },
+            });
+          }
         } else if (step.type === 'game' && step.gameId) {
-          activities.push({
-            activity_type: 'COMPLETE_GAME',
-            reference_id: step.gameId,
-            reference_type: 'game',
-            language: lesson?.course_language,
-            metadata: { game_id: step.gameId, lesson_id: lessonId },
-          });
+          totalInteractive++;
+          if (wasEngaged) {
+            properlyCompletedInteractive++;
+            activities.push({
+              activity_type: 'COMPLETE_GAME',
+              reference_id: step.gameId,
+              reference_type: 'game',
+              language: lesson?.course_language,
+              metadata: { game_id: step.gameId, lesson_id: lessonId, score },
+            });
+          }
         } else if (step.type === 'grammar' && step.grammarId) {
-          activities.push({
-            activity_type: 'COMPLETE_GRAMMAR',
-            reference_id: step.grammarId,
-            reference_type: 'grammar',
-            language: lesson?.course_language,
-            metadata: { grammar_id: step.grammarId, lesson_id: lessonId },
-          });
+          totalInteractive++;
+          if (wasEngaged) {
+            properlyCompletedInteractive++;
+            activities.push({
+              activity_type: 'COMPLETE_GRAMMAR',
+              reference_id: step.grammarId,
+              reference_type: 'grammar',
+              language: lesson?.course_language,
+              metadata: { grammar_id: step.grammarId, lesson_id: lessonId, score },
+            });
+          }
         } else if (step.type === 'content' && step.title === 'Lesson Content') {
           activities.push({
             activity_type: 'COMPLETE_CONTENT',
@@ -385,7 +408,11 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         }
       }
 
-      // Always include the lesson completion activity
+      // Only award lesson completion if at least some interactive steps were done
+      const completionRatio = totalInteractive > 0
+        ? properlyCompletedInteractive / totalInteractive
+        : 1;
+
       activities.push({
         activity_type: 'COMPLETE_LESSON',
         reference_id: lessonId,
@@ -394,10 +421,9 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
         metadata: {
           lesson_id: lessonId,
           total_steps: steps.length,
-          completed_steps: steps.filter(s => {
-            const sp = progress.find(p => p.id === s.id);
-            return sp?.status === 'completed';
-          }).length,
+          total_interactive: totalInteractive,
+          completed_interactive: properlyCompletedInteractive,
+          completion_ratio: completionRatio,
         },
       });
 
@@ -424,11 +450,28 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
     }
   };
 
+  const isInteractiveStep = (step: ProgressItem) => {
+    if (step.type === 'quiz') return true;
+    if (step.type === 'game') return true;
+    if (step.type === 'grammar') return true;
+    if (step.type === 'content' && (step as any).title === 'Vocabulary Trainer') return true;
+    return false;
+  };
+
   const handleNext = async () => {
-    // Mark current step as completed
-    await updateProgress(currentStep, 'completed');
-    
     const steps = buildWorkflowSteps();
+    const currentStepData = steps[currentStep];
+    const currentResult = stepResultsRef.current[currentStep];
+
+    // Only mark passive steps (content, cultural, story) as completed automatically.
+    // Interactive steps (quiz, game, grammar, vocab) must be completed through
+    // their own onComplete callbacks — just clicking Next skips them.
+    if (currentStepData && !isInteractiveStep(currentStepData)) {
+      await updateProgress(currentStep, 'completed');
+    } else if (currentStepData && currentResult?.status !== 'completed') {
+      // Interactive step was skipped — mark with score 0
+      await updateProgress(currentStep, 'completed', 0);
+    }
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
       // Mark next step as in progress

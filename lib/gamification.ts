@@ -272,15 +272,38 @@ export async function awardPoints(
     let pointsToAward = (config && 'base' in config) ? config.base : 0;
     let description = `Completed ${activityType.toLowerCase().replace('_', ' ')}`;
 
-    // Add bonuses based on metadata
+    // Scale points by score for interactive activities
     if (activityType === 'COMPLETE_QUIZ' && metadata) {
-      if (metadata.score >= 100) {
+      const score = parseFloat(metadata.score?.toString() || '0');
+      if (metadata.score_scaled && score > 0 && score < 100) {
+        pointsToAward = Math.round(pointsToAward * (score / 100));
+        description += ` (${score}%)`;
+      }
+      if (score >= 100) {
         pointsToAward += POINTS_CONFIG.COMPLETE_QUIZ.perfect_score_bonus;
         description += ' with perfect score!';
       }
       if (metadata.timeBonus) {
         pointsToAward += POINTS_CONFIG.COMPLETE_QUIZ.time_bonus;
         description += ' quickly';
+      }
+    }
+
+    // Scale game/grammar points by score
+    if ((activityType === 'COMPLETE_GAME' || activityType === 'COMPLETE_GRAMMAR') && metadata?.score) {
+      const score = parseFloat(metadata.score.toString());
+      if (score > 0 && score < 100) {
+        pointsToAward = Math.round(pointsToAward * (score / 100));
+        description += ` (${score}%)`;
+      }
+    }
+
+    // Scale lesson completion points by how many interactive steps were properly done
+    if (activityType === 'COMPLETE_LESSON' && metadata?.completion_ratio !== undefined) {
+      const ratio = parseFloat(metadata.completion_ratio.toString());
+      pointsToAward = Math.round(pointsToAward * ratio);
+      if (ratio < 1) {
+        description += ` (${metadata.completed_interactive}/${metadata.total_interactive} activities completed)`;
       }
     }
 
