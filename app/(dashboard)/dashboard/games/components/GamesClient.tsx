@@ -79,6 +79,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [expandedGame, setExpandedGame] = useState<number | null>(null);
   const [gameTypeFilter, setGameTypeFilter] = useState('all');
+  const [languageFilter, setLanguageFilter] = useState('all');
   const [lessonFilter, setLessonFilter] = useState('all');
   const [assigningLesson, setAssigningLesson] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -106,13 +107,13 @@ export function GamesClient({ userRole }: GamesClientProps) {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [gameTypeFilter, lessonFilter]);
+  }, [gameTypeFilter, languageFilter, lessonFilter]);
 
   // Load games when page, search, or filters change
   useEffect(() => {
     loadGamesFromDatabase();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, debouncedSearch, gameTypeFilter, lessonFilter]);
+  }, [currentPage, debouncedSearch, gameTypeFilter, languageFilter, lessonFilter]);
 
   // Load lessons once on mount
   useEffect(() => {
@@ -128,6 +129,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
       });
       if (debouncedSearch) params.set('search', debouncedSearch);
       if (gameTypeFilter !== 'all') params.set('game_type', gameTypeFilter);
+      if (languageFilter !== 'all') params.set('language', languageFilter);
       if (lessonFilter !== 'all') params.set('lesson', lessonFilter);
 
       const response = await fetch(`/api/games?${params}`);
@@ -358,7 +360,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-600 mb-1 block">Search Games</label>
               <div className="relative">
@@ -390,6 +392,21 @@ export function GamesClient({ userRole }: GamesClientProps) {
             </div>
 
             <div>
+              <label className="text-sm font-medium text-gray-600 mb-1 block">Language</label>
+              <Select value={languageFilter} onValueChange={setLanguageFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All languages" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Languages</SelectItem>
+                  <SelectItem value="french">🇫🇷 French</SelectItem>
+                  <SelectItem value="german">🇩🇪 German</SelectItem>
+                  <SelectItem value="spanish">🇪🇸 Spanish</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
               <label className="text-sm font-medium text-gray-600 mb-1 block">Lesson Assignment</label>
               <Select value={lessonFilter} onValueChange={setLessonFilter}>
                 <SelectTrigger>
@@ -409,6 +426,7 @@ export function GamesClient({ userRole }: GamesClientProps) {
                 onClick={() => {
                   setSearchTerm('');
                   setGameTypeFilter('all');
+                  setLanguageFilter('all');
                   setLessonFilter('all');
                 }}
                 className="w-full"

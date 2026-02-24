@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')));
     const search = searchParams.get('search') || '';
     const gameType = searchParams.get('game_type') || '';
+    const languageFilter = searchParams.get('language') || '';
     const lessonFilter = searchParams.get('lesson') || ''; // 'assigned' | 'unassigned' | ''
     const offset = (page - 1) * limit;
 
@@ -32,6 +33,15 @@ export async function GET(request: Request) {
       conditions.push(eq(games.game_type, gameType as typeof games.game_type.enumValues[number]));
     }
 
+    if (languageFilter) {
+      conditions.push(
+        or(
+          ilike(games.language, languageFilter),
+          ilike(courses.language, languageFilter)
+        )!
+      );
+    }
+
     if (lessonFilter === 'assigned') {
       conditions.push(isNotNull(games.lesson_id));
     } else if (lessonFilter === 'unassigned') {
@@ -40,10 +50,12 @@ export async function GET(request: Request) {
 
     const whereClause = and(...conditions);
 
-    // Get total count for pagination
+    // Get total count for pagination (needs joins when filtering by language)
     const [{ total: totalCount }] = await db
       .select({ total: count() })
       .from(games)
+      .leftJoin(lessons, eq(games.lesson_id, lessons.id))
+      .leftJoin(courses, eq(lessons.course_id, courses.id))
       .where(whereClause);
 
     // Fetch paginated games (lightweight - no game_config/embed_html)
