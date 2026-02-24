@@ -30,8 +30,8 @@ export default function ConversationPage() {
   const silenceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const lessonIdRef = useRef<string>('');
-  const handleSendRef = useRef<(text: string) => Promise<void>>();
-  const startRecordingRef = useRef<() => Promise<void>>();
+  const handleSendRef = useRef<(text: string) => Promise<void>>(undefined);
+  const startRecordingRef = useRef<() => Promise<void>>(undefined);
   const stoppingConversationRef = useRef(false);
 
   useEffect(() => { messagesRef.current = messages; }, [messages]);
