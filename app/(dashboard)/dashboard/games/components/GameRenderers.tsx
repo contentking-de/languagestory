@@ -2063,6 +2063,8 @@ export function WordMatchGame({ config, onComplete }: WordMatchGameProps) {
 interface ListenTypeItem { id: string; word: string; language: string; vocabularyId?: number }
 interface ListenTypeConfig { items: ListenTypeItem[] }
 
+const LISTEN_TYPE_MAX_ATTEMPTS = 3;
+
 export function ListenTypeGame({ config, onComplete }: { config: ListenTypeConfig; onComplete?: (score: number) => void }) {
   const [index, setIndex] = useState(0);
   const [value, setValue] = useState('');
@@ -2072,6 +2074,7 @@ export function ListenTypeGame({ config, onComplete }: { config: ListenTypeConfi
   const [audioBusy, setAudioBusy] = useState<boolean>(false);
   const [audioCache, setAudioCache] = useState<Record<string, string>>({});
   const [justCorrect, setJustCorrect] = useState(false);
+  const [showSkipped, setShowSkipped] = useState(false);
   const [completed, setCompleted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -2172,29 +2175,43 @@ export function ListenTypeGame({ config, onComplete }: { config: ListenTypeConfi
     return normalize(a) === normalize(b);
   };
 
+  const advanceToNext = (nextCorrect: number, skipped = false) => {
+    const delay = skipped ? 2500 : 1500;
+    if (index + 1 >= total) {
+      setTimeout(() => {
+        setCompleted(true);
+        onComplete?.(Math.round((nextCorrect / total) * 100));
+      }, skipped ? delay : 500);
+    } else {
+      setTimeout(() => {
+        setValue('');
+        setJustCorrect(false);
+        setShowSkipped(false);
+        setAttempts(0);
+        setIndex((i) => i + 1);
+      }, delay);
+    }
+  };
+
   const handleCheck = () => {
+    if (showSkipped || justCorrect) return;
+
     if (equals(value, current.word)) {
       const nextCorrect = correctCount + 1;
       setCorrectCount(nextCorrect);
       setAttempts(0);
       setJustCorrect(true);
       playChime();
-      if (index + 1 >= total) {
-        // Finish after brief success feedback
-        setTimeout(() => {
-          setCompleted(true);
-          onComplete?.(Math.round((nextCorrect / total) * 100));
-        }, 500);
-      } else {
-        setTimeout(() => {
-          setValue('');
-          setJustCorrect(false);
-          setIndex((i) => i + 1);
-        }, 1500);
-      }
+      advanceToNext(nextCorrect);
     } else {
-      setAttempts((a) => a + 1);
+      const nextAttempts = attempts + 1;
+      setAttempts(nextAttempts);
       playFail();
+
+      if (nextAttempts >= LISTEN_TYPE_MAX_ATTEMPTS) {
+        setShowSkipped(true);
+        advanceToNext(correctCount, true);
+      }
     }
   };
 
@@ -2301,16 +2318,31 @@ export function ListenTypeGame({ config, onComplete }: { config: ListenTypeConfi
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Input value={value} onChange={(e)=>setValue(e.target.value)} placeholder="Type the word" />
-          <Button onClick={handleCheck}>Check</Button>
+          <Input
+            value={value}
+            onChange={(e)=>setValue(e.target.value)}
+            placeholder="Type the word"
+            disabled={showSkipped || justCorrect}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleCheck(); }}
+          />
+          <Button onClick={handleCheck} disabled={showSkipped || justCorrect}>Check</Button>
         </div>
         {justCorrect && (
           <div className="flex items-center gap-2 text-sm text-green-700">
             <Check className="h-4 w-4" /> Correct!
           </div>
         )}
-        {!justCorrect && attempts > 0 && (
-          <div className="text-sm text-red-600">Not quite. Try again!</div>
+        {showSkipped && (
+          <div className="space-y-1">
+            <div className="text-sm text-amber-700 font-medium">The correct answer is: <span className="font-bold">{current.word}</span></div>
+            <div className="text-xs text-gray-500">Moving on to the next word…</div>
+          </div>
+        )}
+        {!justCorrect && !showSkipped && attempts > 0 && (
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-red-600">Not quite. Try again and also focus on things like capitalization for german words or accents in french and spanish.</div>
+            <div className="text-xs text-gray-400">Attempt {attempts}/{LISTEN_TYPE_MAX_ATTEMPTS}</div>
+          </div>
         )}
       </CardContent>
     </Card>
