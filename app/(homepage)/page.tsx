@@ -33,6 +33,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { QuizTeaserModal } from '@/components/quiz-teaser-modal';
 import { VocabTeaserModal } from '@/components/vocab-teaser-modal';
+import { StoryTeaserModal } from '@/components/story-teaser-modal';
 
 // Modal content data
 const modalContent = {
@@ -1216,6 +1217,8 @@ export default function HomePage() {
   const [quizTeaserType, setQuizTeaserType] = useState<'true_false' | 'multiple_choice' | 'gap_fill'>('true_false');
   const [vocabTeaserOpen, setVocabTeaserOpen] = useState(false);
   const [vocabTeaserLanguage, setVocabTeaserLanguage] = useState<'spanish' | 'german' | 'french'>('spanish');
+  const [storyTeaserOpen, setStoryTeaserOpen] = useState(false);
+  const [storyTeaserLanguage, setStoryTeaserLanguage] = useState<'spanish' | 'german' | 'french'>('spanish');
 
   const openQuizTeaser = (type: 'true_false' | 'multiple_choice' | 'gap_fill') => {
     setQuizTeaserType(type);
@@ -1225,6 +1228,11 @@ export default function HomePage() {
   const openVocabTeaser = (language: 'spanish' | 'german' | 'french') => {
     setVocabTeaserLanguage(language);
     setVocabTeaserOpen(true);
+  };
+
+  const openStoryTeaser = (language: 'spanish' | 'german' | 'french') => {
+    setStoryTeaserLanguage(language);
+    setStoryTeaserOpen(true);
   };
 
   // Accessibility settings state
@@ -1754,8 +1762,11 @@ export default function HomePage() {
                   Practice reading aloud, listening, dictation, translation, vocabulary, comprehension, and more!
                 </p>
                 <div className="mt-auto">
-                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
-                    Enroll Now
+                  <button
+                    onClick={() => openStoryTeaser('spanish')}
+                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
+                  >
+                    See the Story
                   </button>
                 </div>
               </div>
@@ -1781,8 +1792,11 @@ export default function HomePage() {
                   Practice reading aloud, listening, dictation, translation, vocabulary, comprehension and more!
                 </p>
                 <div className="mt-auto">
-                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
-                    Enroll Now
+                  <button
+                    onClick={() => openStoryTeaser('german')}
+                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
+                  >
+                    See the Story
                   </button>
                 </div>
               </div>
@@ -1808,8 +1822,11 @@ export default function HomePage() {
                   Practice reading aloud, listening, dictation, translation, vocabulary, comprehension and more!
                 </p>
                 <div className="mt-auto">
-                  <button className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
-                    Enroll Now
+                  <button
+                    onClick={() => openStoryTeaser('french')}
+                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
+                  >
+                    See the Story
                   </button>
                 </div>
               </div>
@@ -2594,6 +2611,13 @@ export default function HomePage() {
         isOpen={vocabTeaserOpen}
         onClose={() => setVocabTeaserOpen(false)}
         language={vocabTeaserLanguage}
+      />
+
+      {/* Story Teaser Modal */}
+      <StoryTeaserModal
+        isOpen={storyTeaserOpen}
+        onClose={() => setStoryTeaserOpen(false)}
+        language={storyTeaserLanguage}
       />
     </main>
   );
