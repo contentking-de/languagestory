@@ -179,7 +179,7 @@ export default function ConversationPage() {
 
         // Hard cap
         if (elapsed >= MAX_RECORDING_MS) {
-          if (mr.state !== 'inactive') mr.stop();
+          mr.stop();
           return;
         }
 
@@ -194,7 +194,7 @@ export default function ConversationPage() {
         if (rms < SILENCE_THRESHOLD) {
           if (!silenceSince) silenceSince = Date.now();
           else if (Date.now() - silenceSince >= SILENCE_DURATION_MS) {
-            if (mr.state !== 'inactive') mr.stop();
+            mr.stop();
           }
         } else {
           silenceSince = null;
