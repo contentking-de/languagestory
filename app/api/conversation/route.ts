@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
         title: lessons.title,
         description: lessons.description,
         content: lessons.content,
+        cultural_information: lessons.cultural_information,
         course_language: courses.language,
         course_title: courses.title,
         course_level: courses.level,
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
     const level = (lesson as any).course_level || 'beginner';
     const topic = (lesson as any).title || 'general conversation';
     const lessonContent: string = (lesson as any).content || '';
+    const culturalInfo: string = (lesson as any).cultural_information || '';
 
     // Fetch lesson vocabulary (up to 200 items)
     const vocabRows = await db
@@ -76,14 +78,33 @@ export async function POST(request: NextRequest) {
       .slice(0, 200)
       .join('\n');
 
-    const systemPrompt = `You are a friendly ${language} conversation partner for a ${level} learner.
-Keep exchanges short (1-2 sentences), encouraging, and on topic: "${topic}".
+    const culturalBlock = culturalInfo
+      ? `\nCultural background for this lesson (use as inspiration, not a script):\n---\n${culturalInfo.slice(0, 2000)}\n---\n`
+      : '';
+
+    const systemPrompt = `You are a friendly, curious ${language} conversation partner for a ${level} learner.
+The lesson topic is: "${topic}".
 Use only ${language} in replies unless explicitly asked for help in English.
-Offer gentle corrections and follow-up questions.
-IMPORTANT: Never repeat or rephrase the same question you already asked. Each new turn must either acknowledge the learner's last answer or ask a new, distinct question that progresses the topic.
-Ask exactly ONE question at a time.
-Base the conversation on the following lesson content (use it to craft questions and references):\n---\n${lessonContent.slice(0, 4000)}\n---\n
-When crafting questions, prefer to use this lesson vocabulary and vary across different items to avoid near-duplicate questions:\n${vocabLines ? vocabLines + '\n' : ''}`;
+Keep replies short (1-3 sentences) and always end with exactly ONE question.
+
+CONVERSATION STYLE:
+- Be warm and encouraging. Briefly acknowledge or react to what the learner said before moving on.
+- Offer gentle corrections inline when you notice mistakes (e.g. "Ah, du meinst … — genau!").
+- Vary your question types across turns: opinion questions, personal experience, comparisons, hypothetical scenarios, "what would you do if…", true/false challenges, fill-in-the-blank prompts, and factual recall.
+
+TOPIC SCOPE:
+- Use the lesson content and cultural information below as your *starting point and anchor*.
+- You may naturally expand into related real-world topics, personal questions, or broader cultural themes that connect to the lesson — the conversation should feel organic, not like a quiz.
+- About 60-70% of questions should relate to lesson content/vocabulary/culture; the remaining 30-40% can explore the learner's own life, opinions, or related tangents.
+
+ABSOLUTE RULES ON REPETITION:
+- NEVER ask the same question twice, even rephrased or with minor word changes.
+- NEVER ask about the same vocabulary word or concept you already covered in a previous turn.
+- Before generating a question, mentally review ALL your previous questions in this conversation and ensure the new one is substantially different in both topic and structure.
+- If you run low on lesson material, branch into related real-world topics rather than recycling earlier questions.
+
+Lesson content (use as reference, not a script):\n---\n${lessonContent.slice(0, 4000)}\n---\n${culturalBlock}
+Lesson vocabulary (spread usage across many turns; never reuse the same item):\n${vocabLines ? vocabLines + '\n' : ''}`;
 
     const hasMessages = Array.isArray(messages) && messages.length > 0;
     const seedUserMessage = start
@@ -98,8 +119,7 @@ When crafting questions, prefer to use this lesson vocabulary and vary across di
         }
       : {
           role: 'user' as const,
-          content: `Continue the conversation based strictly on the lesson content and the chat so far.
-Ask exactly one question at a time, then wait for the learner's answer.`
+          content: `Continue the conversation naturally. React to my last answer, then ask a new question that explores a different angle of the topic or branches into something related.`
         };
 
     const chatMessages = [
@@ -107,14 +127,19 @@ Ask exactly one question at a time, then wait for the learner's answer.`
       ...(hasMessages ? messages : [seedUserMessage]),
     ];
 
-    // Add anti-repetition hint using the last assistant question if available
+    // Build a summary of ALL previous assistant questions so the model can avoid repetition
     if (hasMessages && !stop) {
-      const lastAssistant = [...messages].reverse().find((m: any) => m?.role === 'assistant')?.content as string | undefined;
-      if (lastAssistant && lastAssistant.trim().length > 0) {
-        const snippet = lastAssistant.length > 220 ? lastAssistant.slice(0, 220) + '…' : lastAssistant;
+      const previousAssistantTurns = (messages as Array<{ role: string; content: string }>)
+        .filter(m => m.role === 'assistant')
+        .map((m, i) => {
+          const text = (m.content || '').trim();
+          return text.length > 150 ? `${i + 1}. ${text.slice(0, 150)}…` : `${i + 1}. ${text}`;
+        });
+
+      if (previousAssistantTurns.length > 0) {
         chatMessages.push({
           role: 'user',
-          content: `Avoid repeating or rephrasing your previous question: "${snippet}". Instead, either briefly acknowledge the learner's last answer or ask a different, follow-up question that advances the conversation.`
+          content: `REMINDER — Here are ALL your previous messages in this conversation. Your next question MUST be substantially different from every single one of these:\n${previousAssistantTurns.join('\n')}\n\nNow respond to my latest message with a brief reaction and a fresh, different question.`
         });
       }
     }
@@ -123,8 +148,10 @@ Ask exactly one question at a time, then wait for the learner's answer.`
     const completion = await openai.chat.completions.create({
       model,
       messages: chatMessages,
-      temperature: stop ? 0.3 : 0.7,
+      temperature: stop ? 0.3 : 0.85,
       max_tokens: stop ? 120 : 500,
+      frequency_penalty: 0.6,
+      presence_penalty: 0.5,
     });
 
     const reply = completion.choices?.[0]?.message?.content || '';

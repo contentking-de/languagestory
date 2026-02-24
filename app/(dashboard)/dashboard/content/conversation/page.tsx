@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageCircle } from 'lucide-react';
+import { FlagIcon, LanguageSelectOption } from '@/components/ui/flag-icon';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -13,16 +14,28 @@ interface ChatMessage {
 
 export default function ConversationPage() {
   const [lessons, setLessons] = useState<Array<{ id: number; title: string; course_language?: string; course_title?: string }>>([]);
+  const [languageFilter, setLanguageFilter] = useState<string>('');
   const [lessonId, setLessonId] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const messagesRef = useRef<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const [thinking, setThinking] = useState(false);
   const autoListenRef = useRef<boolean>(false);
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const lastAssistantRef = useRef<string>('');
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const silenceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const lessonIdRef = useRef<string>('');
+  const handleSendRef = useRef<(text: string) => Promise<void>>();
+  const startRecordingRef = useRef<() => Promise<void>>();
+  const stoppingConversationRef = useRef(false);
+
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { lessonIdRef.current = lessonId; }, [lessonId]);
 
   useEffect(() => {
     (async () => {
@@ -38,13 +51,25 @@ export default function ConversationPage() {
     })();
   }, []);
 
+  const availableLanguages = useMemo(() => {
+    const langs = new Set(lessons.map(l => l.course_language).filter(Boolean));
+    return Array.from(langs).sort() as string[];
+  }, [lessons]);
+
+  const filteredLessons = useMemo(
+    () => languageFilter ? lessons.filter(l => l.course_language === languageFilter) : [],
+    [lessons, languageFilter]
+  );
+
   const selectedLesson = useMemo(() => lessons.find(l => l.id.toString() === lessonId), [lessons, lessonId]);
   const [lessonContent, setLessonContent] = useState<string>('');
   const [hasStarted, setHasStarted] = useState(false);
   const [lessonVocabulary, setLessonVocabulary] = useState<Array<{ term: string; english?: string; type?: string }>>([]);
+  const [culturalInfo, setCulturalInfo] = useState<string>('');
   const [turns, setTurns] = useState<Array<{ user?: string; ai?: string; responseTimeMs?: number }>>([]);
   const lastQuestionTimeRef = useRef<number | null>(null);
   const [rating, setRating] = useState<any>(null);
+  const [ratingLoading, setRatingLoading] = useState(false);
   const [courseLevel, setCourseLevel] = useState<string>('intermediate');
 
   // Load lesson content on selection (for pre-read screen)
@@ -54,6 +79,7 @@ export default function ConversationPage() {
       setMessages([]);
       setLessonContent('');
       setLessonVocabulary([]);
+      setCulturalInfo('');
       setRating(null);
       if (!lessonId) return;
       try {
@@ -61,6 +87,7 @@ export default function ConversationPage() {
         if (res.ok) {
           const data = await res.json();
           setLessonContent(data?.content || '');
+          setCulturalInfo(data?.cultural_information || '');
           if (data?.course_level) setCourseLevel(data.course_level);
           // map vocabulary if available
           const vocab = Array.isArray(data?.vocabulary) ? data.vocabulary : [];
@@ -77,9 +104,20 @@ export default function ConversationPage() {
     loadLesson();
   }, [lessonId]);
 
+  const cleanupSilenceDetection = () => {
+    if (silenceTimerRef.current) {
+      clearInterval(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try { audioContextRef.current.close(); } catch {}
+      audioContextRef.current = null;
+    }
+  };
+
   const startRecording = async () => {
     try {
-      if (isPlayingTTS) return; // avoid recording while TTS is playing (echo)
+      if (isPlayingTTS) return;
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
       } as any);
@@ -89,6 +127,10 @@ export default function ConversationPage() {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
       mr.onstop = async () => {
+        setIsRecording(false);
+        cleanupSilenceDetection();
+        stream.getTracks().forEach(t => t.stop());
+        if (stoppingConversationRef.current) return;
         const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const fd = new FormData();
         fd.append('audio', blob, 'audio.webm');
@@ -97,11 +139,10 @@ export default function ConversationPage() {
           const data = await res.json();
           const raw = (data?.text || '').toString().trim();
           if (raw && raw.length > 1) {
-            // prevent sending if transcription matches last assistant text (echo)
             if (lastAssistantRef.current && raw.replace(/\s+/g,' ').toLowerCase() === lastAssistantRef.current.replace(/\s+/g,' ').toLowerCase()) {
               // ignore echo
             } else {
-              await handleHandsFreeSend(raw);
+              await handleSendRef.current?.(raw);
             }
           }
         } catch (e) {
@@ -110,9 +151,55 @@ export default function ConversationPage() {
       };
       mediaRecorderRef.current = mr;
       mr.start();
-      setTimeout(() => {
-        if (mr.state !== 'inactive') mr.stop();
-      }, 3000);
+      setIsRecording(true);
+
+      // Silence detection via Web Audio API
+      const SILENCE_THRESHOLD = 0.015;
+      const SILENCE_DURATION_MS = 1800;
+      const MAX_RECORDING_MS = 30000;
+      const MIN_RECORDING_MS = 1500;
+
+      const actx = new AudioContext();
+      audioContextRef.current = actx;
+      const source = actx.createMediaStreamSource(stream);
+      const analyser = actx.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+      const dataArray = new Float32Array(analyser.fftSize);
+
+      const recordingStart = Date.now();
+      let silenceSince: number | null = null;
+
+      silenceTimerRef.current = setInterval(() => {
+        if (mr.state === 'inactive') {
+          cleanupSilenceDetection();
+          return;
+        }
+        const elapsed = Date.now() - recordingStart;
+
+        // Hard cap
+        if (elapsed >= MAX_RECORDING_MS) {
+          if (mr.state !== 'inactive') mr.stop();
+          return;
+        }
+
+        // Don't check silence during the initial phase
+        if (elapsed < MIN_RECORDING_MS) return;
+
+        analyser.getFloatTimeDomainData(dataArray);
+        let rms = 0;
+        for (let i = 0; i < dataArray.length; i++) rms += dataArray[i] * dataArray[i];
+        rms = Math.sqrt(rms / dataArray.length);
+
+        if (rms < SILENCE_THRESHOLD) {
+          if (!silenceSince) silenceSince = Date.now();
+          else if (Date.now() - silenceSince >= SILENCE_DURATION_MS) {
+            if (mr.state !== 'inactive') mr.stop();
+          }
+        } else {
+          silenceSince = null;
+        }
+      }, 100);
     } catch (e) {
       console.error('Mic error', e);
       alert('Microphone access failed. Please check permissions.');
@@ -162,11 +249,12 @@ export default function ConversationPage() {
   }
 
   const handleHandsFreeSend = async (text: string) => {
-    if (!lessonId) return;
+    const currentLessonId = lessonIdRef.current;
+    if (!currentLessonId) return;
     const content = (text || '').trim();
     if (!content) return;
     const responseTimeMs = lastQuestionTimeRef.current ? Date.now() - lastQuestionTimeRef.current : undefined;
-    const newMessages = [...messages, { role: 'user', content } as ChatMessage];
+    const newMessages = [...messagesRef.current, { role: 'user', content } as ChatMessage];
     setMessages(newMessages);
     setTurns(prev => [...prev, { user: content, responseTimeMs }]);
     setThinking(true);
@@ -174,7 +262,7 @@ export default function ConversationPage() {
       const res = await fetch('/api/conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lessonId: parseInt(lessonId), messages: newMessages }),
+        body: JSON.stringify({ lessonId: parseInt(currentLessonId), messages: newMessages }),
       });
       const data = await res.json();
       if (data?.reply) {
@@ -198,16 +286,16 @@ export default function ConversationPage() {
       console.error('Conversation error', e);
     } finally {
       setThinking(false);
-      // restart listening loop after short delay
       if (autoListenRef.current) {
         setTimeout(() => {
-          startRecording().catch(() => {});
+          startRecordingRef.current?.().catch(() => {});
         }, 200);
       }
     }
   };
 
-  // removed manual stop and send (hands-free)
+  handleSendRef.current = handleHandsFreeSend;
+  startRecordingRef.current = startRecording;
 
   return (
     <div className="p-6 space-y-6">
@@ -224,20 +312,37 @@ export default function ConversationPage() {
           <CardTitle>Setup</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-600 mb-1 block">Select Lesson</label>
-            <Select value={lessonId} onValueChange={setLessonId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a lesson" />
-              </SelectTrigger>
-              <SelectContent>
-                {lessons.map(l => (
-                  <SelectItem key={l.id} value={l.id.toString()}>
-                    {l.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-600 mb-1 block">Language</label>
+              <Select value={languageFilter} onValueChange={(val) => { setLanguageFilter(val); setLessonId(''); }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableLanguages.map(lang => (
+                    <SelectItem key={lang} value={lang}>
+                      <LanguageSelectOption language={lang} />
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600 mb-1 block">Lesson</label>
+              <Select value={lessonId} onValueChange={setLessonId} disabled={!languageFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder={languageFilter ? "Select a lesson" : "Select a language first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredLessons.map(l => (
+                    <SelectItem key={l.id} value={l.id.toString()}>
+                      {l.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -275,12 +380,23 @@ export default function ConversationPage() {
                     </ul>
                   </div>
                 )}
+                {culturalInfo && (
+                  <div className="mt-4">
+                    <div className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+                      🌍 Cultural Information
+                    </div>
+                    <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+                      <div className="whitespace-pre-wrap text-sm text-gray-700">{culturalInfo}</div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="text-sm text-gray-600">Please read the lesson content carefully before starting.</div>
               <button
                 className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                 disabled={!lessonId}
                 onClick={async () => {
+                  stoppingConversationRef.current = false;
                   setRating(null);
                   setHasStarted(true);
                   setThinking(true);
@@ -326,24 +442,29 @@ export default function ConversationPage() {
                   </div>
                 ))}
                 {thinking && <div className="text-sm text-gray-500">AI is thinking…</div>}
+                {isRecording && !thinking && (
+                  <div className="flex items-center gap-2 text-sm text-red-600">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    Listening… speak your answer
+                  </div>
+                )}
               </div>
               <div className="flex items-center justify-between">
-                <div className="text-xs text-gray-500">Hands-free mode: Speak your answer after the AI finishes.</div>
+                <div className="text-xs text-gray-500">Hands-free mode: Speak your answer — recording stops automatically after a pause.</div>
                 <button
                   className="px-3 py-1.5 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
                   onClick={() => {
-                    // stop conversation: mic + audio + flags
+                    stoppingConversationRef.current = true;
                     autoListenRef.current = false;
+                    cleanupSilenceDetection();
                     const mr = mediaRecorderRef.current;
                     if (mr && mr.state !== 'inactive') {
                       try { mr.stop(); } catch {}
                     }
-                    // stop tracks if any
-                    try {
-                      const navAny = navigator as any;
-                      (navAny.mediaDevices?.getUserMedia && (navAny._activeStream?.getTracks?.().forEach((t: any) => t.stop())));
-                    } catch {}
-                    // stop any playing TTS immediately
+                    setIsRecording(false);
                     stopCurrentTTS();
                     setThinking(false);
                     // Abschlussbotschaft (fixer englischer Text) + Rating
@@ -353,6 +474,7 @@ export default function ConversationPage() {
                         setMessages(prev => [...prev, { role: 'assistant', content: closingText }]);
                         try { await playReplyTTS(closingText, 'english'); } catch {}
 
+                        setRatingLoading(true);
                         const res = await fetch('/api/conversation/rate', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
@@ -369,6 +491,8 @@ export default function ConversationPage() {
                       } catch (e) {
                         console.error('Rating failed', e);
                         setRating(null);
+                      } finally {
+                        setRatingLoading(false);
                       }
                     })();
                   }}
@@ -376,6 +500,15 @@ export default function ConversationPage() {
                   Stop conversation
                 </button>
               </div>
+              {ratingLoading && (
+                <div className="mt-4 flex items-center gap-3 p-4 border rounded bg-indigo-50 border-indigo-200">
+                  <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span className="text-sm text-indigo-700">Analyzing your conversation and preparing your personal rating…</span>
+                </div>
+              )}
               {rating && (
                 <div className="mt-4 border rounded p-4 md:p-5 bg-white">
                   <div className="text-base font-semibold mb-2">Conversation Rating</div>
