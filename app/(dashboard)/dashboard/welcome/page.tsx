@@ -12,7 +12,9 @@ import {
   Sparkles,
   Target,
   Heart,
-  Globe
+  Globe,
+  UserPlus,
+  GraduationCap
 } from 'lucide-react';
 import Link from 'next/link';
 import useSWR from 'swr';
@@ -36,6 +38,46 @@ export default function WelcomePage() {
           Your journey to language mastery begins here. Discover engaging stories, practice with AI, and connect with a community of learners from around the world.
         </p>
       </div>
+
+      {/* First Steps - Teacher */}
+      {user?.role === 'teacher' && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-900">First Steps</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Link href="/dashboard" className="group">
+              <Card className="h-full border-orange-200 transition-all group-hover:border-orange-400 group-hover:shadow-md">
+                <CardHeader>
+                  <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-4">
+                    <UserPlus className="h-6 w-6 text-white" />
+                  </div>
+                  <CardTitle className="text-orange-900">Invite Teachers & Students</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    Grow your learning community by inviting fellow teachers and students to join your team.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/dashboard/content/lessons" className="group">
+              <Card className="h-full border-blue-200 transition-all group-hover:border-blue-400 group-hover:shadow-md">
+                <CardHeader>
+                  <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-4">
+                    <GraduationCap className="h-6 w-6 text-white" />
+                  </div>
+                  <CardTitle className="text-blue-900">Explore Lessons</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    Browse and discover lessons to assign to your students or use as inspiration for your teaching.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* What to Expect Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -125,57 +167,59 @@ export default function WelcomePage() {
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-orange-500" />
-            Ready to Start Learning?
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link href="/dashboard/content/courses" className="group">
-              <Button variant="outline" className="w-full h-auto p-4 group-hover:border-orange-300 group-hover:bg-orange-50 transition-all">
-                <div className="text-center">
-                  <BookOpen className="h-6 w-6 mx-auto mb-2 text-orange-500" />
-                  <div className="font-medium">Browse Courses</div>
-                  <div className="text-xs text-gray-500">Explore our library</div>
-                </div>
-              </Button>
-            </Link>
-            
-            <Link href="/dashboard/content/lessons" className="group">
-              <Button variant="outline" className="w-full h-auto p-4 group-hover:border-blue-300 group-hover:bg-blue-50 transition-all">
-                <div className="text-center">
-                  <Play className="h-6 w-6 mx-auto mb-2 text-blue-500" />
-                  <div className="font-medium">Start Lesson</div>
-                  <div className="text-xs text-gray-500">Begin learning now</div>
-                </div>
-              </Button>
-            </Link>
-            
-            <Link href="/dashboard/progress" className="group">
-              <Button variant="outline" className="w-full h-auto p-4 group-hover:border-green-300 group-hover:bg-green-50 transition-all">
-                <div className="text-center">
-                  <Trophy className="h-6 w-6 mx-auto mb-2 text-green-500" />
-                  <div className="font-medium">View Progress</div>
-                  <div className="text-xs text-gray-500">Track your journey</div>
-                </div>
-              </Button>
-            </Link>
-            
-            <Link href="/dashboard/games" className="group">
-              <Button variant="outline" className="w-full h-auto p-4 group-hover:border-purple-300 group-hover:bg-purple-50 transition-all">
-                <div className="text-center">
-                  <Users className="h-6 w-6 mx-auto mb-2 text-purple-500" />
-                  <div className="font-medium">Play Games</div>
-                  <div className="text-xs text-gray-500">Fun learning activities</div>
-                </div>
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+      {user?.role !== 'teacher' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-orange-500" />
+              Ready to Start Learning?
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Link href="/dashboard/content/courses" className="group">
+                <Button variant="outline" className="w-full h-auto p-4 group-hover:border-orange-300 group-hover:bg-orange-50 transition-all">
+                  <div className="text-center">
+                    <BookOpen className="h-6 w-6 mx-auto mb-2 text-orange-500" />
+                    <div className="font-medium">Browse Courses</div>
+                    <div className="text-xs text-gray-500">Explore our library</div>
+                  </div>
+                </Button>
+              </Link>
+              
+              <Link href="/dashboard/content/lessons" className="group">
+                <Button variant="outline" className="w-full h-auto p-4 group-hover:border-blue-300 group-hover:bg-blue-50 transition-all">
+                  <div className="text-center">
+                    <Play className="h-6 w-6 mx-auto mb-2 text-blue-500" />
+                    <div className="font-medium">Start Lesson</div>
+                    <div className="text-xs text-gray-500">Begin learning now</div>
+                  </div>
+                </Button>
+              </Link>
+              
+              <Link href="/dashboard/progress" className="group">
+                <Button variant="outline" className="w-full h-auto p-4 group-hover:border-green-300 group-hover:bg-green-50 transition-all">
+                  <div className="text-center">
+                    <Trophy className="h-6 w-6 mx-auto mb-2 text-green-500" />
+                    <div className="font-medium">View Progress</div>
+                    <div className="text-xs text-gray-500">Track your journey</div>
+                  </div>
+                </Button>
+              </Link>
+              
+              <Link href="/dashboard/games" className="group">
+                <Button variant="outline" className="w-full h-auto p-4 group-hover:border-purple-300 group-hover:bg-purple-50 transition-all">
+                  <div className="text-center">
+                    <Users className="h-6 w-6 mx-auto mb-2 text-purple-500" />
+                    <div className="font-medium">Play Games</div>
+                    <div className="text-xs text-gray-500">Fun learning activities</div>
+                  </div>
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Learning Philosophy */}
       <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
@@ -221,28 +265,30 @@ export default function WelcomePage() {
       </Card>
 
       {/* Call to Action */}
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-800 rounded-full text-sm font-medium mb-4">
-          <Sparkles className="h-4 w-4" />
-          Your language adventure awaits
-        </div>
-        <div className="space-x-4">
-          {user?.role === 'super_admin' && (
-            <Link href="/dashboard/content">
-              <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
-                <BookOpen className="h-5 w-5 mr-2" />
-                Start Your First Story
+      {user?.role !== 'teacher' && (
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-800 rounded-full text-sm font-medium mb-4">
+            <Sparkles className="h-4 w-4" />
+            Your language adventure awaits
+          </div>
+          <div className="space-x-4">
+            {user?.role === 'super_admin' && (
+              <Link href="/dashboard/content">
+                <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
+                  <BookOpen className="h-5 w-5 mr-2" />
+                  Start Your First Story
+                </Button>
+              </Link>
+            )}
+            <Link href="/dashboard/progress">
+              <Button variant="outline" size="lg">
+                <Trophy className="h-5 w-5 mr-2" />
+                View My Progress
               </Button>
             </Link>
-          )}
-          <Link href="/dashboard/progress">
-            <Button variant="outline" size="lg">
-              <Trophy className="h-5 w-5 mr-2" />
-              View My Progress
-            </Button>
-          </Link>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
