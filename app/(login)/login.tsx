@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
-import { Loader2, X, Eye, EyeOff, Check, X as XIcon, GraduationCap, BookOpen } from 'lucide-react';
+import { Loader2, X, Eye, EyeOff, Check, X as XIcon, GraduationCap, BookOpen, Building2 } from 'lucide-react';
 import { signIn, signUp } from './actions';
 import { ActionState } from '@/lib/auth/middleware';
 import { validatePassword } from '@/lib/utils';
@@ -253,13 +253,39 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               </div>
             </div>
           )}
+          {mode === 'signup' && !invitationRole && selectedRole === 'teacher' && (
+            <div>
+              <Label
+                htmlFor="institutionName"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Institution / School Name
+              </Label>
+              <div className="mt-1">
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="institutionName"
+                    name="institutionName"
+                    type="text"
+                    maxLength={200}
+                    className="appearance-none rounded-lg relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
+                    placeholder="e.g. Springfield Elementary School"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Your school or institution will appear in the Institutions directory
+                </p>
+              </div>
+            </div>
+          )}
           {mode === 'signup' && (
             <div>
               <Label
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700"
               >
-                Full Name
+                Your Name
               </Label>
               <div className="mt-1">
                 <Input
@@ -339,7 +365,7 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                       : 'border-red-300 focus:border-red-500 focus:ring-red-500'
                     : 'border-gray-300'
                 }`}
-                placeholder="Enter your password"
+                placeholder={mode === 'signup' ? "Choose your password" : "Enter your password"}
               />
               <button
                 type="button"

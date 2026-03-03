@@ -123,12 +123,13 @@ const signUpSchema = z.object({
   }),
   role: z.enum(['student', 'teacher', 'member']).default('teacher'),
   institutionId: z.string().optional(),
-  parentEmail: z.string().email().optional(), // For linking parent-child accounts
+  institutionName: z.string().optional(),
+  parentEmail: z.string().email().optional(),
   inviteId: z.string().optional()
 });
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
-  const { name, email, password, role, institutionId, parentEmail, inviteId } = data;
+  const { name, email, password, role, institutionId, institutionName, parentEmail, inviteId } = data;
 
   const existingUser = await db
     .select()
@@ -145,6 +146,25 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   }
 
   const passwordHash = await hashPassword(password);
+
+  // If teacher provided an institution name, create the institution first
+  let resolvedInstitutionId = institutionId ? parseInt(institutionId) : undefined;
+  
+  if (!resolvedInstitutionId && institutionName && institutionName.trim() && role === 'teacher') {
+    try {
+      const [createdInstitution] = await db
+        .insert(institutions)
+        .values({
+          name: institutionName.trim(),
+          type: 'school',
+          contactEmail: email.toLowerCase().trim(),
+        })
+        .returning();
+      resolvedInstitutionId = createdInstitution.id;
+    } catch (error) {
+      console.error('Error creating institution:', error);
+    }
+  }
 
   let parentId: number | undefined;
   
@@ -166,7 +186,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     email: email.toLowerCase().trim(),
     passwordHash,
     role: role as UserRole,
-    institutionId: institutionId ? parseInt(institutionId) : undefined,
+    institutionId: resolvedInstitutionId,
     parentId,
   };
 
@@ -265,8 +285,8 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
       .insert(teams)
       .values({
         name: teamName,
-        subscriptionType: institutionId ? 'institution' : 'individual',
-        institutionId: institutionId ? parseInt(institutionId) : undefined,
+        subscriptionType: resolvedInstitutionId ? 'institution' : 'individual',
+        institutionId: resolvedInstitutionId,
         trialEndsAt,
       })
       .returning();
