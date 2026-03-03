@@ -637,7 +637,7 @@ export const bulkInviteStudents = validatedActionWithUser(
 
         // Generate invitation URL
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://www.lingoletics.com');
-        const invitationUrl = `${baseUrl}/sign-up?inviteId=${invitation[0].id}`;
+        const invitationUrl = `${baseUrl}/accept-invitation?inviteId=${invitation[0].id}`;
 
         // Send invitation email
         try {
@@ -758,7 +758,7 @@ export const inviteEducationalUser = validatedActionWithUser(
 
     // Generate invitation URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://www.lingoletics.com');
-    const invitationUrl = `${baseUrl}/sign-up?inviteId=${invitation[0].id}`;
+    const invitationUrl = `${baseUrl}/accept-invitation?inviteId=${invitation[0].id}`;
 
     // Send invitation email
     try {
