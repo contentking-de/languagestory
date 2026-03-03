@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
-import { invitations, users, teams, teamMembers } from '@/lib/db/schema';
+import { invitations, users, teams } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 // Public route to get invitation details for sign-up form

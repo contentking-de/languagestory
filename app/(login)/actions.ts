@@ -471,7 +471,7 @@ export const updateAccount = validatedActionWithUser(
 );
 
 const removeTeamMemberSchema = z.object({
-  memberId: z.number()
+  memberId: z.coerce.number()
 });
 
 export const removeTeamMember = validatedActionWithUser(

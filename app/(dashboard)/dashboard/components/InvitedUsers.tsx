@@ -87,7 +87,9 @@ function isInvitationExpired(invitedAt: string) {
 
 export default function InvitedUsers() {
   const { data, error, isLoading, mutate } = useSWR<{ invitations: Invitation[] }>('/api/invitations', fetcher);
+  const { data: userData } = useSWR<{ role: string }>('/api/user', fetcher);
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const isAdmin = userData?.role === 'super_admin' || userData?.role === 'institution_admin';
 
   const handleResendInvitation = async (invitationId: number) => {
     setProcessingId(invitationId);
@@ -268,6 +270,18 @@ export default function InvitedUsers() {
                     >
                       <XCircle className="h-4 w-4 mr-1" />
                       Cancel
+                    </Button>
+                  )}
+                  {currentStatus === 'accepted' && isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      disabled={processingId === invitation.id}
+                      onClick={() => handleCancelInvitation(invitation.id)}
+                    >
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Remove
                     </Button>
                   )}
                 </div>

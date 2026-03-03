@@ -95,7 +95,7 @@ export async function PATCH(request: NextRequest) {
 
       // Resend invitation email
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://www.lingoletics.com');
-      const invitationUrl = `${baseUrl}/sign-up?inviteId=${invitation.id}`;
+      const invitationUrl = `${baseUrl}/accept-invitation?inviteId=${invitation.id}`;
       
       await sendInvitationEmail({
         email: invitation.email,
@@ -149,7 +149,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
     }
 
-    if (invitation.status === 'accepted') {
+    if (invitation.status === 'accepted' && !['super_admin', 'institution_admin'].includes(user.role)) {
       return NextResponse.json({ error: 'Cannot cancel accepted invitation' }, { status: 400 });
     }
 
