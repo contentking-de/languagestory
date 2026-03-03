@@ -2,15 +2,21 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { lessons, courses } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { getUser } from '@/lib/db/queries';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const fields = searchParams.get('fields');
 
+    const user = await getUser();
+    const canSeeAllStatuses = user?.role === 'super_admin' || user?.role === 'content_creator';
+
+    const publishedFilter = canSeeAllStatuses ? undefined : eq(lessons.is_published, true);
+
     // Minimal mode: only return fields needed for dropdowns/selectors (much faster)
     if (fields === 'minimal') {
-      const lessonsData = await db
+      const query = db
         .select({
           id: lessons.id,
           title: lessons.title,
@@ -19,14 +25,17 @@ export async function GET(request: Request) {
           course_language: courses.language,
         })
         .from(lessons)
-        .leftJoin(courses, eq(lessons.course_id, courses.id))
-        .orderBy(courses.language, lessons.lesson_order);
+        .leftJoin(courses, eq(lessons.course_id, courses.id));
+
+      const lessonsData = publishedFilter
+        ? await query.where(publishedFilter).orderBy(courses.language, lessons.lesson_order)
+        : await query.orderBy(courses.language, lessons.lesson_order);
 
       return NextResponse.json(lessonsData);
     }
 
     // Full mode: return all fields
-    const lessonsData = await db
+    const query = db
       .select({
         id: lessons.id,
         title: lessons.title,
@@ -45,8 +54,11 @@ export async function GET(request: Request) {
         course_level: courses.level,
       })
       .from(lessons)
-      .leftJoin(courses, eq(lessons.course_id, courses.id))
-      .orderBy(courses.language, lessons.lesson_order);
+      .leftJoin(courses, eq(lessons.course_id, courses.id));
+
+    const lessonsData = publishedFilter
+      ? await query.where(publishedFilter).orderBy(courses.language, lessons.lesson_order)
+      : await query.orderBy(courses.language, lessons.lesson_order);
 
     return NextResponse.json(lessonsData);
   } catch (error) {

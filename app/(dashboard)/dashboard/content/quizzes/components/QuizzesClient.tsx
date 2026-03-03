@@ -68,6 +68,7 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
   // Check if user can delete quizzes (only super_admin)
   const canDelete = userRole === 'super_admin';
+  const canSeeAllStatuses = userRole === 'super_admin' || userRole === 'content_creator';
 
   useEffect(() => {
     fetchQuizzes();
@@ -154,6 +155,8 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
   };
 
   const filteredQuizzes = quizzes.filter((quiz: Quiz) => {
+    if (!canSeeAllStatuses && !quiz.is_published) return false;
+
     const parsedDescription = parseQuizDescription(quiz.description);
     const matchesSearch = quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          parsedDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -304,7 +307,7 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className={`grid grid-cols-1 ${canSeeAllStatuses ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-4`}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -330,16 +333,18 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
               </SelectContent>
             </Select>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-              </SelectContent>
-            </Select>
+            {canSeeAllStatuses && (
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
 
             <Select value={languageFilter} onValueChange={setLanguageFilter}>
               <SelectTrigger>
@@ -396,7 +401,9 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
                     )}
                   </div>
                 </div>
-                <div className={`w-3 h-3 rounded-full ${quiz.is_published ? 'bg-green-500' : 'bg-gray-400'}`} />
+                {canSeeAllStatuses && (
+                  <div className={`w-3 h-3 rounded-full ${quiz.is_published ? 'bg-green-500' : 'bg-gray-400'}`} />
+                )}
               </CardHeader>
               
               <CardContent className="space-y-4">
@@ -443,10 +450,14 @@ export function QuizzesClient({ userRole }: QuizzesClientProps) {
                 </div>
 
                 <div className="flex items-center gap-1 text-sm">
-                  <span className={`${quiz.is_published ? 'text-green-600' : 'text-gray-500'}`}>
-                    {quiz.is_published ? 'Published' : 'Draft'}
-                  </span>
-                  <span className="text-gray-400">•</span>
+                  {canSeeAllStatuses && (
+                    <>
+                      <span className={`${quiz.is_published ? 'text-green-600' : 'text-gray-500'}`}>
+                        {quiz.is_published ? 'Published' : 'Draft'}
+                      </span>
+                      <span className="text-gray-400">•</span>
+                    </>
+                  )}
                   <span className="text-gray-500">
                     {new Date(quiz.created_at).toLocaleDateString()}
                   </span>

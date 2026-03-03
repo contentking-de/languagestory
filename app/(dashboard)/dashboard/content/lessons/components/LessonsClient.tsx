@@ -62,6 +62,7 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
 
   // Check if user can create/edit lessons
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
+  const canSeeAllStatuses = userRole === 'super_admin' || userRole === 'content_creator';
 
   useEffect(() => {
     fetchLessons();
@@ -82,6 +83,8 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
   };
 
   const filteredLessons = lessons.filter((lesson: Lesson) => {
+    if (!canSeeAllStatuses && !lesson.is_published) return false;
+
     const matchesSearch = lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          lesson.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          lesson.course_title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -241,7 +244,7 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className={`grid grid-cols-1 ${canSeeAllStatuses ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4`}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -279,16 +282,18 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
               </SelectContent>
             </Select>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-              </SelectContent>
-            </Select>
+            {canSeeAllStatuses && (
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -305,7 +310,9 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
                   <th className="text-left p-3 font-medium text-gray-900">Type</th>
                   <th className="text-left p-3 font-medium text-gray-900">Duration</th>
                   <th className="text-left p-3 font-medium text-gray-900">Points</th>
-                  <th className="text-left p-3 font-medium text-gray-900">Status</th>
+                  {canSeeAllStatuses && (
+                    <th className="text-left p-3 font-medium text-gray-900">Status</th>
+                  )}
                   <th className="text-left p-3 font-medium text-gray-900">Actions</th>
                 </tr>
               </thead>
@@ -361,14 +368,16 @@ export function LessonsClient({ userRole }: LessonsClientProps) {
                           <span className="text-sm">{lesson.points_value}</span>
                         </div>
                       </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-1">
-                          <div className={`w-2 h-2 rounded-full ${lesson.is_published ? 'bg-green-500' : 'bg-gray-400'}`} />
-                          <span className={`text-sm ${lesson.is_published ? 'text-green-600' : 'text-gray-500'}`}>
-                            {lesson.is_published ? 'Published' : 'Draft'}
-                          </span>
-                        </div>
-                      </td>
+                      {canSeeAllStatuses && (
+                        <td className="p-3">
+                          <div className="flex items-center gap-1">
+                            <div className={`w-2 h-2 rounded-full ${lesson.is_published ? 'bg-green-500' : 'bg-gray-400'}`} />
+                            <span className={`text-sm ${lesson.is_published ? 'text-green-600' : 'text-gray-500'}`}>
+                              {lesson.is_published ? 'Published' : 'Draft'}
+                            </span>
+                          </div>
+                        </td>
+                      )}
                       <td className="p-3">
                         <div className="flex gap-1">
                           <Link href={`/dashboard/content/lessons/${lesson.id}`}>

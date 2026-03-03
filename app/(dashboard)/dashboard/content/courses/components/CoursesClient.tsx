@@ -57,6 +57,7 @@ export function CoursesClient({ userRole }: CoursesClientProps) {
 
   // Check if user can create/edit courses
   const canCreateEdit = userRole === 'super_admin' || userRole === 'content_creator';
+  const canSeeAllStatuses = userRole === 'super_admin' || userRole === 'content_creator';
 
   useEffect(() => {
     fetchCourses();
@@ -104,6 +105,8 @@ export function CoursesClient({ userRole }: CoursesClientProps) {
   };
 
   const filteredCourses = courses.filter((course: Course) => {
+    if (!canSeeAllStatuses && !course.is_published) return false;
+
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLanguage = languageFilter === 'all' || course.language === languageFilter;
@@ -230,7 +233,7 @@ export function CoursesClient({ userRole }: CoursesClientProps) {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className={`grid grid-cols-1 ${canSeeAllStatuses ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4`}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -280,16 +283,18 @@ export function CoursesClient({ userRole }: CoursesClientProps) {
               </SelectContent>
             </Select>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-              </SelectContent>
-            </Select>
+            {canSeeAllStatuses && (
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -331,12 +336,14 @@ export function CoursesClient({ userRole }: CoursesClientProps) {
                   <Trophy className="h-4 w-4" />
                   <span>{course.total_points} points</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${course.is_published ? 'bg-green-500' : 'bg-gray-400'}`} />
-                  <span className={`text-sm ${course.is_published ? 'text-green-600' : 'text-gray-500'}`}>
-                    {course.is_published ? 'Published' : 'Draft'}
-                  </span>
-                </div>
+                {canSeeAllStatuses && (
+                  <div className="flex items-center gap-1">
+                    <div className={`w-2 h-2 rounded-full ${course.is_published ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    <span className={`text-sm ${course.is_published ? 'text-green-600' : 'text-gray-500'}`}>
+                      {course.is_published ? 'Published' : 'Draft'}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2 pt-2">

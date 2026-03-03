@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { courses, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { getUser } from '@/lib/db/queries';
 
 export async function GET() {
   try {
-    const coursesData = await db
+    const user = await getUser();
+    const canSeeAllStatuses = user?.role === 'super_admin' || user?.role === 'content_creator';
+
+    const publishedFilter = canSeeAllStatuses ? undefined : eq(courses.is_published, true);
+
+    const query = db
       .select({
         id: courses.id,
         title: courses.title,
@@ -21,8 +27,11 @@ export async function GET() {
         creator_name: users.name,
       })
       .from(courses)
-      .leftJoin(users, eq(courses.created_by, users.id))
-      .orderBy(courses.created_at);
+      .leftJoin(users, eq(courses.created_by, users.id));
+
+    const coursesData = publishedFilter
+      ? await query.where(publishedFilter).orderBy(courses.created_at)
+      : await query.orderBy(courses.created_at);
 
     return NextResponse.json(coursesData);
   } catch (error) {

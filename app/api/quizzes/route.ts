@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { quizzes, lessons, courses, quiz_questions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { getUser } from '@/lib/db/queries';
 
 // Helper function to automatically generate gap fill questions
 async function generateGapFillQuestions(quizId: number, gapFillConfig: any) {
@@ -57,7 +58,12 @@ async function generateGapFillQuestions(quizId: number, gapFillConfig: any) {
 
 export async function GET() {
   try {
-    const quizzesData = await db
+    const user = await getUser();
+    const canSeeAllStatuses = user?.role === 'super_admin' || user?.role === 'content_creator';
+
+    const publishedFilter = canSeeAllStatuses ? undefined : eq(quizzes.is_published, true);
+
+    const query = db
       .select({
         id: quizzes.id,
         title: quizzes.title,
@@ -77,8 +83,11 @@ export async function GET() {
       })
       .from(quizzes)
       .leftJoin(lessons, eq(quizzes.lesson_id, lessons.id))
-      .leftJoin(courses, eq(lessons.course_id, courses.id))
-      .orderBy(quizzes.created_at);
+      .leftJoin(courses, eq(lessons.course_id, courses.id));
+
+    const quizzesData = publishedFilter
+      ? await query.where(publishedFilter).orderBy(quizzes.created_at)
+      : await query.orderBy(quizzes.created_at);
 
     return NextResponse.json(quizzesData);
   } catch (error) {

@@ -282,8 +282,8 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto p-0 xl:p-4">
-          {/* Trial Banner - never shown to super_admin */}
-          {userRole !== 'super_admin' && accessStatus === 'trial' && trialDaysRemaining !== null && (
+          {/* Trial Banner - never shown to super_admin or student */}
+          {userRole !== 'super_admin' && userRole !== 'student' && accessStatus === 'trial' && trialDaysRemaining !== null && (
             <div className={`mx-4 mt-4 xl:mx-0 xl:mt-0 mb-4 rounded-lg border px-4 py-3 flex items-center justify-between ${
               trialDaysRemaining > 7
                 ? 'bg-green-50 border-green-200 text-green-800'
@@ -309,7 +309,7 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
               </Link>
             </div>
           )}
-          {userRole !== 'super_admin' && accessStatus === 'expired' && (
+          {userRole !== 'super_admin' && userRole !== 'student' && accessStatus === 'expired' && (
             <div className="mx-4 mt-4 xl:mx-0 xl:mt-0 mb-4 rounded-lg border bg-red-50 border-red-200 text-red-800 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 flex-shrink-0" />
