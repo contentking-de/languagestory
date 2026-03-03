@@ -9,7 +9,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "update:vocab-levels": "npx tsx scripts/update-vocabulary-levels.ts"
+    "update:vocab-levels": "npx tsx scripts/update-vocabulary-levels.ts",
+    "optimize:images": "npx tsx scripts/optimize-blob-images.ts",
+    "optimize:images:dry": "npx tsx scripts/optimize-blob-images.ts --dry-run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.57.0",
@@ -23,6 +25,7 @@
     "@types/node": "^22.15.18",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
+    "@types/sharp": "^0.32.0",
     "@types/xml2js": "^0.4.14",
     "@vercel/blob": "^1.1.1",
     "autoprefixer": "^10.4.21",
@@ -47,6 +50,7 @@
     "recharts": "^3.1.0",
     "resend": "^4.7.0",
     "server-only": "^0.0.1",
+    "sharp": "^0.34.5",
     "stripe": "^18.1.0",
     "swr": "^2.3.3",
     "tailwind-merge": "^3.3.0",

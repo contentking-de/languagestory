@@ -43,3 +43,6 @@ public/media/*
 !public/media/done-success.mp3
 !public/media/reached.mp3
 !public/media/failed.mp3
+
+# One-off scripts
+scripts/optimize-blob-images.ts

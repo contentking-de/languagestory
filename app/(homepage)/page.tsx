@@ -2517,15 +2517,6 @@ export default function HomePage() {
                     Pricing
                   </a>
                 </li>
-                <li>
-                  <a 
-                    href="#" 
-                    onClick={(e) => { e.preventDefault(); openModal('redeem'); }} 
-                    className="text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
-                  >
-                    Redeem An Enrollment Key
-                  </a>
-                </li>
               </ul>
             </div>
 
