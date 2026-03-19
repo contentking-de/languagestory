@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserProgressSummary } from '@/components/user-progress-summary';
 import { 
   Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight,
-  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage, Ticket, FileText, MessageCircle, UserCircle, Clock, AlertTriangle
+  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage, Ticket, FileText, MessageCircle, UserCircle, Clock, AlertTriangle, Dumbbell
 } from 'lucide-react';
 
 interface NavItem {
@@ -29,7 +29,13 @@ interface DashboardNavigationProps {
 export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining, trialEndsAt, planName, children }: DashboardNavigationProps) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>(['/dashboard/content']);
+  const [expandedItems, setExpandedItems] = useState<string[]>(() => {
+    const initial = ['/dashboard/content'];
+    if (pathname.startsWith('/dashboard/content/vocabulary')) {
+      initial.push('/dashboard/content/vocabulary');
+    }
+    return initial;
+  });
 
   // Full navigation for Super Admin and Content Creator
   const fullNavItems: NavItem[] = [
@@ -42,7 +48,10 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
         { href: '/dashboard/content/courses', icon: GraduationCap, label: 'Courses' },
         { href: '/dashboard/content/lessons', icon: BookOpen, label: 'Lessons' },
         { href: '/dashboard/content/quizzes', icon: FileQuestion, label: 'Quizzes' },
-        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' },
+        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary', subItems: [
+          { href: '/dashboard/content/vocabulary', icon: Languages, label: 'All Vocabulary' },
+          { href: '/dashboard/content/vocabulary/practice', icon: Dumbbell, label: 'Practice' },
+        ]},
         { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
         { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
@@ -86,7 +95,10 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
         { href: '/dashboard/content/courses', icon: GraduationCap, label: 'Courses' },
         { href: '/dashboard/content/lessons', icon: BookOpen, label: 'Lessons' },
         { href: '/dashboard/content/quizzes', icon: FileQuestion, label: 'Quizzes' },
-        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' },
+        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary', subItems: [
+          { href: '/dashboard/content/vocabulary', icon: Languages, label: 'All Vocabulary' },
+          { href: '/dashboard/content/vocabulary/practice', icon: Dumbbell, label: 'Practice' },
+        ]},
         { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
         { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
@@ -114,7 +126,10 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
         { href: '/dashboard/content/courses', icon: GraduationCap, label: 'Courses' },
         { href: '/dashboard/content/lessons', icon: BookOpen, label: 'Lessons' },
         { href: '/dashboard/content/quizzes', icon: FileQuestion, label: 'Quizzes' },
-        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' },
+        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary', subItems: [
+          { href: '/dashboard/content/vocabulary', icon: Languages, label: 'All Vocabulary' },
+          { href: '/dashboard/content/vocabulary/practice', icon: Dumbbell, label: 'Practice' },
+        ]},
         { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
         { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
@@ -134,7 +149,10 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
         { href: '/dashboard/content/courses', icon: GraduationCap, label: 'Courses' },
         { href: '/dashboard/content/lessons', icon: BookOpen, label: 'Lessons' },
         { href: '/dashboard/content/quizzes', icon: FileQuestion, label: 'Quizzes' },
-        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary' },
+        { href: '/dashboard/content/vocabulary', icon: Languages, label: 'Vocabulary', subItems: [
+          { href: '/dashboard/content/vocabulary', icon: Languages, label: 'All Vocabulary' },
+          { href: '/dashboard/content/vocabulary/practice', icon: Dumbbell, label: 'Practice' },
+        ]},
         { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
         { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
@@ -161,10 +179,10 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
   };
 
   const isExpanded = (href: string) => expandedItems.includes(href);
-  const isActiveOrChild = (item: NavItem) => {
+  const isActiveOrChild = (item: NavItem): boolean => {
     if (pathname === item.href) return true;
     if (item.subItems) {
-      return item.subItems.some(subItem => pathname === subItem.href);
+      return item.subItems.some(subItem => isActiveOrChild(subItem));
     }
     return false;
   };
