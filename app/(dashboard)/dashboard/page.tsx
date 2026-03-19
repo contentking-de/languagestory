@@ -237,6 +237,10 @@ function InviteTeamMember() {
   const canInviteStudents = invitableRoles.includes('student');
   const isTeacher = user?.role === 'teacher';
 
+  // State for class name (combobox)
+  const { data: classNamesData } = useSWR<{ classNames: { id: number; name: string }[] }>('/api/class-names', fetcher);
+  const [className, setClassName] = useState('');
+
   // State for bulk invitation
   const [emails, setEmails] = useState('');
   const [uploadedEmails, setUploadedEmails] = useState<string[]>([]);
@@ -360,6 +364,30 @@ function InviteTeamMember() {
                     </div>
                   ))}
                 </RadioGroup>
+              </div>
+              <div>
+                <Label htmlFor="className" className="mb-2">
+                  Class (optional)
+                </Label>
+                <Input
+                  id="className"
+                  name="className"
+                  type="text"
+                  list="class-name-options"
+                  placeholder="e.g. 8c"
+                  value={className}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setClassName(e.target.value)}
+                  disabled={!canInvite}
+                  autoComplete="off"
+                />
+                <datalist id="class-name-options">
+                  {classNamesData?.classNames?.map((cn) => (
+                    <option key={cn.id} value={cn.name} />
+                  ))}
+                </datalist>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Type a new class name or select an existing one
+                </p>
               </div>
               {inviteState?.error && (
                 <p className="text-red-500">{inviteState.error}</p>
@@ -497,6 +525,29 @@ function InviteTeamMember() {
                   </p>
                 </div>
 
+                <div>
+                  <Label htmlFor="bulk-className" className="mb-2">
+                    Class (optional)
+                  </Label>
+                  <Input
+                    id="bulk-className"
+                    type="text"
+                    list="class-name-options-bulk"
+                    placeholder="e.g. 8c"
+                    value={className}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setClassName(e.target.value)}
+                    autoComplete="off"
+                  />
+                  <datalist id="class-name-options-bulk">
+                    {classNamesData?.classNames?.map((cn) => (
+                      <option key={cn.id} value={cn.name} />
+                    ))}
+                  </datalist>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Assign all students to a class
+                  </p>
+                </div>
+
                 {bulkInviteState?.error && (
                   <p className="text-red-500">{bulkInviteState.error}</p>
                 )}
@@ -530,6 +581,7 @@ function InviteTeamMember() {
                   <input type="hidden" name="names" value={uploadedNames.join(', ')} />
                   <input type="hidden" name="classes" value={uploadedClasses.join(', ')} />
                   <input type="hidden" name="yearGroups" value={uploadedYearGroups.join(', ')} />
+                  <input type="hidden" name="className" value={className} />
                   <Button
                     type="submit"
                     className="bg-orange-500 hover:bg-orange-600 text-white w-full"

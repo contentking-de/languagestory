@@ -13,6 +13,7 @@ import {
   teachingAssignments,
   classes,
   classEnrollments,
+  teamClassNames,
   ActivityType,
   userRoleEnum,
   languageEnum,
@@ -508,6 +509,7 @@ const inviteEducationalUserSchema = z.object({
   email: z.string().email('Invalid email address'),
   role: z.enum(['teacher', 'student', 'parent', 'content_creator', 'member']),
   language: z.enum(['french', 'german', 'spanish', 'all']).default('all'),
+  className: z.string().max(100).optional(),
   institutionId: z.string().optional(),
   classId: z.string().optional(),
 });
@@ -516,9 +518,9 @@ const inviteEducationalUserSchema = z.object({
 const bulkInviteStudentsSchema = z.object({
   emails: z.string().min(1, 'At least one email is required'),
   language: z.enum(['french', 'german', 'spanish', 'all']).default('all'),
+  className: z.string().max(100).optional(),
   institutionId: z.string().optional(),
   classId: z.string().optional(),
-  // Additional data from Excel upload
   names: z.string().optional(),
   classes: z.string().optional(),
   yearGroups: z.string().optional(),
@@ -527,7 +529,7 @@ const bulkInviteStudentsSchema = z.object({
 export const bulkInviteStudents = validatedActionWithUser(
   bulkInviteStudentsSchema,
   async (data, _, user) => {
-    const { emails, language, institutionId, classId, names, classes, yearGroups } = data;
+    const { emails, language, className, institutionId, classId, names, classes, yearGroups } = data;
     const userWithTeam = await getUserWithTeam(user.id);
 
     if (!userWithTeam?.teamId) {
@@ -585,6 +587,27 @@ export const bulkInviteStudents = validatedActionWithUser(
 
     const teamName = team[0]?.name || 'Lingoletics.com Team';
 
+    // Save new class name for future use
+    if (className?.trim()) {
+      const existing = await db
+        .select()
+        .from(teamClassNames)
+        .where(
+          and(
+            eq(teamClassNames.teamId, userWithTeam.teamId),
+            eq(teamClassNames.name, className.trim())
+          )
+        )
+        .limit(1);
+
+      if (existing.length === 0) {
+        await db.insert(teamClassNames).values({
+          teamId: userWithTeam.teamId,
+          name: className.trim(),
+        });
+      }
+    }
+
     // Process each email
     for (let i = 0; i < emailList.length; i++) {
       const email = emailList[i];
@@ -632,6 +655,7 @@ export const bulkInviteStudents = validatedActionWithUser(
           email,
           role: 'student',
           language,
+          className: className?.trim() || null,
           invitedBy: user.id,
         }).returning();
 
@@ -690,7 +714,7 @@ export const bulkInviteStudents = validatedActionWithUser(
 export const inviteEducationalUser = validatedActionWithUser(
   inviteEducationalUserSchema,
   async (data, _, user) => {
-    const { email, role, language, institutionId, classId } = data;
+    const { email, role, language, className, institutionId, classId } = data;
     const userWithTeam = await getUserWithTeam(user.id);
 
     if (!userWithTeam?.teamId) {
@@ -744,8 +768,30 @@ export const inviteEducationalUser = validatedActionWithUser(
       email,
       role,
       language,
+      className: className?.trim() || null,
       invitedBy: user.id,
     }).returning();
+
+    // Save new class name for future use
+    if (className?.trim()) {
+      const existing = await db
+        .select()
+        .from(teamClassNames)
+        .where(
+          and(
+            eq(teamClassNames.teamId, userWithTeam.teamId),
+            eq(teamClassNames.name, className.trim())
+          )
+        )
+        .limit(1);
+
+      if (existing.length === 0) {
+        await db.insert(teamClassNames).values({
+          teamId: userWithTeam.teamId,
+          name: className.trim(),
+        });
+      }
+    }
 
     // Get team name for the email
     const team = await db

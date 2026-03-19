@@ -170,11 +170,21 @@ export const invitations = pgTable('invitations', {
   email: varchar('email', { length: 255 }).notNull(),
   role: userRoleEnum('role').notNull(),
   language: languageEnum('language').default('all'),
+  className: varchar('class_name', { length: 100 }),
   invitedBy: integer('invited_by')
     .notNull()
     .references(() => users.id),
   invitedAt: timestamp('invited_at').notNull().defaultNow(),
   status: varchar('status', { length: 20 }).notNull().default('pending'),
+});
+
+export const teamClassNames = pgTable('team_class_names', {
+  id: serial('id').primaryKey(),
+  teamId: integer('team_id')
+    .notNull()
+    .references(() => teams.id),
+  name: varchar('name', { length: 100 }).notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 // Relations
@@ -245,6 +255,7 @@ export const teamsRelations = relations(teams, ({ one, many }) => ({
   teamMembers: many(teamMembers),
   activityLogs: many(activityLogs),
   invitations: many(invitations),
+  classNames: many(teamClassNames),
 }));
 
 export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
@@ -323,6 +334,13 @@ export const invitationsRelations = relations(invitations, ({ one }) => ({
   }),
 }));
 
+export const teamClassNamesRelations = relations(teamClassNames, ({ one }) => ({
+  team: one(teams, {
+    fields: [teamClassNames.teamId],
+    references: [teams.id],
+  }),
+}));
+
 // Type exports
 export type Institution = typeof institutions.$inferSelect;
 export type NewInstitution = typeof institutions.$inferInsert;
@@ -348,6 +366,8 @@ export type TicketHistory = typeof ticketHistory.$inferSelect;
 export type NewTicketHistory = typeof ticketHistory.$inferInsert;
 export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
+export type TeamClassName = typeof teamClassNames.$inferSelect;
+export type NewTeamClassName = typeof teamClassNames.$inferInsert;
 
 export type TeamDataWithMembers = Team & {
   teamMembers: (TeamMember & {

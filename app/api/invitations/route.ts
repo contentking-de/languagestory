@@ -20,6 +20,7 @@ export async function GET() {
         email: invitations.email,
         role: invitations.role,
         language: invitations.language,
+        className: invitations.className,
         status: invitations.status,
         invitedAt: invitations.invitedAt,
         inviterName: users.name,

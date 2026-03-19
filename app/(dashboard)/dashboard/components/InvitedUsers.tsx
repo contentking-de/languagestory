@@ -14,6 +14,7 @@ type Invitation = {
   email: string;
   role: string;
   language: string;
+  className: string | null;
   status: string;
   invitedAt: string;
   inviterName: string | null;
@@ -216,6 +217,12 @@ export default function InvitedUsers() {
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <span>{getRoleDisplayName(invitation.role as UserRole)}</span>
+                      {invitation.className && (
+                        <>
+                          <span>•</span>
+                          <span>{invitation.className}</span>
+                        </>
+                      )}
                       <span>•</span>
                       <span>{getLanguageDisplayName(invitation.language as Language)}</span>
                       <span>•</span>
