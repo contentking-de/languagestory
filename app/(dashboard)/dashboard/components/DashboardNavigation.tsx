@@ -34,6 +34,9 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
     if (pathname.startsWith('/dashboard/content/vocabulary')) {
       initial.push('/dashboard/content/vocabulary');
     }
+    if (pathname.startsWith('/dashboard/content/grammar')) {
+      initial.push('/dashboard/content/grammar');
+    }
     return initial;
   });
 
@@ -52,7 +55,10 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
           { href: '/dashboard/content/vocabulary', icon: Languages, label: 'All Vocabulary' },
           { href: '/dashboard/content/vocabulary/practice', icon: Dumbbell, label: 'Practice' },
         ]},
-        { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
+        { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar', subItems: [
+          { href: '/dashboard/content/grammar', icon: FileText, label: 'All Grammar' },
+          { href: '/dashboard/content/grammar/practice', icon: Dumbbell, label: 'Practice' },
+        ]},
         { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
       ]
@@ -99,7 +105,10 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
           { href: '/dashboard/content/vocabulary', icon: Languages, label: 'All Vocabulary' },
           { href: '/dashboard/content/vocabulary/practice', icon: Dumbbell, label: 'Practice' },
         ]},
-        { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
+        { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar', subItems: [
+          { href: '/dashboard/content/grammar', icon: FileText, label: 'All Grammar' },
+          { href: '/dashboard/content/grammar/practice', icon: Dumbbell, label: 'Practice' },
+        ]},
         { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
       ]
@@ -130,7 +139,10 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
           { href: '/dashboard/content/vocabulary', icon: Languages, label: 'All Vocabulary' },
           { href: '/dashboard/content/vocabulary/practice', icon: Dumbbell, label: 'Practice' },
         ]},
-        { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
+        { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar', subItems: [
+          { href: '/dashboard/content/grammar', icon: FileText, label: 'All Grammar' },
+          { href: '/dashboard/content/grammar/practice', icon: Dumbbell, label: 'Practice' },
+        ]},
         { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
       ]
@@ -153,7 +165,10 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
           { href: '/dashboard/content/vocabulary', icon: Languages, label: 'All Vocabulary' },
           { href: '/dashboard/content/vocabulary/practice', icon: Dumbbell, label: 'Practice' },
         ]},
-        { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar' },
+        { href: '/dashboard/content/grammar', icon: FileText, label: 'Grammar', subItems: [
+          { href: '/dashboard/content/grammar', icon: FileText, label: 'All Grammar' },
+          { href: '/dashboard/content/grammar/practice', icon: Dumbbell, label: 'Practice' },
+        ]},
         { href: '/dashboard/content/conversation', icon: MessageCircle, label: 'Conversation' },
         { href: '/dashboard/games', icon: Gamepad2, label: 'Games' }
       ]
