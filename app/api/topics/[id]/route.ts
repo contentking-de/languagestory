@@ -2,12 +2,18 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { topics } from '@/lib/db/content-schema';
 import { eq } from 'drizzle-orm';
+import { getUserWithTeamData } from '@/lib/db/queries';
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserWithTeamData();
+    if (!user || (user.role !== 'super_admin' && user.role !== 'content_creator')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     const topicId = parseInt(id);
     if (isNaN(topicId)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
@@ -44,6 +50,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserWithTeamData();
+    if (!user || (user.role !== 'super_admin' && user.role !== 'content_creator')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     const topicId = parseInt(id);
     if (isNaN(topicId)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });

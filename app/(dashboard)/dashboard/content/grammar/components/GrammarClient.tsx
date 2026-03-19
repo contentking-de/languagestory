@@ -31,6 +31,7 @@ export function GrammarClient({ userRole }: { userRole: string }) {
   const [search, setSearch] = useState('');
   const [languageFilter, setLanguageFilter] = useState('all');
 
+  const canEdit = userRole === 'super_admin' || userRole === 'content_creator';
   const canDelete = userRole === 'super_admin';
 
   useEffect(() => {
@@ -158,11 +159,13 @@ export function GrammarClient({ userRole }: { userRole: string }) {
                     <Eye className="h-4 w-4 mr-1" /> View
                   </Button>
                 </Link>
-                <Link href={`/dashboard/content/grammar/${g.id}/edit`}>
-                  <Button size="sm" variant="secondary">
-                    <Edit className="h-4 w-4 mr-1" /> Edit
-                  </Button>
-                </Link>
+                {canEdit && (
+                  <Link href={`/dashboard/content/grammar/${g.id}/edit`}>
+                    <Button size="sm" variant="secondary">
+                      <Edit className="h-4 w-4 mr-1" /> Edit
+                    </Button>
+                  </Link>
+                )}
                 {canDelete && (
                   <Button size="sm" variant="destructive" onClick={() => handleDelete(g.id, g.title)}>
                     <Trash2 className="h-4 w-4 mr-1" /> Delete

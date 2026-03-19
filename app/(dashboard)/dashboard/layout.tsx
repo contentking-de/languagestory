@@ -39,7 +39,13 @@ export default async function DashboardLayout({
 
   // Super admins always have full access regardless of subscription status
   const userIsSuperAdmin = isSuperAdmin(user.role as any);
-  const effectiveAccessStatus = userIsSuperAdmin ? 'active' : (accessStatus?.status || 'expired');
+  // Teachers and institution admins without a team are treated as active
+  // (they may have been created with a manual role assignment)
+  const hasNoTeam = !user.teamId;
+  const isAdminRole = user.role === 'teacher' || user.role === 'institution_admin';
+  const effectiveAccessStatus = userIsSuperAdmin || (hasNoTeam && isAdminRole)
+    ? 'active'
+    : (accessStatus?.status || 'expired');
 
   return (
     <DashboardNavigation 

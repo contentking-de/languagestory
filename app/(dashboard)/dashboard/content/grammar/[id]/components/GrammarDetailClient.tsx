@@ -21,6 +21,8 @@ export function GrammarDetailClient({ userRole }: { userRole: string }) {
   const [saving, setSaving] = useState(false);
   const [lessons, setLessons] = useState<Array<{ id: number; title: string }>>([]);
 
+  const canEdit = userRole === 'super_admin' || userRole === 'content_creator';
+
   useEffect(() => {
     const m = location.pathname.match(/\/grammar\/(\d+)/);
     const id = m ? parseInt(m[1]) : NaN;
@@ -71,13 +73,20 @@ export function GrammarDetailClient({ userRole }: { userRole: string }) {
         </CardHeader>
         <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2 items-center">
-            <Input value={item.title} onChange={(e) => setItem({ ...item, title: e.target.value })} />
+            {canEdit ? (
+              <Input value={item.title} onChange={(e) => setItem({ ...item, title: e.target.value })} />
+            ) : (
+              <h2 className="text-xl font-semibold">{item.title}</h2>
+            )}
             <Badge className={item.is_published ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
               {item.is_published ? 'published' : 'draft'}
             </Badge>
-            <Button variant="outline" onClick={() => setItem({ ...item, is_published: !item.is_published })}>
-              Toggle Publish
-            </Button>
+            {canEdit && (
+              <Button variant="outline" onClick={() => setItem({ ...item, is_published: !item.is_published })}>
+                Toggle Publish
+              </Button>
+            )}
+          {canEdit && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Assign to lesson:</span>
             <Select value={item.lesson_id == null ? 'none' : String(item.lesson_id)} onValueChange={(v) => setItem({ ...item, lesson_id: v === 'none' ? null : Number(v) })}>
@@ -92,7 +101,8 @@ export function GrammarDetailClient({ userRole }: { userRole: string }) {
               </SelectContent>
             </Select>
           </div>
-            <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>
+          )}
+            {canEdit && <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>}
           </div>
 
           <div className="space-y-3">
@@ -123,11 +133,15 @@ export function GrammarDetailClient({ userRole }: { userRole: string }) {
             {Array.isArray(exercises) && exercises.length > 0 && (
               <>
                 {exercises.map((ex: any, idx: number) => (
-                  <ExerciseEditor key={idx} ex={ex} onChange={(updated) => {
-                    const next = [...exercises];
-                    next[idx] = updated;
-                    setItem({ ...item, interactive_data: { ...item.interactive_data, exercises: next } });
-                  }} />
+                  canEdit ? (
+                    <ExerciseEditor key={idx} ex={ex} onChange={(updated) => {
+                      const next = [...exercises];
+                      next[idx] = updated;
+                      setItem({ ...item, interactive_data: { ...item.interactive_data, exercises: next } });
+                    }} />
+                  ) : (
+                    <ExerciseViewer key={idx} ex={ex} />
+                  )
                 ))}
               </>
             )}
@@ -173,6 +187,41 @@ function ExerciseEditor({ ex, onChange }: { ex: any; onChange: (v: any) => void 
         <div>
           <div className="text-xs text-gray-500">Explanation</div>
           <Input value={ex.explanation || ''} onChange={(e) => onChange({ ...ex, explanation: e.target.value })} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ExerciseViewer({ ex }: { ex: any }) {
+  return (
+    <Card>
+      <CardContent className="p-4 space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div>
+            <div className="text-xs text-gray-500">Type</div>
+            <div className="text-sm">{ex.type || '—'}</div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-500">Difficulty</div>
+            <div className="text-sm">{ex.difficulty_level ?? '—'}</div>
+          </div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-500">Instruction</div>
+          <div className="text-sm">{ex.instruction || '—'}</div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-500">Question</div>
+          <div className="text-sm">{ex.question || '—'}</div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-500">Correct Answer</div>
+          <div className="text-sm">{ex.correct_answer || '—'}</div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-500">Explanation</div>
+          <div className="text-sm">{ex.explanation || '—'}</div>
         </div>
       </CardContent>
     </Card>
