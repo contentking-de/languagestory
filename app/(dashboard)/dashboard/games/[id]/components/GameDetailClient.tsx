@@ -28,7 +28,9 @@ import {
   WordSearchGame, 
   WordMixupGame, 
   WordAssociationGame,
-  WordMatchGame 
+  WordMatchGame,
+  VocabRunGame,
+  ListenTypeGame 
 } from '../../components/GameRenderers';
 
 interface DatabaseGame {
@@ -221,6 +223,10 @@ export function GameDetailClient({ userRole }: GameDetailClientProps) {
           return <WordAssociationGame config={parsedConfig.wordAssociation || parsedConfig} />;
         case 'word_match':
           return <WordMatchGame config={parsedConfig.wordMatch || parsedConfig} />;
+        case 'vocab_run':
+          return <VocabRunGame config={parsedConfig.vocabRun || parsedConfig} />;
+        case 'listen_type':
+          return <ListenTypeGame config={parsedConfig.listenType || parsedConfig} />;
         default:
           return (
             <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">

@@ -7,7 +7,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 // Audio is pre-generated and cached for these lessons.
 const TEASER_STORY_IDS: Record<string, number[]> = {
   spanish: [1039, 1029, 1045],
-  german:  [976, 734, 937],
+  german:  [939, 734, 904],
   french:  [692, 673, 681],
 };
 
