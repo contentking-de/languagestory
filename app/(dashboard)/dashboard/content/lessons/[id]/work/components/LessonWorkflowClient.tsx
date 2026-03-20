@@ -360,7 +360,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
             activities.push({
               activity_type: 'COMPLETE_VOCABULARY',
               reference_id: lessonId,
-              reference_type: 'lesson',
+              reference_type: 'vocabulary',
               language: lesson?.course_language,
               metadata: { lesson_id: lessonId },
             });
@@ -393,7 +393,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
           activities.push({
             activity_type: 'COMPLETE_CONTENT',
             reference_id: lessonId,
-            reference_type: 'lesson',
+            reference_type: 'content',
             language: lesson?.course_language,
             metadata: { lesson_id: lessonId },
           });
@@ -401,7 +401,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
           activities.push({
             activity_type: 'COMPLETE_CULTURAL',
             reference_id: lessonId,
-            reference_type: 'lesson',
+            reference_type: 'cultural',
             language: lesson?.course_language,
             metadata: { lesson_id: lessonId },
           });
