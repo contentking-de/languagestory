@@ -77,13 +77,14 @@ export function InlineVocabTrainer({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        <p className="text-gray-700 font-bold">Read and listen to the correct pronunciation of the word. If you don't know what it means, you can reveal the word.</p>
         <div className="p-6 border rounded-lg bg-gray-50">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">
                 Word ({targetLanguage === 'french' ? 'French' : targetLanguage === 'german' ? 'German' : targetLanguage === 'spanish' ? 'Spanish' : 'English'})
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mt-3">
                 <p className="text-2xl font-semibold text-gray-900">{translation || '—'}</p>
                 {translation && (
                   <AudioPlayer
@@ -91,7 +92,8 @@ export function InlineVocabTrainer({
                     language={targetLanguage}
                     type="vocabulary"
                     vocabularyId={current.id}
-                    size="sm"
+                    size="lg"
+                    variant="highlighted"
                   />
                 )}
               </div>
@@ -106,7 +108,7 @@ export function InlineVocabTrainer({
         <div className="p-6 border rounded-lg">
           <p className="text-gray-500 text-sm mb-1">Reveal (English)</p>
           {showAnswer ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-3">
               <p className="text-xl font-medium text-gray-900">{englishWord || '—'}</p>
               {englishWord && (
                 <AudioPlayer
@@ -114,7 +116,8 @@ export function InlineVocabTrainer({
                   language="english"
                   type="vocabulary"
                   vocabularyId={current.id}
-                  size="sm"
+                  size="lg"
+                  variant="highlighted"
                 />
               )}
             </div>

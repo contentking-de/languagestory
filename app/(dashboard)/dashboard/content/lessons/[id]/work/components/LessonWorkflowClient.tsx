@@ -560,7 +560,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                 <AudioPlayer 
                   text={lesson?.content || ''} 
                   language={lesson?.course_language || 'english'} 
-                  size="md"
+                  size="lg"
+                  variant="highlighted"
                   lessonId={lessonId}
                   type="content"
                   showSpeedControl={true}
@@ -568,6 +569,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
               </div>
             </CardHeader>
             <CardContent>
+              <p className="text-gray-700 font-bold mb-4">Read and listen carefully – Take your time - you will need all the information and context for the upcoming steps and quizzes!</p>
               <div className="prose max-w-none">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="flex flex-col sm:flex-row items-start gap-4">
@@ -602,7 +604,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                 <AudioPlayer 
                   text={lesson?.cultural_information || ''} 
                   language={lesson?.course_language || 'english'} 
-                  size="md"
+                  size="lg"
+                  variant="highlighted"
                   lessonId={lessonId}
                   type="cultural"
                   showSpeedControl={true}
@@ -610,6 +613,7 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
               </div>
             </CardHeader>
             <CardContent>
+              <p className="text-gray-700 font-bold mb-4">Read and listen carefully! Please take your time - You will need the information and context for the upcoming quiz in the next step.</p>
               <div className="prose max-w-none">
                 <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
                   <div className="flex-1 whitespace-pre-wrap text-sm text-gray-700">
@@ -633,7 +637,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                 <AudioPlayer 
                   text={story?.content || ''} 
                   language={lesson?.course_language || 'english'} 
-                  size="md"
+                  size="lg"
+                  variant="highlighted"
                   lessonId={lessonId}
                   type="story"
                   topicId={story?.id}
@@ -707,7 +712,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                         <AudioPlayer 
                           text={lesson?.content || ''} 
                           language={lesson?.course_language || 'english'} 
-                          size="md"
+                          size="lg"
+                          variant="highlighted"
                           lessonId={lessonId}
                           type="content"
                           showSpeedControl={true}
@@ -745,7 +751,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                         <AudioPlayer 
                           text={lesson?.cultural_information || ''} 
                           language={lesson?.course_language || 'english'} 
-                          size="md"
+                          size="lg"
+                          variant="highlighted"
                           lessonId={lessonId}
                           type="cultural"
                           showSpeedControl={true}
@@ -800,7 +807,8 @@ export function LessonWorkflowClient({ lessonId, userRole, userId }: LessonWorkf
                       <AudioPlayer 
                         text={lesson.content} 
                         language={lesson?.course_language || 'english'} 
-                        size="md"
+                        size="lg"
+                        variant="highlighted"
                         lessonId={lessonId}
                         type="content"
                         showSpeedControl={true}

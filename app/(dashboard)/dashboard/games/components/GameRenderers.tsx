@@ -10,6 +10,7 @@ import {
   X, 
   Play, 
   Pause,
+  Square,
   Timer,
   Star,
   Trophy
@@ -2076,6 +2077,7 @@ export function ListenTypeGame({ config, onComplete }: { config: ListenTypeConfi
   const [justCorrect, setJustCorrect] = useState(false);
   const [showSkipped, setShowSkipped] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [audioPlaying, setAudioPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   if (!config || !Array.isArray(config.items) || config.items.length === 0) {
@@ -2301,17 +2303,42 @@ export function ListenTypeGame({ config, onComplete }: { config: ListenTypeConfi
         <div className="text-sm text-gray-600">Item {index + 1} of {total}</div>
         <div className="space-y-2">
           <div className="text-gray-700">Listen and type the vocabulary word you hear.</div>
-          <div className="bg-gray-50 border rounded p-3">
+          <div className="bg-gray-50 border rounded p-3 flex items-center gap-3">
             {audioUrl ? (
-              <audio
-                controls
-                src={audioUrl}
-                preload="auto"
-                ref={audioRef}
-                onLoadedMetadata={() => {
-                  try { if (audioRef.current) audioRef.current.playbackRate = 0.75; } catch {}
-                }}
-              />
+              <>
+                <audio
+                  src={audioUrl}
+                  preload="auto"
+                  ref={audioRef}
+                  onLoadedMetadata={() => {
+                    try { if (audioRef.current) audioRef.current.playbackRate = 0.75; } catch {}
+                  }}
+                  onEnded={() => { setAudioPlaying(false); }}
+                  onPause={() => { setAudioPlaying(false); }}
+                  onPlay={() => { setAudioPlaying(true); }}
+                  className="hidden"
+                />
+                {audioPlaying ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; } }}
+                    className="h-12 w-12 p-0 rounded-full bg-green-100 hover:bg-green-200 ring-2 ring-green-700 transition-colors"
+                  >
+                    <Square className="h-6 w-6 text-green-600" />
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { if (audioRef.current) { audioRef.current.currentTime = 0; audioRef.current.playbackRate = 0.75; audioRef.current.play().catch(() => {}); } }}
+                    className="h-12 w-12 p-0 rounded-full bg-green-100 hover:bg-green-200 ring-2 ring-green-700 transition-colors"
+                  >
+                    <Play className="h-6 w-6 text-green-600" />
+                  </Button>
+                )}
+                <span className="text-sm text-gray-600">Click to listen</span>
+              </>
             ) : (
               <div className="text-sm text-gray-500">{audioBusy ? 'Loading audio…' : 'Audio unavailable'}</div>
             )}

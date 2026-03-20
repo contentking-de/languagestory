@@ -735,7 +735,13 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
         {!showResults ? (
           <>
             <div className="mb-6">
-              <p className="text-gray-700">{quiz.description}</p>
+              <p className="text-gray-700 font-bold">
+                {quiz.quiz_type === 'multiple_choice'
+                  ? 'Read and listen, then choose the correct answer in this multiple choice quiz.'
+                  : quiz.quiz_type === 'gap_fill'
+                    ? 'Click on the play-icon, listen to the audio and then drag the words into the right gaps.'
+                    : quiz.description}
+              </p>
             </div>
             
             {quiz?.quiz_type === 'gap_fill' ? (
@@ -769,7 +775,8 @@ export function InlineQuiz({ quizId, onComplete, onNext, lessonLanguage }: Inlin
                               <AudioPlayer
                                 text={audioText}
                                 language={lessonLanguage || 'english'}
-                                size="md"
+                                size="lg"
+                                variant="highlighted"
                                 type="content"
                                 showSpeedControl={true}
                               />

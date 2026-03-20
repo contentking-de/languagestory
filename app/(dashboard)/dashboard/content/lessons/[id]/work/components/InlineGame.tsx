@@ -357,9 +357,31 @@ export const InlineGame = memo(({ gameId, onComplete, onNext }: InlineGameProps)
       <CardContent>
         {!gameCompleted ? (
           <>
-            <div className="mb-6">
-              <p className="text-gray-700">{game.description}</p>
-            </div>
+            {(() => {
+              const vocabRunDescription = 'Scroll down and start at the bottom of this game! Choose and click the right word to move up and finally reach the beach to save the frog from being eaten by alligators.';
+              const memoryDescription = 'Find the matching word-pairs in this memory-game. The more accurate and faster you are, the more points you will collect.';
+              const listenTypeDescription = 'Click on the play-icon and listen to the word, then type what you heard. Make sure to use the correct spelling.';
+              const wordSearchDescription = 'Read the "words to find" and find them in this grid. Click on the letters to complete a word you found until it is marked green. Repeat until you found all words.';
+              const hangmanDescription = 'Remember what you heard in the story so far? We are now looking for one of the new words from our vocabulary and context. Click on the letters to solve the hangman-game in as few steps as possible.';
+              const desc = game.game_type === 'vocab_run'
+                ? vocabRunDescription
+                : game.game_type === 'memory'
+                  ? memoryDescription
+                  : game.game_type === 'listen_type'
+                    ? listenTypeDescription
+                    : game.game_type === 'word_search'
+                      ? wordSearchDescription
+                      : game.game_type === 'hangman'
+                        ? hangmanDescription
+                        : game.description && !game.description.startsWith('Auto-created')
+                          ? game.description
+                          : null;
+              return desc ? (
+                <div className="mb-6">
+                  <p className="text-gray-700 font-bold">{desc}</p>
+                </div>
+              ) : null;
+            })()}
             
             {renderGame}
 

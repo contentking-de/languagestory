@@ -10,6 +10,7 @@ interface AudioPlayerProps {
   voice?: string;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  variant?: 'default' | 'highlighted';
   vocabularyId?: number;
   lessonId?: number;
   type?: 'cultural' | 'content' | 'story' | 'vocabulary';
@@ -24,6 +25,7 @@ export function AudioPlayer({
   voice, 
   className = '',
   size = 'md',
+  variant = 'default',
   vocabularyId,
   lessonId,
   type,
@@ -79,6 +81,14 @@ export function AudioPlayer({
     md: 'h-8 w-8',
     lg: 'h-10 w-10'
   };
+
+  const playIconColor = variant === 'highlighted'
+    ? 'text-green-600 hover:text-green-700'
+    : 'text-gray-600 hover:text-blue-600';
+
+  const playButtonBg = variant === 'highlighted'
+    ? 'rounded-full bg-green-100 hover:bg-green-200 ring-2 ring-green-700 transition-colors'
+    : 'rounded-full hover:bg-gray-100 transition-colors';
 
   const generateAudio = async () => {
     if (audioUrl) {
@@ -263,13 +273,13 @@ export function AudioPlayer({
           size="sm"
           onClick={generateAudio}
           disabled={isLoading}
-          className={`${buttonSize[size]} p-0 rounded-full hover:bg-gray-100 transition-colors`}
+          className={`${buttonSize[size]} p-0 ${playButtonBg}`}
           title={isPaused ? `Resume pronunciation of "${text}"` : `Play pronunciation of "${text}"`}
         >
           {isLoading ? (
             <Loader2 className={`${sizeClasses[size]} animate-spin text-blue-600`} />
           ) : (
-            <Play className={`${sizeClasses[size]} text-gray-600 hover:text-blue-600`} />
+            <Play className={`${sizeClasses[size]} ${playIconColor}`} />
           )}
         </Button>
       )}

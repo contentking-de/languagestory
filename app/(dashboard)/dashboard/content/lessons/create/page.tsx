@@ -939,7 +939,7 @@ function CreateLessonForm() {
                             return s;
                           };
                           const wsWords = shuffled.map((v:any)=> stripArticleAndToSingleWord((v?.[langKey] || v?.word_english || '').toString())).filter(Boolean);
-                          const wsBody = { title: `${lessonData?.title || 'Lesson'} - Word Search`, description: `Auto-created word search for lesson ${lessonId}`, language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'word_search', game_config: { wordSearch: { words: wsWords, gridSize: 15, directions: ['horizontal','vertical','diagonal'] } }, provider_name: 'Custom' };
+                          const wsBody = { title: `${lessonData?.title || 'Lesson'} - Word Search`, description: 'Read the "words to find" and find them in this grid. Click on the letters to complete a word you found until it is marked green. Repeat until you found all words.', language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'word_search', game_config: { wordSearch: { words: wsWords, gridSize: 15, directions: ['horizontal','vertical','diagonal'] } }, provider_name: 'Custom' };
                           const wsRes = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(wsBody)});
                           if (!wsRes.ok) throw new Error('Word Search creation failed');
                           const wsCreated = await wsRes.json();
@@ -951,7 +951,7 @@ function CreateLessonForm() {
                         try{
                           const memShuffled = [...vocab].sort(()=>Math.random()-0.5).slice(0, Math.min(12, vocab.length));
                           const cards = memShuffled.map((v:any, idx:number)=> ({ id: `${v.id || idx}`, word: (v?.[langKey] || v?.word_english || '').toString(), translation: (v?.word_english || '').toString() }));
-                          const memBody = { title: `${lessonData?.title || 'Lesson'} - Memory`, description: `Auto-created memory game for lesson ${lessonId}`, language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'memory', game_config: { memory: { cards, gridSize: 4, timeLimit: 120 } }, provider_name: 'Custom' };
+                          const memBody = { title: `${lessonData?.title || 'Lesson'} - Memory`, description: 'Find the matching word-pairs in this memory-game. The more accurate and faster you are, the more points you will collect.', language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'memory', game_config: { memory: { cards, gridSize: 4, timeLimit: 120 } }, provider_name: 'Custom' };
                           const memRes = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(memBody)});
                           if (!memRes.ok) throw new Error('Memory creation failed');
                           const memCreated = await memRes.json();
@@ -974,7 +974,7 @@ function CreateLessonForm() {
                             const prompt = item.english || correct;
                             return { question: `Choose the correct word for: ${prompt}`, options: opts, correctIndex: opts.indexOf(correct) };
                           });
-                          const vrBody = { title: `${lessonData?.title || 'Lesson'} - Vocab Run`, description: `Auto-created Vocab Run for lesson ${lessonId}`, language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'vocab_run', game_config: { vocabRun: { questions } }, provider_name: 'Custom' };
+                          const vrBody = { title: `${lessonData?.title || 'Lesson'} - Vocab Run`, description: 'Scroll down and start at the bottom of this game! Choose and click the right word to move up and finally reach the beach to save the frog from being eaten by alligators.', language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'vocab_run', game_config: { vocabRun: { questions } }, provider_name: 'Custom' };
                           const vrRes = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(vrBody)});
                           if (!vrRes.ok) throw new Error('Vocab Run creation failed');
                           const vrCreated = await vrRes.json();
@@ -995,7 +995,7 @@ function CreateLessonForm() {
                             }))
                             .filter((it:any)=> !!it.word);
                           if (items.length > 0){
-                            const ltBody = { title: `${lessonData?.title || 'Lesson'} - Listen & Type`, description: `Auto-created Listen & Type for lesson ${lessonId}`, language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'listen_type', game_config: { listenType: { items } }, provider_name: 'Custom' };
+                            const ltBody = { title: `${lessonData?.title || 'Lesson'} - Listen & Type`, description: 'Click on the play-icon and listen to the word, then type what you heard. Make sure to use the correct spelling.', language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'listen_type', game_config: { listenType: { items } }, provider_name: 'Custom' };
                             const ltRes = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ltBody)});
                             if (!ltRes.ok) throw new Error('Listen & Type creation failed');
                             const ltCreated = await ltRes.json();
@@ -1025,7 +1025,7 @@ function CreateLessonForm() {
                           const rawHint = (g?.data?.hint || g?.preview || '').toString();
                           const sanitized = rawHint.replace(new RegExp(word,'i'),'').trim();
                           const hint = (sanitized || 'Guess the word!').slice(0,80);
-                          const hmBody = { title: `${lessonData?.title || 'Lesson'} - Hangman`, description: `Auto-created hangman for lesson ${lessonId}`, language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'hangman', game_config: { hangman: { words: [word], hints: [hint], maxAttempts: 6, categories: ['lesson'] } }, provider_name: 'Custom' };
+                          const hmBody = { title: `${lessonData?.title || 'Lesson'} - Hangman`, description: 'Remember what you heard in the story so far? We are now looking for one of the new words from our vocabulary and context. Click on the letters to solve the hangman-game in as few steps as possible.', language, category: 'vocabulary', difficulty_level: 1, estimated_duration: 5, lesson_id: lessonId.toString(), game_type: 'hangman', game_config: { hangman: { words: [word], hints: [hint], maxAttempts: 6, categories: ['lesson'] } }, provider_name: 'Custom' };
                           const hmRes = await fetch('/api/games',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(hmBody)});
                           if (!hmRes.ok) throw new Error('Hangman creation failed');
                           const hmCreated = await hmRes.json();
@@ -1277,7 +1277,7 @@ function CreateLessonForm() {
                         setGfPreview(updated);
                         const requestBody = {
                           title: `${formData.title || 'Lesson'} - Gap Fill`,
-                          description: 'Auto-created gap fill from lesson content',
+                          description: 'Click on the play-icon, listen to the audio and then drag the words into the right gaps.',
                           quiz_type: 'gap_fill',
                           pass_percentage: 70,
                           time_limit: 0,
