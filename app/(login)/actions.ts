@@ -35,6 +35,7 @@ import { createCheckoutSession } from '@/lib/payments/stripe';
 import { getUser, getUserWithTeam } from '@/lib/db/queries';
 import { UserRole, hasPermission, canManageUser, canInviteRole, getInvitableRoles, getRoleDisplayName } from '@/lib/auth/rbac';
 import { sendWelcomeEmail } from '@/lib/email/welcome-email';
+import { sendNewUserNotificationEmail } from '@/lib/email/new-user-notification-email';
 import { sendInvitationEmail } from '@/lib/email/invitation-email';
 import { validatePassword } from '@/lib/utils';
 
@@ -309,13 +310,21 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     logActivity(teamId, createdUser.id, ActivityType.SIGN_UP),
   ]);
 
-  // Send welcome email (don't await to avoid blocking the redirect)
+  // Send welcome email and admin notification (don't await to avoid blocking the redirect)
   sendWelcomeEmail({
     name: createdUser.name || 'there',
     email: createdUser.email,
     role: userRole
   }).catch(error => {
     console.error('Failed to send welcome email:', error);
+  });
+
+  sendNewUserNotificationEmail({
+    name: createdUser.name || 'Unknown',
+    email: createdUser.email,
+    role: userRole
+  }).catch(error => {
+    console.error('Failed to send new user notification email:', error);
   });
 
   const redirectTo = formData.get('redirect') as string | null;
