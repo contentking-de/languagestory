@@ -2525,12 +2525,11 @@ export default function HomePage() {
               <h3 className="text-xl font-bold mb-4">Buy Subscription</h3>
               <ul className="space-y-3">
                 <li>
-                  <a 
-                    href="#" 
-                    onClick={(e) => { e.preventDefault(); openModal('shop'); }} 
-                    className="text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                <a
+                    href="/#pricing"
+                    className="text-gray-600 hover:text-gray-800 transition-colors"
                   >
-                    Shopping Area
+                    Pricing
                   </a>
                 </li>
                 <li>
