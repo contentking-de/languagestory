@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     title: 'Lingoletics.com - Learn French, German & Spanish Through Stories',
     description: 'Master French, German, and Spanish through engaging short stories with audio, comprehension exercises, and cultural insights.',
   },
+  verification: {
+    google: 'J1EcZ83PfCE5t1DIWZGrTB6mfe85n_w4GRkYbblgxl0',
+  },
 };
 
 export const viewport: Viewport = {
