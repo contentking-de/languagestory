@@ -39,7 +39,7 @@ export function AudioPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [playbackSpeed, setPlaybackSpeed] = useState(0.75);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Cleanup: stop audio when component unmounts (e.g. step change)

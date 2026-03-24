@@ -2311,7 +2311,7 @@ export function ListenTypeGame({ config, onComplete }: { config: ListenTypeConfi
                   preload="auto"
                   ref={audioRef}
                   onLoadedMetadata={() => {
-                    try { if (audioRef.current) audioRef.current.playbackRate = 0.75; } catch {}
+                    try { if (audioRef.current) audioRef.current.playbackRate = 1; } catch {}
                   }}
                   onEnded={() => { setAudioPlaying(false); }}
                   onPause={() => { setAudioPlaying(false); }}
@@ -2331,7 +2331,7 @@ export function ListenTypeGame({ config, onComplete }: { config: ListenTypeConfi
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => { if (audioRef.current) { audioRef.current.currentTime = 0; audioRef.current.playbackRate = 0.75; audioRef.current.play().catch(() => {}); } }}
+                    onClick={() => { if (audioRef.current) { audioRef.current.currentTime = 0; audioRef.current.playbackRate = 1; audioRef.current.play().catch(() => {}); } }}
                     className="h-12 w-12 p-0 rounded-full bg-green-100 hover:bg-green-200 ring-2 ring-green-700 transition-colors"
                   >
                     <Play className="h-6 w-6 text-green-600" />
