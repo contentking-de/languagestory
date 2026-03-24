@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   title: 'Lingoletics.com - Learn French, German & Spanish Through Stories',
   description: 'Master French, German, and Spanish through engaging short stories with audio, comprehension exercises, and cultural insights. Perfect for beginner to intermediate learners. Start your language learning journey today with our story-based approach.',
   robots: {
-    index: false,
-    follow: false,
+    index: true,
+    follow: true,
   },
   icons: {
     icon: '/favicon.png',
