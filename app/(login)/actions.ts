@@ -99,6 +99,52 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
     };
   }
 
+  // Process any pending invitations for this user
+  try {
+    const pendingInvitations = await db
+      .select()
+      .from(invitations)
+      .where(
+        and(
+          eq(invitations.email, email.toLowerCase()),
+          eq(invitations.status, 'pending')
+        )
+      );
+
+    for (const invitation of pendingInvitations) {
+      const invitationDate = new Date(invitation.invitedAt);
+      const daysDiff = (Date.now() - invitationDate.getTime()) / (1000 * 60 * 60 * 24);
+      if (daysDiff > 7) continue;
+
+      const existingMember = await db
+        .select()
+        .from(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.userId, foundUser.id),
+            eq(teamMembers.teamId, invitation.teamId)
+          )
+        )
+        .limit(1);
+
+      if (existingMember.length === 0) {
+        await db.insert(teamMembers).values({
+          teamId: invitation.teamId,
+          userId: foundUser.id,
+          role: invitation.role,
+          language: invitation.language,
+        });
+      }
+
+      await db
+        .update(invitations)
+        .set({ status: 'accepted' })
+        .where(eq(invitations.id, invitation.id));
+    }
+  } catch (error) {
+    console.error('Error processing pending invitations during sign-in:', error);
+  }
+
   await Promise.all([
     setSession(foundUser),
     logActivity(foundTeam?.id, foundUser.id, ActivityType.SIGN_IN)
@@ -140,6 +186,13 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     .limit(1);
 
   if (existingUser.length > 0) {
+    if (inviteId) {
+      return {
+        error: 'You already have an account. Please sign in to accept this invitation.',
+        email,
+        password
+      };
+    }
     return {
       error: 'An account with this email address already exists. Please sign in instead.',
       email,
@@ -255,21 +308,18 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     userRole = invitationById.role as UserRole;
 
     try {
-      await Promise.all([
-        db.insert(teamMembers).values({
-          teamId: invitationById.teamId,
-          userId: createdUser.id,
-          role: invitationById.role,
-          language: invitationById.language,
-        }),
-        db
-          .update(invitations)
-          .set({ status: 'accepted' })
-          .where(eq(invitations.id, invitationById.id)),
-      ]);
+      await db.insert(teamMembers).values({
+        teamId: invitationById.teamId,
+        userId: createdUser.id,
+        role: invitationById.role,
+        language: invitationById.language,
+      });
+      await db
+        .update(invitations)
+        .set({ status: 'accepted' })
+        .where(eq(invitations.id, invitationById.id));
     } catch (error) {
       console.error('Error adding user to team:', error);
-      // Rollback user creation if team member insertion fails
       await db.delete(users).where(eq(users.id, createdUser.id));
       return { error: 'Failed to complete registration. Please try again or contact support.' };
     }
@@ -492,6 +542,34 @@ export const removeTeamMember = validatedActionWithUser(
 
     if (!userWithTeam?.teamId) {
       return { error: 'User is not part of a team' };
+    }
+
+    const actorRole = (userWithTeam.user.role as UserRole) || 'member';
+    if (!['super_admin', 'institution_admin', 'teacher'].includes(actorRole)) {
+      return { error: 'You do not have permission to remove team members' };
+    }
+
+    const targetMember = await db.query.teamMembers.findFirst({
+      where: and(
+        eq(teamMembers.id, memberId),
+        eq(teamMembers.teamId, userWithTeam.teamId)
+      ),
+      with: {
+        user: { columns: { id: true, role: true } }
+      }
+    });
+
+    if (!targetMember) {
+      return { error: 'Team member not found' };
+    }
+
+    if (targetMember.user.id === user.id) {
+      return { error: 'You cannot remove yourself from the team' };
+    }
+
+    const targetRole = (targetMember.user.role as UserRole) || 'member';
+    if (!canManageUser(actorRole, targetRole)) {
+      return { error: 'You cannot remove a user with a higher or equal role' };
     }
 
     await db

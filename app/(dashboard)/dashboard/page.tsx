@@ -13,8 +13,8 @@ import { customerPortalAction } from '@/lib/payments/actions';
 import { useActionState } from 'react';
 import { TeamDataWithMembers, User } from '@/lib/db/schema';
 import { removeTeamMember, inviteEducationalUser, bulkInviteStudents } from '@/app/(login)/actions';
-import useSWR from 'swr';
-import { Suspense, useState, useRef } from 'react';
+import useSWR, { useSWRConfig } from 'swr';
+import { Suspense, useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -126,15 +126,27 @@ function TeamMembersSkeleton() {
 }
 
 function TeamMembers() {
-  const { data: teamData } = useSWR<TeamDataWithMembers>('/api/team', fetcher);
+  const { data: teamData, mutate: mutateTeam } = useSWR<TeamDataWithMembers>('/api/team', fetcher);
+  const { data: currentUser } = useSWR<User>('/api/user', fetcher);
+  const { mutate: globalMutate } = useSWRConfig();
   const [removeState, removeAction, isRemovePending] = useActionState<
     ActionState,
     FormData
   >(removeTeamMember, {});
 
+  useEffect(() => {
+    if (removeState?.success) {
+      mutateTeam();
+      globalMutate('/api/invitations');
+    }
+  }, [removeState, mutateTeam, globalMutate]);
+
   const getUserDisplayName = (user: Pick<User, 'id' | 'name' | 'email'>) => {
     return user.name || user.email || 'Unknown User';
   };
+
+  const canRemoveMembers = currentUser?.role && 
+    ['super_admin', 'institution_admin', 'teacher'].includes(currentUser.role);
 
   if (!teamData?.teamMembers?.length) {
     return (
@@ -156,19 +168,10 @@ function TeamMembers() {
       </CardHeader>
       <CardContent>
         <ul className="space-y-4">
-          {teamData.teamMembers.map((member, index) => (
+          {teamData.teamMembers.map((member) => (
             <li key={member.id} className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Avatar>
-                  {/* 
-                    This app doesn't save profile images, but here
-                    is how you'd show them:
-
-                    <AvatarImage
-                      src={member.user.image || ''}
-                      alt={getUserDisplayName(member.user)}
-                    />
-                  */}
                   <AvatarFallback>
                     {getUserDisplayName(member.user)
                       .split(' ')
@@ -185,7 +188,7 @@ function TeamMembers() {
                   </p>
                 </div>
               </div>
-              {index > 1 ? (
+              {canRemoveMembers && member.user.id !== currentUser?.id ? (
                 <form action={removeAction}>
                   <input type="hidden" name="memberId" value={member.id} />
                   <Button
@@ -203,6 +206,9 @@ function TeamMembers() {
         </ul>
         {removeState?.error && (
           <p className="text-red-500 mt-4">{removeState.error}</p>
+        )}
+        {removeState?.success && (
+          <p className="text-green-500 mt-4">{removeState.success}</p>
         )}
       </CardContent>
     </Card>
@@ -618,17 +624,17 @@ function InviteTeamMember() {
 
 export default function SettingsPage() {
   const { data: user } = useSWR<User>('/api/user', fetcher);
-  const isMember = user?.role === 'member';
+  const canManageTeam = user?.role && !['member', 'student', 'parent'].includes(user.role);
 
   return (
     <section className="flex-1 p-4 lg:p-8">
       <h1 className="text-lg lg:text-2xl font-medium mb-6">
-        {isMember ? 'My Subscription' : 'Team Settings'}
+        {canManageTeam ? 'Team Settings' : 'My Subscription'}
       </h1>
       <Suspense fallback={<SubscriptionSkeleton />}>
         <ManageSubscription />
       </Suspense>
-      {!isMember && (
+      {canManageTeam && (
         <>
           <Suspense fallback={<TeamMembersSkeleton />}>
             <TeamMembers />

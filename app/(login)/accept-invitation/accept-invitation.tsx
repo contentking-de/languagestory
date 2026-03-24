@@ -309,7 +309,7 @@ export function AcceptInvitation() {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
             Already have an account?{' '}
-            <Link href="/sign-in" className="text-orange-600 hover:text-orange-700 font-medium">
+            <Link href={`/sign-in${inviteId ? `?inviteId=${inviteId}` : ''}`} className="text-orange-600 hover:text-orange-700 font-medium">
               Sign in instead
             </Link>
           </p>

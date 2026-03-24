@@ -2,9 +2,15 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/drizzle';
 import { institutions } from '@/lib/db/schema';
 import { sql } from 'drizzle-orm';
+import { getUserWithTeamData } from '@/lib/db/queries';
 
 export async function GET() {
   try {
+    const user = await getUserWithTeamData();
+    if (!user || !['super_admin', 'institution_admin'].includes(user.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const institutionsData = await db
       .select({
         id: institutions.id,
@@ -26,6 +32,44 @@ export async function GET() {
     console.error('Error fetching institutions:', error);
     return NextResponse.json(
       { error: 'Failed to fetch institutions' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const user = await getUserWithTeamData();
+    if (!user || !['super_admin', 'institution_admin'].includes(user.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { name, type, address, contactEmail } = body;
+
+    if (!name || !type) {
+      return NextResponse.json(
+        { error: 'Name and type are required' },
+        { status: 400 }
+      );
+    }
+
+    const [newInstitution] = await db
+      .insert(institutions)
+      .values({
+        name,
+        type,
+        address: address || null,
+        contactEmail: contactEmail || null,
+        isActive: true,
+      })
+      .returning();
+
+    return NextResponse.json(newInstitution, { status: 201 });
+  } catch (error) {
+    console.error('Error creating institution:', error);
+    return NextResponse.json(
+      { error: 'Failed to create institution' },
       { status: 500 }
     );
   }

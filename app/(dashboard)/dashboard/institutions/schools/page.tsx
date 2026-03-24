@@ -11,13 +11,14 @@ import {
   Plus,
   Eye,
   Edit,
-  Users,
+  Trash2,
   Mail,
   MapPin,
   School,
   GraduationCap,
   Building,
-  UserCheck
+  UserCheck,
+  Loader2
 } from 'lucide-react';
 import {
   Select,
@@ -27,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface Institution {
   id: number;
@@ -42,11 +44,13 @@ interface Institution {
 }
 
 export default function SchoolsPage() {
+  const router = useRouter();
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchInstitutions();
@@ -63,6 +67,31 @@ export default function SchoolsPage() {
       console.error('Error fetching institutions:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (institution: Institution) => {
+    if (!confirm(`Are you sure you want to delete "${institution.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingId(institution.id);
+    try {
+      const response = await fetch(`/api/institutions/${institution.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setInstitutions(prev => prev.filter(i => i.id !== institution.id));
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to delete institution');
+      }
+    } catch (error) {
+      console.error('Error deleting institution:', error);
+      alert('Failed to delete institution');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -127,7 +156,6 @@ export default function SchoolsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Schools & Institutions</h1>
@@ -135,13 +163,14 @@ export default function SchoolsPage() {
             Manage educational institutions and organizations using Lingoletics.com
           </p>
         </div>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Institution
-        </Button>
+        <Link href="/dashboard/institutions/schools/new">
+          <Button className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Institution
+          </Button>
+        </Link>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -198,7 +227,6 @@ export default function SchoolsPage() {
         </Card>
       </div>
 
-      {/* Filters */}
       <Card>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -240,7 +268,6 @@ export default function SchoolsPage() {
         </CardContent>
       </Card>
 
-      {/* Institutions Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredInstitutions.map((institution) => {
           const TypeIcon = getTypeIcon(institution.type);
@@ -320,6 +347,19 @@ export default function SchoolsPage() {
                       Edit
                     </Button>
                   </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleDelete(institution)}
+                    disabled={deletingId === institution.id}
+                  >
+                    {deletingId === institution.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -337,13 +377,15 @@ export default function SchoolsPage() {
                 ? 'Try adjusting your filters to see more institutions.'
                 : 'Get started by adding your first institution.'}
             </p>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Institution
-            </Button>
+            <Link href="/dashboard/institutions/schools/new">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Institution
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       )}
     </div>
   );
-} 
+}
