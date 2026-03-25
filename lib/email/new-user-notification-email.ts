@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const ADMIN_NOTIFICATION_EMAIL = 'andystokes74@gmail.com';
+const ADMIN_NOTIFICATION_EMAIL = 'andy@lingoletics.com';
 
 interface NewUserNotificationData {
   name: string;
