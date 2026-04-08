@@ -70,14 +70,37 @@ const styles = StyleSheet.create({
     height: 28,
     objectFit: 'contain',
   },
-  worksheetIconRow: {
-    marginBottom: 14,
+  worksheetTopHeader: {
+    flexDirection: 'row',
     alignItems: 'flex-start',
+    marginBottom: 14,
+  },
+  worksheetTopHeaderSpacer: {
+    flexGrow: 1,
+    alignItems: 'flex-end',
+  },
+  studentFieldRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginBottom: 5,
+  },
+  studentFieldLabel: {
+    fontSize: 9,
+    fontFamily: 'Helvetica',
+    fontWeight: 'bold',
+    marginRight: 4,
+  },
+  studentFieldLine: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#222',
+    minWidth: 148,
+    height: 12,
   },
   worksheetIcon: {
     width: 56,
     height: 56,
     objectFit: 'contain',
+    marginRight: 12,
   },
   gapPassageLine: { marginBottom: 6, textAlign: 'left' },
   wordBankTitle: {
@@ -258,11 +281,21 @@ export function WorksheetDocument({
             <Image src={logoSrc} style={styles.logoImage} />
           </View>
         ) : null}
-        {worksheetIconSrc ? (
-          <View style={styles.worksheetIconRow}>
+        <View style={styles.worksheetTopHeader} wrap={false}>
+          {worksheetIconSrc ? (
             <Image src={worksheetIconSrc} style={styles.worksheetIcon} />
+          ) : null}
+          <View style={styles.worksheetTopHeaderSpacer}>
+            <View style={styles.studentFieldRow}>
+              <Text style={styles.studentFieldLabel}>Name:</Text>
+              <View style={styles.studentFieldLine} />
+            </View>
+            <View style={styles.studentFieldRow}>
+              <Text style={styles.studentFieldLabel}>Class:</Text>
+              <View style={styles.studentFieldLine} />
+            </View>
           </View>
-        ) : null}
+        </View>
         <Text style={styles.title}>Worksheet</Text>
         <Text style={styles.subtitle}>
           For classroom use · answer key not included · games from the lesson are not on this sheet
@@ -336,10 +369,12 @@ export function WorksheetDocument({
                 {' '}
               </Text>
             ) : null}
-            <Text style={styles.sectionTitle}>Quizzes</Text>
             {chunkQuizzesForPdf(data.quizzes).map((chunk, ci) =>
               chunk.kind === 'tfGap' ? (
                 <View key={`tg-${ci}`} wrap={false} break={ci > 0}>
+                  {ci === 0 ? (
+                    <Text style={styles.sectionTitle}>Quizzes</Text>
+                  ) : null}
                   {chunk.quizzes.map((quiz, qi) => (
                     <WorksheetQuizBlock
                       key={qi}
@@ -349,8 +384,18 @@ export function WorksheetDocument({
                   ))}
                 </View>
               ) : (
-                <View key={`n-${ci}`} break={ci > 0}>
-                  <WorksheetQuizBlock quiz={chunk.quiz} titleMarginTop={12} />
+                <View
+                  key={`n-${ci}`}
+                  break={ci > 0}
+                  wrap={ci === 0 ? false : undefined}
+                >
+                  {ci === 0 ? (
+                    <Text style={styles.sectionTitle}>Quizzes</Text>
+                  ) : null}
+                  <WorksheetQuizBlock
+                    quiz={chunk.quiz}
+                    titleMarginTop={ci === 0 ? 4 : 12}
+                  />
                 </View>
               )
             )}
