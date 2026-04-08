@@ -4,7 +4,10 @@ const nextConfig: NextConfig = {
   experimental: {
     clientSegmentCache: true
   },
-  serverExternalPackages: ['prettier']
+  serverExternalPackages: ['prettier'],
+  async rewrites() {
+    return [{ source: '/resources', destination: '/dashboard/resources' }];
+  }
 };
 
 export default nextConfig;

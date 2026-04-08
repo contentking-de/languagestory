@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserProgressSummary } from '@/components/user-progress-summary';
 import { 
   Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight,
-  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage, Ticket, FileText, MessageCircle, UserCircle, Clock, AlertTriangle, Dumbbell
+  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage, Ticket, FileText, MessageCircle, UserCircle, Clock, AlertTriangle, Dumbbell, Download
 } from 'lucide-react';
 
 interface NavItem {
@@ -19,6 +19,8 @@ interface NavItem {
 
 interface DashboardNavigationProps {
   userRole: string;
+  /** Teacher worksheets / resources (teachers, school admins, content team) */
+  teacherResourcesAccess: boolean;
   accessStatus: string;
   trialDaysRemaining: number | null;
   trialEndsAt: string | null;
@@ -26,7 +28,7 @@ interface DashboardNavigationProps {
   children: React.ReactNode;
 }
 
-export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining, trialEndsAt, planName, children }: DashboardNavigationProps) {
+export function DashboardNavigation({ userRole, teacherResourcesAccess, accessStatus, trialDaysRemaining, trialEndsAt, planName, children }: DashboardNavigationProps) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>(() => {
@@ -40,9 +42,12 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
     return initial;
   });
 
+  const resourcesNavItem: NavItem = { href: '/resources', icon: Download, label: 'Resources' };
+
   // Full navigation for Super Admin and Content Creator
   const fullNavItems: NavItem[] = [
     { href: '/dashboard/welcome', icon: Heart, label: 'Welcome' },
+    ...(teacherResourcesAccess ? [resourcesNavItem] : []),
     { 
       href: '/dashboard/content', 
       icon: BookOpen, 
@@ -176,6 +181,10 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
     { href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
   ];
 
+  const teacherNavWithResources: NavItem[] = teacherResourcesAccess
+    ? [teacherNavItems[0], resourcesNavItem, ...teacherNavItems.slice(1)]
+    : teacherNavItems;
+
   // Determine which navigation to use based on role
   const navItems = (userRole === 'super_admin' || userRole === 'content_creator') 
     ? fullNavItems 
@@ -183,7 +192,7 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
     ? memberNavItems
     : userRole === 'student'
     ? studentNavItems
-    : teacherNavItems;
+    : teacherNavWithResources;
 
   const toggleExpanded = (href: string) => {
     setExpandedItems(prev => 
@@ -194,8 +203,11 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
   };
 
   const isExpanded = (href: string) => expandedItems.includes(href);
+  const navHrefIsActive = (href: string) =>
+    pathname === href ||
+    (href === '/resources' && pathname === '/dashboard/resources');
   const isActiveOrChild = (item: NavItem): boolean => {
-    if (pathname === item.href) return true;
+    if (navHrefIsActive(item.href)) return true;
     if (item.subItems) {
       return item.subItems.some(subItem => isActiveOrChild(subItem));
     }
@@ -228,9 +240,9 @@ export function DashboardNavigation({ userRole, accessStatus, trialDaysRemaining
         ) : (
           <Link href={item.href} passHref>
             <Button
-              variant={pathname === item.href ? 'secondary' : 'ghost'}
+              variant={navHrefIsActive(item.href) ? 'secondary' : 'ghost'}
               className={`shadow-none my-1 w-full justify-start ${
-                pathname === item.href ? 'bg-gray-100' : ''
+                navHrefIsActive(item.href) ? 'bg-gray-100' : ''
               } ${isSubItem ? 'pl-8 text-sm' : ''}`}
               onClick={() => setIsSidebarOpen(false)}
             >

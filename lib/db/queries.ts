@@ -1,4 +1,4 @@
-import { desc, and, eq, isNull, gte, lte, sql } from 'drizzle-orm';
+import { desc, asc, and, eq, isNull, gte, lte, sql } from 'drizzle-orm';
 import { db } from './drizzle';
 import { activityLogs, teamMembers, teams, users } from './schema';
 import { cookies } from 'next/headers';
@@ -71,6 +71,7 @@ export async function getUserWithTeamData() {
     .from(users)
     .leftJoin(teamMembers, eq(users.id, teamMembers.userId))
     .where(and(eq(users.id, sessionData.user.id), isNull(users.deletedAt)))
+    .orderBy(asc(teamMembers.joinedAt))
     .limit(1);
 
   if (result.length === 0) {
@@ -138,16 +139,32 @@ export async function updateUserAndTeamMemberRole(
 
   const ownerId = members[0].userId;
 
+  const [currentUser] = await db
+    .select({ role: users.role })
+    .from(users)
+    .where(eq(users.id, ownerId))
+    .limit(1);
+
+  // Enduser-Abo mappt auf `member`, soll aber Lehrkräfte und Schul-Admins nicht entwerten.
+  let effectiveRole = newRole;
+  if (
+    newRole === 'member' &&
+    currentUser &&
+    (currentUser.role === 'teacher' || currentUser.role === 'institution_admin')
+  ) {
+    effectiveRole = currentUser.role;
+  }
+
   // Update user role
   await db
     .update(users)
-    .set({ role: newRole, updatedAt: new Date() })
+    .set({ role: effectiveRole, updatedAt: new Date() })
     .where(eq(users.id, ownerId));
 
   // Update team_members role
   await db
     .update(teamMembers)
-    .set({ role: newRole })
+    .set({ role: effectiveRole })
     .where(
       and(
         eq(teamMembers.teamId, teamId),

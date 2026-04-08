@@ -5,7 +5,7 @@ import { teams, teamMembers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { DashboardNavigation } from './components/DashboardNavigation';
 import { TrialGuard } from './components/TrialGuard';
-import { isSuperAdmin } from '@/lib/auth/rbac';
+import { isSuperAdmin, canAccessTeacherResources } from '@/lib/auth/rbac';
 
 export default async function DashboardLayout({
   children
@@ -42,14 +42,24 @@ export default async function DashboardLayout({
   // Teachers and institution admins without a team are treated as active
   // (they may have been created with a manual role assignment)
   const hasNoTeam = !user.teamId;
-  const isAdminRole = user.role === 'teacher' || user.role === 'institution_admin';
-  const effectiveAccessStatus = userIsSuperAdmin || (hasNoTeam && isAdminRole)
+  const isTeachingStaff =
+    user.role === 'teacher' ||
+    user.role === 'institution_admin' ||
+    user.userRole === 'teacher' ||
+    user.userRole === 'institution_admin';
+  const effectiveAccessStatus = userIsSuperAdmin || (hasNoTeam && isTeachingStaff)
     ? 'active'
     : (accessStatus?.status || 'expired');
+
+  const teacherResourcesAccess = canAccessTeacherResources({
+    role: user.role,
+    userRole: user.userRole,
+  });
 
   return (
     <DashboardNavigation 
       userRole={user.role}
+      teacherResourcesAccess={teacherResourcesAccess}
       accessStatus={effectiveAccessStatus}
       trialDaysRemaining={userIsSuperAdmin ? null : (accessStatus?.trialDaysRemaining ?? null)}
       trialEndsAt={userIsSuperAdmin ? null : (accessStatus?.trialEndsAt?.toISOString() ?? null)}
