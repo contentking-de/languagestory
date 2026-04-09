@@ -44,18 +44,12 @@ export const PERMISSIONS: Record<UserRole, PermissionAction[]> = {
   member: ['view_progress']
 };
 
-/** Roles allowed to use teacher worksheets / Resources (account or team role). */
-const TEACHER_RESOURCES_ROLES: ReadonlySet<string> = new Set([
-  'teacher',
-  'institution_admin',
-  'super_admin',
-  'content_creator',
-]);
+/** Roles allowed to open Resources / worksheet PDFs (account or team role). */
+const RESOURCES_ACCESS_ROLES: ReadonlySet<string> = new Set(['super_admin']);
 
 /**
- * Resources page & worksheet PDFs: checks both the effective session `role` and the
- * account role in `users` (`userRole` from getUserWithTeamData), so access still works
- * after Stripe when team role is `member` but `users.role` is still `teacher`.
+ * Resources page & worksheet PDFs: super_admin only. Checks both the session `role` and
+ * `userRole` from getUserWithTeamData so team/session edge cases still resolve correctly.
  */
 export function canAccessTeacherResources(user: {
   role: string;
@@ -64,7 +58,7 @@ export function canAccessTeacherResources(user: {
   const candidates = [user.role, user.userRole].filter(
     (x): x is string => typeof x === 'string' && x.length > 0
   );
-  return candidates.some((r) => TEACHER_RESOURCES_ROLES.has(r));
+  return candidates.some((r) => RESOURCES_ACCESS_ROLES.has(r));
 }
 
 // Check if user has permission for a specific action

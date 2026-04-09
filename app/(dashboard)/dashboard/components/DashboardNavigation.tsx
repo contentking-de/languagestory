@@ -19,7 +19,7 @@ interface NavItem {
 
 interface DashboardNavigationProps {
   userRole: string;
-  /** Teacher worksheets / resources (teachers, school admins, content team) */
+  /** Printable worksheets / Resources nav (super_admin only) */
   teacherResourcesAccess: boolean;
   accessStatus: string;
   trialDaysRemaining: number | null;
