@@ -21,14 +21,14 @@ export async function GET() {
         source: outreachContacts.source,
         createdAt: outreachContacts.createdAt,
         lastEmailStatus: sql<string | null>`(
-          SELECT ${outreachEmails.status} FROM ${outreachEmails}
-          WHERE ${outreachEmails.contactId} = ${outreachContacts.id}
-          ORDER BY ${outreachEmails.createdAt} DESC LIMIT 1
+          SELECT "outreach_emails"."status" FROM "outreach_emails"
+          WHERE "outreach_emails"."contact_id" = "outreach_contacts"."id"
+          ORDER BY "outreach_emails"."created_at" DESC LIMIT 1
         )`,
         lastEmailDate: sql<string | null>`(
-          SELECT ${outreachEmails.sentAt} FROM ${outreachEmails}
-          WHERE ${outreachEmails.contactId} = ${outreachContacts.id}
-          ORDER BY ${outreachEmails.createdAt} DESC LIMIT 1
+          SELECT "outreach_emails"."sent_at" FROM "outreach_emails"
+          WHERE "outreach_emails"."contact_id" = "outreach_contacts"."id"
+          ORDER BY "outreach_emails"."created_at" DESC LIMIT 1
         )`,
       })
       .from(outreachContacts)
