@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const file = formData.get('file') as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: 'Keine Datei hochgeladen' }, { status: 400 });
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -26,19 +26,19 @@ export async function POST(request: Request) {
     const rows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet);
 
     if (rows.length === 0) {
-      return NextResponse.json({ error: 'Die Datei enthält keine Daten' }, { status: 400 });
+      return NextResponse.json({ error: 'The file contains no data' }, { status: 400 });
     }
 
     const emailKey = findColumnKey(Object.keys(rows[0]), ['email', 'e-mail', 'mail', 'emailaddress', 'e-mail-adresse', 'email_address']);
     if (!emailKey) {
       return NextResponse.json(
-        { error: 'Keine E-Mail-Spalte gefunden. Bitte benenne die Spalte "email", "E-Mail" oder "mail".' },
+        { error: 'No email column found. Please name the column "email", "E-Mail" or "mail".' },
         { status: 400 }
       );
     }
 
-    const nameKey = findColumnKey(Object.keys(rows[0]), ['name', 'fullname', 'full_name', 'full name', 'vorname', 'kontakt']);
-    const companyKey = findColumnKey(Object.keys(rows[0]), ['company', 'firma', 'organization', 'organisation', 'unternehmen']);
+    const nameKey = findColumnKey(Object.keys(rows[0]), ['name', 'fullname', 'full_name', 'full name', 'contact', 'kontakt']);
+    const schoolKey = findColumnKey(Object.keys(rows[0]), ['school', 'schule', 'institution', 'organisation', 'organization']);
     const notesKey = findColumnKey(Object.keys(rows[0]), ['notes', 'notizen', 'bemerkung', 'kommentar', 'comment']);
 
     let imported = 0;
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       await db.insert(outreachContacts).values({
         email,
         name: nameKey ? String(row[nameKey] || '').trim() || null : null,
-        company: companyKey ? String(row[companyKey] || '').trim() || null : null,
+        school: schoolKey ? String(row[schoolKey] || '').trim() || null : null,
         notes: notesKey ? String(row[notesKey] || '').trim() || null : null,
         source: 'xlsx',
       });
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ imported, skipped, total: rows.length });
   } catch (error) {
     console.error('Error importing outreach contacts:', error);
-    return NextResponse.json({ error: 'Import fehlgeschlagen' }, { status: 500 });
+    return NextResponse.json({ error: 'Import failed' }, { status: 500 });
   }
 }
 

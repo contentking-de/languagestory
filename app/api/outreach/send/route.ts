@@ -18,11 +18,11 @@ export async function POST(request: Request) {
     const { contactIds, subject, body: emailBody } = body;
 
     if (!contactIds || !Array.isArray(contactIds) || contactIds.length === 0) {
-      return NextResponse.json({ error: 'Keine Kontakte ausgewählt' }, { status: 400 });
+      return NextResponse.json({ error: 'No contacts selected' }, { status: 400 });
     }
 
     if (!subject || !emailBody) {
-      return NextResponse.json({ error: 'Betreff und Nachricht sind erforderlich' }, { status: 400 });
+      return NextResponse.json({ error: 'Subject and message are required' }, { status: 400 });
     }
 
     const contacts = await db
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ sent, failed, errors });
   } catch (error) {
     console.error('Error sending outreach emails:', error);
-    return NextResponse.json({ error: 'Versand fehlgeschlagen' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to send emails' }, { status: 500 });
   }
 }
 

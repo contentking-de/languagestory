@@ -194,7 +194,7 @@ export const outreachContacts = pgTable('outreach_contacts', {
   id: serial('id').primaryKey(),
   email: varchar('email', { length: 255 }).notNull(),
   name: varchar('name', { length: 200 }),
-  company: varchar('company', { length: 200 }),
+  school: varchar('school', { length: 200 }),
   notes: text('notes'),
   source: varchar('source', { length: 50 }).notNull().default('manual'),
   createdAt: timestamp('created_at').notNull().defaultNow(),

@@ -22,7 +22,7 @@ interface Contact {
   id: number;
   email: string;
   name: string | null;
-  company: string | null;
+  school: string | null;
   notes: string | null;
   source: string;
   createdAt: string;
@@ -88,12 +88,12 @@ export function OutreachClient() {
       const data = await res.json();
       if (res.ok) {
         await fetchContacts();
-        alert(`${data.imported} Kontakte erfolgreich importiert${data.skipped > 0 ? `, ${data.skipped} übersprungen (Duplikate)` : ''}`);
+        alert(`${data.imported} contact${data.imported !== 1 ? 's' : ''} imported successfully${data.skipped > 0 ? `, ${data.skipped} skipped (duplicates)` : ''}`);
       } else {
-        alert(data.error || 'Import fehlgeschlagen');
+        alert(data.error || 'Import failed');
       }
     } catch (err) {
-      alert('Import fehlgeschlagen');
+      alert('Import failed');
     } finally {
       setImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -102,7 +102,7 @@ export function OutreachClient() {
 
   const handleDeleteSelected = async () => {
     if (selectedContacts.size === 0) return;
-    if (!confirm(`${selectedContacts.size} Kontakt(e) wirklich löschen?`)) return;
+    if (!confirm(`Delete ${selectedContacts.size} contact${selectedContacts.size !== 1 ? 's' : ''}?`)) return;
 
     try {
       const res = await fetch('/api/outreach/contacts', {
@@ -115,7 +115,7 @@ export function OutreachClient() {
         await fetchContacts();
       }
     } catch (err) {
-      alert('Löschen fehlgeschlagen');
+      alert('Failed to delete');
     }
   };
 
@@ -167,7 +167,7 @@ export function OutreachClient() {
         if (result.errors) allErrors.push(...result.errors);
       } catch {
         totalFailed += batch.length;
-        allErrors.push(`Batch ${i + 1} komplett fehlgeschlagen`);
+        allErrors.push(`Batch ${i + 1} failed completely`);
       }
 
       setSendProgress(prev => ({
@@ -207,7 +207,7 @@ export function OutreachClient() {
   const filteredContacts = contacts.filter(c =>
     c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (c.name && c.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (c.company && c.company.toLowerCase().includes(searchTerm.toLowerCase()))
+    (c.school && c.school.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const statusIcon = (status: string | null | undefined) => {
@@ -235,14 +235,14 @@ export function OutreachClient() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Kontakte suchen..."
+              placeholder="Search contacts..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="pl-10 w-64"
             />
           </div>
           <span className="text-sm text-gray-500">
-            {filteredContacts.length} Kontakt{filteredContacts.length !== 1 ? 'e' : ''}
+            {filteredContacts.length} contact{filteredContacts.length !== 1 ? 's' : ''}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -263,17 +263,17 @@ export function OutreachClient() {
           </Button>
           <Button variant="outline" onClick={() => setShowAddModal(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Kontakt hinzufügen
+            Add Contact
           </Button>
           {selectedContacts.size > 0 && (
             <>
               <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={handleDeleteSelected}>
                 <Trash2 className="h-4 w-4 mr-2" />
-                {selectedContacts.size} löschen
+                Delete {selectedContacts.size}
               </Button>
               <Button onClick={() => setShowEmailModal(true)}>
                 <Mail className="h-4 w-4 mr-2" />
-                E-Mail an {selectedContacts.size} senden
+                Email {selectedContacts.size} contact{selectedContacts.size !== 1 ? 's' : ''}
               </Button>
             </>
           )}
@@ -298,11 +298,11 @@ export function OutreachClient() {
                   className="rounded border-gray-300"
                 />
               </th>
-              <th className="p-3 text-left text-xs font-semibold text-gray-500 uppercase">E-Mail</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
               <th className="p-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
-              <th className="p-3 text-left text-xs font-semibold text-gray-500 uppercase">Firma</th>
-              <th className="p-3 text-left text-xs font-semibold text-gray-500 uppercase">Quelle</th>
-              <th className="p-3 text-left text-xs font-semibold text-gray-500 uppercase">Letzter Versand</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-500 uppercase">School</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-500 uppercase">Source</th>
+              <th className="p-3 text-left text-xs font-semibold text-gray-500 uppercase">Last Sent</th>
               <th className="p-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
             </tr>
           </thead>
@@ -310,9 +310,9 @@ export function OutreachClient() {
             {filteredContacts.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-8 text-center text-gray-500">
-                  {contacts.length === 0 
-                    ? 'Noch keine Kontakte vorhanden. Importiere eine XLSX-Datei oder füge Kontakte manuell hinzu.'
-                    : 'Keine Kontakte gefunden.'}
+                  {contacts.length === 0
+                    ? 'No contacts yet. Import an XLSX file or add contacts manually.'
+                    : 'No contacts found.'}
                 </td>
               </tr>
             ) : (
@@ -328,7 +328,7 @@ export function OutreachClient() {
                   </td>
                   <td className="p-3 text-sm font-medium">{contact.email}</td>
                   <td className="p-3 text-sm text-gray-600">{contact.name || '—'}</td>
-                  <td className="p-3 text-sm text-gray-600">{contact.company || '—'}</td>
+                  <td className="p-3 text-sm text-gray-600">{contact.school || '—'}</td>
                   <td className="p-3">
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       contact.source === 'xlsx' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
@@ -338,7 +338,7 @@ export function OutreachClient() {
                   </td>
                   <td className="p-3 text-sm text-gray-500">
                     {contact.lastEmailDate
-                      ? new Date(contact.lastEmailDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                      ? new Date(contact.lastEmailDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                       : '—'}
                   </td>
                   <td className="p-3">{statusIcon(contact.lastEmailStatus)}</td>
@@ -383,18 +383,18 @@ function SendProgressBar({ progress, onAbort }: { progress: SendProgress; onAbor
           {progress.status === 'pausing' && <Clock className="h-4 w-4 text-yellow-500" />}
           {progress.status === 'done' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
           <span className="text-sm font-medium">
-            {progress.status === 'sending' && `Sende Batch ${progress.currentBatch}/${progress.totalBatches}...`}
-            {progress.status === 'pausing' && `Pause vor nächstem Batch (20s)...`}
-            {progress.status === 'done' && 'Versand abgeschlossen'}
-            {progress.status === 'error' && 'Versand fehlgeschlagen'}
+            {progress.status === 'sending' && `Sending batch ${progress.currentBatch}/${progress.totalBatches}...`}
+            {progress.status === 'pausing' && `Pausing before next batch (20s)...`}
+            {progress.status === 'done' && 'Sending complete'}
+            {progress.status === 'error' && 'Sending failed'}
           </span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-500">
-            {progress.sent} gesendet, {progress.failed} fehlgeschlagen / {progress.total} gesamt
+            {progress.sent} sent, {progress.failed} failed / {progress.total} total
           </span>
           {(progress.status === 'sending' || progress.status === 'pausing') && (
-            <Button variant="outline" size="sm" onClick={onAbort}>Abbrechen</Button>
+            <Button variant="outline" size="sm" onClick={onAbort}>Cancel</Button>
           )}
         </div>
       </div>
@@ -418,7 +418,7 @@ function SendProgressBar({ progress, onAbort }: { progress: SendProgress; onAbor
 function AddContactModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [company, setCompany] = useState('');
+  const [school, setSchool] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -431,16 +431,16 @@ function AddContactModal({ onClose, onAdded }: { onClose: () => void; onAdded: (
       const res = await fetch('/api/outreach/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name: name || null, company: company || null, notes: notes || null }),
+        body: JSON.stringify({ email, name: name || null, school: school || null, notes: notes || null }),
       });
       if (res.ok) {
         onAdded();
       } else {
         const data = await res.json();
-        alert(data.error || 'Fehler beim Speichern');
+        alert(data.error || 'Failed to save');
       }
     } catch {
-      alert('Fehler beim Speichern');
+      alert('Failed to save');
     } finally {
       setSaving(false);
     }
@@ -450,31 +450,31 @@ function AddContactModal({ onClose, onAdded }: { onClose: () => void; onAdded: (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Kontakt hinzufügen</h2>
+          <h2 className="text-lg font-semibold">Add Contact</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="h-5 w-5" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="email">E-Mail *</Label>
+            <Label htmlFor="email">Email *</Label>
             <Input id="email" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" />
           </div>
           <div>
             <Label htmlFor="name">Name</Label>
-            <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Max Mustermann" />
+            <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="John Smith" />
           </div>
           <div>
-            <Label htmlFor="company">Firma</Label>
-            <Input id="company" value={company} onChange={e => setCompany(e.target.value)} placeholder="Musterfirma GmbH" />
+            <Label htmlFor="school">School</Label>
+            <Input id="school" value={school} onChange={e => setSchool(e.target.value)} placeholder="Springfield Elementary" />
           </div>
           <div>
-            <Label htmlFor="notes">Notizen</Label>
-            <textarea id="notes" value={notes} onChange={e => setNotes(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-[60px] focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Optionale Notizen..." />
+            <Label htmlFor="notes">Notes</Label>
+            <textarea id="notes" value={notes} onChange={e => setNotes(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-[60px] focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Optional notes..." />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>Abbrechen</Button>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-              Speichern
+              Save
             </Button>
           </div>
         </form>
@@ -502,39 +502,39 @@ function ComposeEmailModal({ selectedCount, onClose, onSend }: {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold">Outreach E-Mail verfassen</h2>
+            <h2 className="text-lg font-semibold">Compose Outreach Email</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Wird an {selectedCount} Kontakt{selectedCount !== 1 ? 'e' : ''} gesendet (in 10er-Batches mit 20s Pause)
+              Will be sent to {selectedCount} contact{selectedCount !== 1 ? 's' : ''} (in batches of 10 with 20s pause)
             </p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="h-5 w-5" /></button>
         </div>
         <form onSubmit={handleSend} className="space-y-4">
           <div>
-            <Label htmlFor="subject">Betreff *</Label>
-            <Input id="subject" required value={subject} onChange={e => setSubject(e.target.value)} placeholder="Betreff der E-Mail" />
+            <Label htmlFor="subject">Subject *</Label>
+            <Input id="subject" required value={subject} onChange={e => setSubject(e.target.value)} placeholder="Email subject" />
           </div>
           <div>
-            <Label htmlFor="body">Nachricht * (HTML unterstützt)</Label>
+            <Label htmlFor="body">Message * (HTML supported)</Label>
             <textarea
               id="body"
               required
               value={body}
               onChange={e => setBody(e.target.value)}
               className="w-full border border-gray-200 rounded-md p-3 text-sm min-h-[250px] focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
-              placeholder={`<h2>Hallo!</h2>\n<p>Wir möchten Ihnen unsere Plattform vorstellen...</p>`}
+              placeholder={`<h2>Hello!</h2>\n<p>We'd like to introduce our platform...</p>`}
             />
           </div>
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
             <p className="text-sm text-yellow-800">
-              <strong>Hinweis:</strong> E-Mails werden in Batches von 10 versendet mit 20 Sekunden Pause zwischen den Batches. Der Fortschritt wird live angezeigt.
+              <strong>Note:</strong> Emails will be sent in batches of 10 with a 20-second pause between batches. Progress will be shown live.
             </p>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>Abbrechen</Button>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" disabled={!subject.trim() || !body.trim()}>
               <Mail className="h-4 w-4 mr-2" />
-              Jetzt senden
+              Send Now
             </Button>
           </div>
         </form>

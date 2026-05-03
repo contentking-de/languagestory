@@ -16,7 +16,7 @@ export async function GET() {
         id: outreachContacts.id,
         email: outreachContacts.email,
         name: outreachContacts.name,
-        company: outreachContacts.company,
+        school: outreachContacts.school,
         notes: outreachContacts.notes,
         source: outreachContacts.source,
         createdAt: outreachContacts.createdAt,
@@ -49,10 +49,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { email, name, company, notes } = body;
+    const { email, name, school, notes } = body;
 
     if (!email) {
-      return NextResponse.json({ error: 'E-Mail ist erforderlich' }, { status: 400 });
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
     const existing = await db
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       .limit(1);
 
     if (existing.length > 0) {
-      return NextResponse.json({ error: 'Kontakt mit dieser E-Mail existiert bereits' }, { status: 409 });
+      return NextResponse.json({ error: 'A contact with this email already exists' }, { status: 409 });
     }
 
     const [newContact] = await db
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       .values({
         email: email.toLowerCase().trim(),
         name: name || null,
-        company: company || null,
+        school: school || null,
         notes: notes || null,
         source: 'manual',
       })
@@ -94,7 +94,7 @@ export async function DELETE(request: Request) {
     const { ids } = body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json({ error: 'IDs sind erforderlich' }, { status: 400 });
+      return NextResponse.json({ error: 'IDs are required' }, { status: 400 });
     }
 
     await db.delete(outreachEmails).where(inArray(outreachEmails.contactId, ids));
