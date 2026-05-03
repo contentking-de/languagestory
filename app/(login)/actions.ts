@@ -39,6 +39,34 @@ import { sendNewUserNotificationEmail } from '@/lib/email/new-user-notification-
 import { sendInvitationEmail } from '@/lib/email/invitation-email';
 import { validatePassword } from '@/lib/utils';
 
+async function ensureUserHasTeam(user: User) {
+  const userWithTeam = await getUserWithTeam(user.id);
+
+  if (userWithTeam?.teamId) {
+    return userWithTeam;
+  }
+
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
+  const [createdTeam] = await db
+    .insert(teams)
+    .values({
+      name: `${user.name || user.email}'s Classes`,
+      subscriptionType: 'individual',
+      trialEndsAt,
+    })
+    .returning();
+
+  await db.insert(teamMembers).values({
+    teamId: createdTeam.id,
+    userId: user.id,
+    role: user.role || 'teacher',
+  });
+
+  return { user, teamId: createdTeam.id };
+}
+
 async function logActivity(
   teamId: number | null | undefined,
   userId: number,
@@ -538,10 +566,10 @@ export const removeTeamMember = validatedActionWithUser(
   removeTeamMemberSchema,
   async (data, _, user) => {
     const { memberId } = data;
-    const userWithTeam = await getUserWithTeam(user.id);
+    const userWithTeam = await ensureUserHasTeam(user);
 
     if (!userWithTeam?.teamId) {
-      return { error: 'User is not part of a team' };
+      return { error: 'Failed to initialize team. Please try again.' };
     }
 
     const actorRole = (userWithTeam.user.role as UserRole) || 'member';
@@ -617,10 +645,10 @@ export const bulkInviteStudents = validatedActionWithUser(
   bulkInviteStudentsSchema,
   async (data, _, user) => {
     const { emails, language, className, institutionId, classId, names, classes, yearGroups } = data;
-    const userWithTeam = await getUserWithTeam(user.id);
+    const userWithTeam = await ensureUserHasTeam(user);
 
     if (!userWithTeam?.teamId) {
-      return { error: 'User is not part of a team' };
+      return { error: 'Failed to initialize team. Please try again.' };
     }
 
     // Check if current user has permission to invite users
@@ -802,10 +830,10 @@ export const inviteEducationalUser = validatedActionWithUser(
   inviteEducationalUserSchema,
   async (data, _, user) => {
     const { email, role, language, className, institutionId, classId } = data;
-    const userWithTeam = await getUserWithTeam(user.id);
+    const userWithTeam = await ensureUserHasTeam(user);
 
     if (!userWithTeam?.teamId) {
-      return { error: 'User is not part of a team' };
+      return { error: 'Failed to initialize team. Please try again.' };
     }
 
     // Check if current user has permission to invite users
