@@ -1221,6 +1221,21 @@ export default function HomePage() {
   const [storyTeaserOpen, setStoryTeaserOpen] = useState(false);
   const [storyTeaserLanguage, setStoryTeaserLanguage] = useState<'spanish' | 'german' | 'french'>('spanish');
 
+  const heroMessages = [
+    'Lingoletics helps schools and learners strengthen language skills, boost confidence, and improve exam success in French, German, and Spanish.',
+    'Built for GCSE, A-Level, and CEFR progression, it provides targeted practice in reading, listening, and comprehension.',
+    'Through AI-supported learning, audio-enhanced stories, and cultural insight, students stay engaged while making real progress.',
+    'It is a powerful tool for both classroom support and independent study, helping learners achieve stronger outcomes in languages.',
+  ];
+  const [heroMessageIndex, setHeroMessageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroMessageIndex((prev) => (prev + 1) % heroMessages.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [heroMessages.length]);
+
   const openQuizTeaser = (type: 'true_false' | 'multiple_choice' | 'gap_fill') => {
     setQuizTeaserType(type);
     setQuizTeaserOpen(true);
@@ -1265,10 +1280,11 @@ export default function HomePage() {
                 Language Learning with
                 <span className="block text-orange-500">Short Stories, Quizzes & Games</span>
               </h1>
-              <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
-                Master French, German, and Spanish through engaging stories with audio, 
-                comprehension exercises, and cultural insights. Perfect for beginner to 
-                intermediate learners who love reading and discovery. <strong>Join the Language Athletics League now!</strong>
+              <p
+                key={heroMessageIndex}
+                className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl animate-fade-in"
+              >
+                {heroMessages[heroMessageIndex]}
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
                 <a href="#pricing">
