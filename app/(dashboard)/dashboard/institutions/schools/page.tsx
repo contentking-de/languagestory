@@ -18,7 +18,8 @@ import {
   GraduationCap,
   Building,
   UserCheck,
-  Loader2
+  Loader2,
+  CalendarPlus
 } from 'lucide-react';
 import {
   Select,
@@ -102,9 +103,12 @@ export default function SchoolsPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [extendingId, setExtendingId] = useState<number | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     fetchInstitutions();
+    fetchUserRole();
   }, []);
 
   const fetchInstitutions = async () => {
@@ -118,6 +122,45 @@ export default function SchoolsPage() {
       console.error('Error fetching institutions:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserRole = async () => {
+    try {
+      const response = await fetch('/api/user');
+      if (response.ok) {
+        const data = await response.json();
+        setUserRole(data?.role || null);
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+  };
+
+  const handleExtendTrial = async (institution: Institution) => {
+    if (!confirm(`Extend trial for "${institution.name}" by 2 weeks? Teachers will be notified by email.`)) {
+      return;
+    }
+
+    setExtendingId(institution.id);
+    try {
+      const response = await fetch(`/api/institutions/${institution.id}/extend-trial`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(`Trial extended successfully! ${data.emailsSent} teacher(s) notified. New end date: ${new Date(data.newTrialEndsAt).toLocaleDateString()}`);
+        fetchInstitutions();
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to extend trial');
+      }
+    } catch (error) {
+      console.error('Error extending trial:', error);
+      alert('Failed to extend trial');
+    } finally {
+      setExtendingId(null);
     }
   };
 
@@ -404,6 +447,23 @@ export default function SchoolsPage() {
                     </>
                   )}
                 </div>
+
+                {userRole === 'super_admin' && (subStatus.status === 'trial' || subStatus.status === 'trial_expired') && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-yellow-700 hover:text-yellow-800 hover:bg-yellow-50 border-yellow-300"
+                    onClick={() => handleExtendTrial(institution)}
+                    disabled={extendingId === institution.id}
+                  >
+                    {extendingId === institution.id ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <CalendarPlus className="h-4 w-4 mr-1" />
+                    )}
+                    Extend Trial (+14 days)
+                  </Button>
+                )}
 
                 <div className="flex gap-2 pt-2">
                   <Link href={`/dashboard/institutions/schools/${institution.id}`} className="flex-1">
