@@ -38,9 +38,60 @@ interface Institution {
   contact_email: string;
   is_active: boolean;
   created_at: string;
+  subscription_status: string | null;
+  trial_ends_at: string | null;
+  plan_name: string | null;
   student_count?: number;
   teacher_count?: number;
   admin_count?: number;
+}
+
+type AccessStatus = 'active' | 'trial' | 'trial_expired' | 'canceled' | 'no_team';
+
+function getSubscriptionStatus(institution: Institution): { status: AccessStatus; label: string; trialDaysRemaining: number | null } {
+  const { subscription_status, trial_ends_at } = institution;
+
+  if (!subscription_status && !trial_ends_at) {
+    return { status: 'no_team', label: 'No Subscription', trialDaysRemaining: null };
+  }
+
+  if (subscription_status === 'active') {
+    return { status: 'active', label: 'Subscribed', trialDaysRemaining: null };
+  }
+
+  if (subscription_status === 'trialing') {
+    const days = trial_ends_at
+      ? Math.ceil((new Date(trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+      : null;
+    if (days !== null && days > 0) {
+      return { status: 'trial', label: `Trial · ${days}d left`, trialDaysRemaining: days };
+    }
+    return { status: 'trial_expired', label: 'Trial Expired', trialDaysRemaining: 0 };
+  }
+
+  if (trial_ends_at) {
+    const days = Math.ceil((new Date(trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (days > 0) {
+      return { status: 'trial', label: `Trial · ${days}d left`, trialDaysRemaining: days };
+    }
+    return { status: 'trial_expired', label: 'Trial Expired', trialDaysRemaining: 0 };
+  }
+
+  if (subscription_status === 'canceled' || subscription_status === 'unpaid') {
+    return { status: 'canceled', label: 'Canceled', trialDaysRemaining: null };
+  }
+
+  return { status: 'no_team', label: 'No Subscription', trialDaysRemaining: null };
+}
+
+function getStatusBadgeStyle(status: AccessStatus): string {
+  switch (status) {
+    case 'active': return 'bg-green-100 text-green-800';
+    case 'trial': return 'bg-yellow-100 text-yellow-800';
+    case 'trial_expired': return 'bg-red-100 text-red-800';
+    case 'canceled': return 'bg-red-100 text-red-800';
+    case 'no_team': return 'bg-gray-100 text-gray-600';
+  }
 }
 
 export default function SchoolsPage() {
@@ -99,9 +150,12 @@ export default function SchoolsPage() {
     const matchesSearch = institution.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (institution.address && institution.address.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesType = typeFilter === 'all' || institution.type === typeFilter;
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && institution.is_active) ||
-                         (statusFilter === 'inactive' && !institution.is_active);
+    const subStatus = getSubscriptionStatus(institution).status;
+    const matchesStatus = statusFilter === 'all' ||
+                         (statusFilter === 'subscribed' && subStatus === 'active') ||
+                         (statusFilter === 'trial' && subStatus === 'trial') ||
+                         (statusFilter === 'expired' && (subStatus === 'trial_expired' || subStatus === 'canceled')) ||
+                         (statusFilter === 'no_subscription' && subStatus === 'no_team');
 
     return matchesSearch && matchesType && matchesStatus;
   });
@@ -188,9 +242,9 @@ export default function SchoolsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active</p>
+                <p className="text-sm font-medium text-gray-600">Subscribed</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {institutions.filter(i => i.is_active).length}
+                  {institutions.filter(i => getSubscriptionStatus(i).status === 'active').length}
                 </p>
               </div>
               <UserCheck className="h-8 w-8 text-green-500" />
@@ -202,12 +256,12 @@ export default function SchoolsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Schools</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {typeStats.school || 0}
+                <p className="text-sm font-medium text-gray-600">In Trial</p>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {institutions.filter(i => getSubscriptionStatus(i).status === 'trial').length}
                 </p>
               </div>
-              <School className="h-8 w-8 text-blue-500" />
+              <School className="h-8 w-8 text-yellow-500" />
             </div>
           </CardContent>
         </Card>
@@ -216,12 +270,15 @@ export default function SchoolsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Universities</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {typeStats.university || 0}
+                <p className="text-sm font-medium text-gray-600">Trial Expired</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {institutions.filter(i => {
+                    const s = getSubscriptionStatus(i).status;
+                    return s === 'trial_expired' || s === 'canceled';
+                  }).length}
                 </p>
               </div>
-              <GraduationCap className="h-8 w-8 text-purple-500" />
+              <GraduationCap className="h-8 w-8 text-red-500" />
             </div>
           </CardContent>
         </Card>
@@ -260,8 +317,10 @@ export default function SchoolsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="subscribed">Subscribed</SelectItem>
+                <SelectItem value="trial">In Trial</SelectItem>
+                <SelectItem value="expired">Trial Expired</SelectItem>
+                <SelectItem value="no_subscription">No Subscription</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -271,6 +330,7 @@ export default function SchoolsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredInstitutions.map((institution) => {
           const TypeIcon = getTypeIcon(institution.type);
+          const subStatus = getSubscriptionStatus(institution);
           return (
             <Card key={institution.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
@@ -279,9 +339,14 @@ export default function SchoolsPage() {
                     <TypeIcon className="h-8 w-8 text-orange-500" />
                     <div>
                       <CardTitle className="text-lg line-clamp-2">{institution.name}</CardTitle>
-                      <Badge className={getTypeColor(institution.type)}>
-                        {getTypeLabel(institution.type)}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Badge className={getTypeColor(institution.type)}>
+                          {getTypeLabel(institution.type)}
+                        </Badge>
+                        <Badge className={getStatusBadgeStyle(subStatus.status)}>
+                          {subStatus.label}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                   <div className={`w-3 h-3 rounded-full ${institution.is_active ? 'bg-green-500' : 'bg-gray-400'}`} />
@@ -324,7 +389,7 @@ export default function SchoolsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 text-sm">
+                <div className="flex items-center gap-1 text-sm flex-wrap">
                   <span className={`${institution.is_active ? 'text-green-600' : 'text-gray-500'}`}>
                     {institution.is_active ? 'Active' : 'Inactive'}
                   </span>
@@ -332,6 +397,12 @@ export default function SchoolsPage() {
                   <span className="text-gray-500">
                     Added {new Date(institution.created_at).toLocaleDateString()}
                   </span>
+                  {institution.plan_name && (
+                    <>
+                      <span className="text-gray-400">•</span>
+                      <span className="text-gray-500">{institution.plan_name}</span>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex gap-2 pt-2">

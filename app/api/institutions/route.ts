@@ -22,6 +22,32 @@ export async function GET() {
         contact_email: institutions.contactEmail,
         is_active: institutions.isActive,
         created_at: institutions.createdAt,
+        subscription_status: sql<string | null>`(
+          SELECT t.subscription_status FROM teams t
+          WHERE t.institution_id = ${instId}
+          ORDER BY CASE t.subscription_status
+            WHEN 'active' THEN 1
+            WHEN 'trialing' THEN 2
+            ELSE 3
+          END
+          LIMIT 1
+        )`,
+        trial_ends_at: sql<string | null>`(
+          SELECT t.trial_ends_at::text FROM teams t
+          WHERE t.institution_id = ${instId}
+          ORDER BY t.trial_ends_at DESC NULLS LAST
+          LIMIT 1
+        )`,
+        plan_name: sql<string | null>`(
+          SELECT t.plan_name FROM teams t
+          WHERE t.institution_id = ${instId}
+          ORDER BY CASE t.subscription_status
+            WHEN 'active' THEN 1
+            WHEN 'trialing' THEN 2
+            ELSE 3
+          END
+          LIMIT 1
+        )`,
         student_count: sql<number>`(
           SELECT count(*)::int FROM users
           WHERE users.role = 'student'
