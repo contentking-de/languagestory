@@ -14,6 +14,7 @@ import {
   GraduationCap,
   Building,
   UserCheck,
+  ShieldCheck,
   Calendar,
   Users
 } from 'lucide-react';
@@ -31,7 +32,7 @@ interface Institution {
   updated_at: string;
   student_count?: number;
   teacher_count?: number;
-  course_count?: number;
+  admin_count?: number;
 }
 
 export default function InstitutionViewPage() {
@@ -187,10 +188,10 @@ export default function InstitutionViewPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Courses</p>
-                <p className="text-2xl font-bold text-gray-900">{institution.course_count || 0}</p>
+                <p className="text-sm font-medium text-gray-600">Admins</p>
+                <p className="text-2xl font-bold text-gray-900">{institution.admin_count || 0}</p>
               </div>
-              <GraduationCap className="h-8 w-8 text-purple-500" />
+              <ShieldCheck className="h-8 w-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>

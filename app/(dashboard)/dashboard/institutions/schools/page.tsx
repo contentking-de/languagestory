@@ -40,7 +40,7 @@ interface Institution {
   created_at: string;
   student_count?: number;
   teacher_count?: number;
-  course_count?: number;
+  admin_count?: number;
 }
 
 export default function SchoolsPage() {
@@ -318,9 +318,9 @@ export default function SchoolsPage() {
                   </div>
                   <div className="text-center p-2 bg-gray-50 rounded">
                     <div className="font-medium text-gray-900">
-                      {institution.course_count || 0}
+                      {institution.admin_count || 0}
                     </div>
-                    <div className="text-gray-600 text-xs">Courses</div>
+                    <div className="text-gray-600 text-xs">Admins</div>
                   </div>
                 </div>
 

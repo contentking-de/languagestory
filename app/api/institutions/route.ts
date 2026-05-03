@@ -11,6 +11,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const instId = sql.raw('"institutions"."id"');
+
     const institutionsData = await db
       .select({
         id: institutions.id,
@@ -20,9 +22,39 @@ export async function GET() {
         contact_email: institutions.contactEmail,
         is_active: institutions.isActive,
         created_at: institutions.createdAt,
-        student_count: sql<number>`(SELECT count(*)::int FROM users WHERE users.institution_id = ${institutions.id} AND users.role = 'student')`,
-        teacher_count: sql<number>`(SELECT count(*)::int FROM users WHERE users.institution_id = ${institutions.id} AND users.role = 'teacher')`,
-        course_count: sql<number>`(SELECT count(*)::int FROM courses WHERE courses.institution_id = ${institutions.id})`,
+        student_count: sql<number>`(
+          SELECT count(*)::int FROM users
+          WHERE users.role = 'student'
+            AND (users.institution_id = ${instId}
+                 OR users.id IN (
+                   SELECT team_members.user_id FROM team_members
+                   WHERE team_members.team_id IN (
+                     SELECT teams.id FROM teams WHERE teams.institution_id = ${instId}
+                   )
+                 ))
+        )`,
+        teacher_count: sql<number>`(
+          SELECT count(*)::int FROM users
+          WHERE users.role = 'teacher'
+            AND (users.institution_id = ${instId}
+                 OR users.id IN (
+                   SELECT team_members.user_id FROM team_members
+                   WHERE team_members.team_id IN (
+                     SELECT teams.id FROM teams WHERE teams.institution_id = ${instId}
+                   )
+                 ))
+        )`,
+        admin_count: sql<number>`(
+          SELECT count(*)::int FROM users
+          WHERE users.role = 'institution_admin'
+            AND (users.institution_id = ${instId}
+                 OR users.id IN (
+                   SELECT team_members.user_id FROM team_members
+                   WHERE team_members.team_id IN (
+                     SELECT teams.id FROM teams WHERE teams.institution_id = ${instId}
+                   )
+                 ))
+        )`,
       })
       .from(institutions)
       .orderBy(institutions.name);
