@@ -71,6 +71,7 @@ export function DashboardNavigation({ userRole, teacherResourcesAccess, accessSt
         { href: '/dashboard/institutions/analytics', icon: BarChart3, label: 'Analytics' }
       ]
     },
+    { href: '/dashboard/individuals', icon: UserCircle, label: 'Individuals' },
     { 
       href: '/dashboard', 
       icon: Users, 
