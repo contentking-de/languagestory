@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserProgressSummary } from '@/components/user-progress-summary';
 import { 
   Users, Settings, Shield, Activity, Menu, UserCheck, ChevronDown, ChevronRight,
-  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage, Ticket, FileText, MessageCircle, UserCircle, Clock, AlertTriangle, Dumbbell, Download
+  BookOpen, GraduationCap, FileQuestion, Languages, Building2, BarChart3, School, Gamepad2, Brain, Heart, TrendingUp, FileImage, Ticket, FileText, MessageCircle, UserCircle, Clock, AlertTriangle, Dumbbell, Download, Send
 } from 'lucide-react';
 
 interface NavItem {
@@ -93,6 +93,7 @@ export function DashboardNavigation({ userRole, teacherResourcesAccess, accessSt
     { href: '/dashboard/ai-creator', icon: Brain, label: 'AI Creator' },
     { href: '/dashboard/media', icon: FileImage, label: 'Media Library' },
     { href: '/dashboard/tickets', icon: Ticket, label: 'Tickets' },
+    { href: '/dashboard/outreach', icon: Send, label: 'Outreach' },
   ];
 
   // Stripped navigation for Teachers

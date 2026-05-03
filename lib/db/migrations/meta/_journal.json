@@ -120,6 +120,13 @@
       "when": 1754570311285,
       "tag": "0016_faithful_dragon_lord",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1777831254802,
+      "tag": "0017_small_venom",
+      "breakpoints": true
     }
   ]
 }

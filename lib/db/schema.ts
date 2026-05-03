@@ -187,6 +187,32 @@ export const teamClassNames = pgTable('team_class_names', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+// Outreach contacts (imported or manually added)
+export const outreachStatusEnum = pgEnum('outreach_status', ['pending', 'sent', 'failed', 'bounced']);
+
+export const outreachContacts = pgTable('outreach_contacts', {
+  id: serial('id').primaryKey(),
+  email: varchar('email', { length: 255 }).notNull(),
+  name: varchar('name', { length: 200 }),
+  company: varchar('company', { length: 200 }),
+  notes: text('notes'),
+  source: varchar('source', { length: 50 }).notNull().default('manual'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const outreachEmails = pgTable('outreach_emails', {
+  id: serial('id').primaryKey(),
+  contactId: integer('contact_id').notNull().references(() => outreachContacts.id),
+  subject: varchar('subject', { length: 500 }).notNull(),
+  body: text('body').notNull(),
+  status: outreachStatusEnum('status').notNull().default('pending'),
+  sentAt: timestamp('sent_at'),
+  sentBy: integer('sent_by').notNull().references(() => users.id),
+  resendId: varchar('resend_id', { length: 255 }),
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 // Relations
 export const institutionsRelations = relations(institutions, ({ many }) => ({
   users: many(users),
@@ -323,6 +349,21 @@ export const ticketHistoryRelations = relations(ticketHistory, ({ one }) => ({
   }),
 }));
 
+export const outreachContactsRelations = relations(outreachContacts, ({ many }) => ({
+  emails: many(outreachEmails),
+}));
+
+export const outreachEmailsRelations = relations(outreachEmails, ({ one }) => ({
+  contact: one(outreachContacts, {
+    fields: [outreachEmails.contactId],
+    references: [outreachContacts.id],
+  }),
+  sender: one(users, {
+    fields: [outreachEmails.sentBy],
+    references: [users.id],
+  }),
+}));
+
 export const invitationsRelations = relations(invitations, ({ one }) => ({
   team: one(teams, {
     fields: [invitations.teamId],
@@ -368,6 +409,10 @@ export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
 export type TeamClassName = typeof teamClassNames.$inferSelect;
 export type NewTeamClassName = typeof teamClassNames.$inferInsert;
+export type OutreachContact = typeof outreachContacts.$inferSelect;
+export type NewOutreachContact = typeof outreachContacts.$inferInsert;
+export type OutreachEmail = typeof outreachEmails.$inferSelect;
+export type NewOutreachEmail = typeof outreachEmails.$inferInsert;
 
 export type TeamDataWithMembers = Team & {
   teamMembers: (TeamMember & {
