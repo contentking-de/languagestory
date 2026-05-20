@@ -1264,7 +1264,7 @@ export default function HomePage() {
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight sm:text-4xl md:text-5xl">
-                Improve GCSE French, German and Spanish
+                Improve GCSE and A-Level French, German and Spanish
                 <span className="block text-orange-500">Through Story-Based Reading</span>
               </h1>
               <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
@@ -1424,9 +1424,9 @@ export default function HomePage() {
           </div>
           <div className="flex flex-wrap justify-center gap-3 mb-10">
             <span className="bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-semibold">GCSE Aligned</span>
-            <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-semibold">CEFR A1 &ndash; B2</span>
+            <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-semibold">CEFR A1 &ndash; C1</span>
             <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-semibold">Curriculum-Mapped Topics</span>
-            <span className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold">KS3 &amp; KS4</span>
+            <span className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold">KS3, KS4 &amp; KS5</span>
             <span className="bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-semibold">AQA &middot; Edexcel &middot; OCR</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -1440,7 +1440,7 @@ export default function HomePage() {
               <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
               </div>
-              <p className="text-gray-700">Stories levelled from A1 to B2 (CEFR)</p>
+              <p className="text-gray-700">Stories levelled from A1 to C1 (CEFR)</p>
             </div>
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -1490,7 +1490,7 @@ export default function HomePage() {
                 <Users className="h-6 w-6 text-green-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Differentiated for mixed-ability</h3>
-              <p className="text-gray-600 text-sm">Stories levelled from A1 to B2, so every pupil works at the right challenge.</p>
+              <p className="text-gray-600 text-sm">Stories levelled from A1 to C1, so every pupil works at the right challenge.</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
@@ -1590,7 +1590,7 @@ export default function HomePage() {
               <p className="text-sm text-gray-500">Languages</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-orange-500">A1&ndash;B2</p>
+              <p className="text-3xl font-bold text-orange-500">A1&ndash;C1</p>
               <p className="text-sm text-gray-500">CEFR levels</p>
             </div>
           </div>
