@@ -11,11 +11,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const navLinks = [
-  { href: '#why-choose-us', label: 'Why Choose Us' },
-  { href: '#features', label: 'Features' },
-  { href: '#short-stories', label: 'Short Stories' },
-  { href: '#quizzes', label: 'Quizzes' },
-  { href: '#vocabulary-games', label: 'Vocabulary Games' },
+  { href: '#how-it-works', label: 'How It Works' },
+  { href: '#why-choose-us', label: 'For Teachers' },
+  { href: '#short-stories', label: 'Stories' },
+  { href: '#quizzes', label: 'Practice' },
   { href: '#pricing', label: 'Plans & Pricing' },
 ];
 

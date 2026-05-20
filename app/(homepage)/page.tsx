@@ -1211,7 +1211,7 @@ function ConsentPreferences() {
 }
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState('individual');
+  const [activeTab, setActiveTab] = useState('school');
   const [modalOpen, setModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState('');
   const [quizTeaserOpen, setQuizTeaserOpen] = useState(false);
@@ -1221,20 +1221,6 @@ export default function HomePage() {
   const [storyTeaserOpen, setStoryTeaserOpen] = useState(false);
   const [storyTeaserLanguage, setStoryTeaserLanguage] = useState<'spanish' | 'german' | 'french'>('spanish');
 
-  const heroMessages = [
-    'Lingoletics helps schools and learners strengthen language skills, boost confidence, and improve exam success in French, German, and Spanish.',
-    'Built for GCSE, A-Level, and CEFR progression, it provides targeted practice in reading, listening, and comprehension.',
-    'Through AI-supported learning, audio-enhanced stories, and cultural insight, students stay engaged while making real progress.',
-    'It is a powerful tool for both classroom support and independent study, helping learners achieve stronger outcomes in languages.',
-  ];
-  const [heroMessageIndex, setHeroMessageIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setHeroMessageIndex((prev) => (prev + 1) % heroMessages.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [heroMessages.length]);
 
   const openQuizTeaser = (type: 'true_false' | 'multiple_choice' | 'gap_fill') => {
     setQuizTeaserType(type);
@@ -1272,33 +1258,28 @@ export default function HomePage() {
 
   return (
     <main>
+      {/* Hero Section */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
               <h1 className="text-3xl font-bold text-gray-900 tracking-tight sm:text-4xl md:text-5xl">
-                Language Learning with
-                <span className="block text-orange-500">Short Stories, Quizzes & Games</span>
+                Improve GCSE French, German and Spanish
+                <span className="block text-orange-500">Through Story-Based Reading</span>
               </h1>
-              <p
-                key={heroMessageIndex}
-                className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl animate-fade-in"
-              >
-                {heroMessages[heroMessageIndex]}
+              <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
+                Levelled short stories with audio, quizzes and gamified practice &mdash; built by a teacher for UK secondary MFL departments.
               </p>
-              <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
-                <a href="#pricing">
-                  <button
-                    className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-lg font-medium transition-all px-6 py-3 border-2 ${
-                      accessibilitySettings.colorScheme === 'high-contrast'
-                        ? 'bg-white text-black border-white hover:bg-gray-100'
-                        : accessibilitySettings.colorScheme === 'dark'
-                        ? 'bg-white text-gray-900 border-white hover:bg-gray-100'
-                        : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    Start Your Journey
-                    <ArrowRight className="ml-2 h-5 w-5" />
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 sm:max-w-lg sm:mx-auto lg:mx-0 lg:text-left sm:text-center">
+                <a href="/sign-up">
+                  <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-lg font-medium transition-all px-6 py-3 bg-orange-500 text-white hover:bg-orange-600">
+                    Start Your 14-Day Free Trial
+                    <ArrowRight className="ml-1 h-5 w-5" />
+                  </button>
+                </a>
+                <a href="#how-it-works">
+                  <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-lg font-medium transition-all px-6 py-3 border-2 border-gray-300 text-gray-900 bg-white hover:bg-gray-50">
+                    See How It Works
                   </button>
                 </a>
               </div>
@@ -1320,7 +1301,64 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Social Proof Banner */}
+      <section className="py-6 bg-gray-50 border-y border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-gray-500 font-medium text-sm uppercase tracking-wide">Trusted by MFL teachers across the UK</p>
+        </div>
+      </section>
+
+      {/* Pain Points Section */}
       <section className="py-16 bg-white w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
+              The Challenges Facing MFL Departments
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Sound familiar? These are the problems teachers tell us about every day.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Pupils rarely read independently in the target language</h3>
+              <p className="text-sm text-gray-500">Authentic literature is too hard; simplified texts feel dull.</p>
+            </div>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="h-6 w-6 text-orange-600" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Low motivation and engagement in lessons</h3>
+              <p className="text-sm text-gray-500">Traditional drills don&apos;t excite pupils or build real confidence.</p>
+            </div>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Headphones className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Limited time for reading and listening practice</h3>
+              <p className="text-sm text-gray-500">Curriculum time is shrinking but expectations keep rising.</p>
+            </div>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Vocabulary retention drops between lessons</h3>
+              <p className="text-sm text-gray-500">Without regular reinforcement, learning doesn&apos;t stick.</p>
+            </div>
+          </div>
+          <div className="text-center mt-10">
+            <p className="text-lg font-semibold text-gray-900">
+              Lingoletics was built to solve exactly these problems.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-16 bg-gray-50 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             <div>
@@ -1329,12 +1367,13 @@ export default function HomePage() {
                   <BookOpen className="h-6 w-6" />
                 </div>
                 <h2 className="text-lg font-medium text-gray-900">
-                  Story-Based Learning
+                  Builds Extended Reading Confidence
                 </h2>
               </div>
               <p className="mt-4 text-base text-gray-500 sm:text-xl lg:text-lg xl:text-xl">
-                Learn through captivating short stories featuring memorable characters 
-                and authentic cultural contexts from France, Germany, and Spain.
+                Levelled short stories with curriculum-mapped topics help pupils read 
+                independently in French, German, and Spanish &mdash; building fluency 
+                and confidence with every page.
               </p>
             </div>
 
@@ -1344,12 +1383,13 @@ export default function HomePage() {
                   <Users className="h-6 w-6" />
                 </div>
                 <h2 className="text-lg font-medium text-gray-900">
-                  Four Skills Development
+                  Supports GCSE Writing &amp; Speaking Quality
                 </h2>
               </div>
               <p className="mt-4 text-base text-gray-500 sm:text-xl lg:text-lg xl:text-xl">
-                Practice reading, listening, writing, and speaking skills through 
-                comprehensive exercises that build on each story's content.
+                Stories expose pupils to natural sentence patterns, key vocabulary, and 
+                grammar in context &mdash; improving the quality of their own written 
+                and spoken output.
               </p>
             </div>
 
@@ -1359,222 +1399,226 @@ export default function HomePage() {
                   <Headphones className="h-6 w-6" />
                 </div>
                 <h2 className="text-lg font-medium text-gray-900">
-                  Audio & Comprehension
+                  Develops Listening Stamina &amp; Comprehension
                 </h2>
               </div>
               <p className="mt-4 text-base text-gray-500 sm:text-xl lg:text-lg xl:text-xl">
-                Listen to native speaker audio recordings and complete interactive 
-                comprehension exercises to reinforce your learning.
+                Every story includes native-speaker audio, giving pupils regular 
+                listening practice that builds stamina for the GCSE listening exam.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Languages Section */}
-      <section className="py-16 bg-orange-50">
+      {/* Exam Alignment Section */}
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
+          <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
-              Learn Through Engaging Stories
+              Designed Around What Schools Actually Need
             </h2>
-            <p className="text-lg text-gray-600 mb-12 max-w-3xl mx-auto">
-              Master French, German, and Spanish with our collection of original short stories. 
-              Each story includes audio, comprehension exercises, and cultural insights.
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Every story and exercise is aligned to the UK secondary curriculum, so you can trust it fits your teaching.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex justify-center mb-4">
-                <FlagIcon language="french" size="xl" />
+          <div className="flex flex-wrap justify-center gap-3 mb-10">
+            <span className="bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-semibold">GCSE Aligned</span>
+            <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-semibold">CEFR A1 &ndash; B2</span>
+            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-semibold">Curriculum-Mapped Topics</span>
+            <span className="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold">KS3 &amp; KS4</span>
+            <span className="bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-semibold">AQA &middot; Edexcel &middot; OCR</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">French</h3>
-              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">
-                Discover French culture through engaging stories set in Paris, Provence, and beyond. 
-                Learn authentic expressions and cultural nuances.
-              </p>
+              <p className="text-gray-700">Topics mapped to AQA, Edexcel and OCR GCSE specifications</p>
             </div>
-            <div className="text-center bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex justify-center mb-4">
-                <FlagIcon language="german" size="xl" />
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">German</h3>
-              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">
-                Explore German traditions and landmarks through captivating narratives. 
-                Master complex grammar in context with memorable characters.
-              </p>
+              <p className="text-gray-700">Stories levelled from A1 to B2 (CEFR)</p>
             </div>
-            <div className="text-center bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex justify-center mb-4">
-                <FlagIcon language="spanish" size="xl" />
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Spanish</h3>
-              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">
-                Journey through Spanish-speaking countries and their rich cultures. 
-                Build vocabulary naturally through immersive storytelling.
-              </p>
+              <p className="text-gray-700">Supports retrieval practice and spaced repetition</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+              </div>
+              <p className="text-gray-700">Develops spontaneous vocabulary recall</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Why Choose Us Section */}
+      {/* Built for Teachers Section */}
       <section id="why-choose-us" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
-              Why Choose Us?
+              Built to Save Teachers Time and Boost Results
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Discover how Lingoletics.com transforms language learning for everyone in the educational community
+              Everything you need to run engaging MFL lessons &mdash; without the prep
             </p>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* For Teachers */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <BookOpen className="h-6 w-6 text-orange-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">For Teachers</h3>
-              <div className="text-left space-y-3">
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Ready-to-use lesson plans that save hours of preparation time</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Comprehensive assessment tools with automatic grading</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Cultural insights that enhance classroom discussions</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Progress tracking to monitor student development</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Differentiated content for various skill levels</p>
-                </div>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Ready-to-use lesson content</h3>
+              <p className="text-gray-600 text-sm">Stories, quizzes and games aligned to your curriculum &mdash; no prep needed.</p>
             </div>
-
-            {/* For Students */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                </svg>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                <BarChart3 className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">For Students</h3>
-              <div className="text-left space-y-3">
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Engaging stories that make learning feel like entertainment</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Interactive games and quizzes for active learning</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Native speaker audio for perfect pronunciation practice</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Self-paced learning that adapts to individual schedules</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Immediate feedback to accelerate improvement</p>
-                </div>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Automatic progress tracking</h3>
+              <p className="text-gray-600 text-sm">See how every pupil is performing across all your classes at a glance.</p>
             </div>
-
-            {/* For Parents */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                <Users className="h-6 w-6 text-green-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">For Parents</h3>
-              <div className="text-left space-y-3">
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Safe, educational screen time that parents can feel good about</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Detailed progress reports to track your child's growth</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Cost-effective alternative to expensive private tutoring</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Family-friendly content that promotes cultural awareness</p>
-                </div>
-                <div className="flex items-start">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-gray-600">Flexible learning that fits into busy family schedules</p>
-                </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Differentiated for mixed-ability</h3>
+              <p className="text-gray-600 text-sm">Stories levelled from A1 to B2, so every pupil works at the right challenge.</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                <Trophy className="h-6 w-6 text-purple-600" />
               </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Pupils stay engaged</h3>
+              <p className="text-gray-600 text-sm">Gamified quizzes, vocabulary games and achievement tracking keep motivation high.</p>
             </div>
           </div>
 
-          {/* Bottom CTA */}
-          <div className="text-center mt-16">
-            <p className="text-lg text-gray-600 mb-6">
-              Join thousands of educators, students, and families who trust Lingoletics.com
-            </p>
-            <a href="#pricing">
+          <div className="text-center mt-12">
+            <a href="/sign-up">
               <button className="bg-orange-500 text-white font-bold text-lg px-8 py-3 rounded-lg hover:bg-orange-600 transition-colors">
-                Explore Our Plans
+                Try It Free for 14 Days
               </button>
             </a>
+            <p className="text-sm text-gray-500 mt-3">Completely free &mdash; no credit card required for trial</p>
           </div>
         </div>
       </section>
 
-      {/* From Teachers for Teachers and Students Section */}
+      {/* Social Proof / Testimonials Section */}
       <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
+              What Teachers Are Saying
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Hear from MFL teachers who use Lingoletics in their classrooms
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <div className="flex items-center gap-1 mb-3">
+                {[1,2,3,4,5].map(i => (
+                  <svg key={i} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                ))}
+              </div>
+              <p className="text-gray-700 italic mb-4">&ldquo;My Year 9 pupils are actually asking to read in French now. The stories are pitched perfectly and the quizzes keep them accountable.&rdquo;</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center">
+                  <span className="text-orange-700 font-semibold text-sm">ST</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">Sarah T.</p>
+                  <p className="text-gray-500 text-xs">Head of MFL, Secondary School</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <div className="flex items-center gap-1 mb-3">
+                {[1,2,3,4,5].map(i => (
+                  <svg key={i} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                ))}
+              </div>
+              <p className="text-gray-700 italic mb-4">&ldquo;The progress tracking saves me hours of admin. I can see at a glance who has engaged with the reading tasks and who needs a nudge.&rdquo;</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
+                  <span className="text-blue-700 font-semibold text-sm">JM</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">James M.</p>
+                  <p className="text-gray-500 text-xs">German &amp; French Teacher</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <div className="flex items-center gap-1 mb-3">
+                {[1,2,3,4,5].map(i => (
+                  <svg key={i} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                ))}
+              </div>
+              <p className="text-gray-700 italic mb-4">&ldquo;Finally a platform that gets comprehensible input right. The GCSE-aligned topics mean I can use it as genuine homework, not just a supplement.&rdquo;</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
+                  <span className="text-green-700 font-semibold text-sm">RP</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">Rachel P.</p>
+                  <p className="text-gray-500 text-xs">Spanish Teacher, Academy Trust</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto text-center">
+            <div>
+              <p className="text-3xl font-bold text-orange-500">500+</p>
+              <p className="text-sm text-gray-500">Original stories</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-orange-500">3</p>
+              <p className="text-sm text-gray-500">Languages</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-orange-500">A1&ndash;B2</p>
+              <p className="text-sm text-gray-500">CEFR levels</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Founder Section */}
+      <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left lg:flex lg:items-center">
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 tracking-tight sm:text-4xl mb-6">
-                  From Teachers for Teachers and Students
+                  Built by a Teacher Who Understands Your Classroom
                 </h2>
                 <p className="mt-3 text-base text-gray-600 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl mb-4">
-                  Lingoletics.com is a project created by a teacher, for teachers and students. 
-                  Built with deep understanding of the educational landscape and classroom needs, 
-                  our platform reflects the professionalism and dedication that comes from real 
-                  teaching experience.
-                </p>
-                <p className="text-base text-gray-600 sm:text-xl lg:text-lg xl:text-xl mb-6">
-                  Every story, exercise, and feature has been carefully crafted with pedagogical 
-                  expertise, ensuring that both educators and learners have access to high-quality, 
-                  curriculum-aligned resources that truly support language acquisition and teaching excellence.
+                  Lingoletics was created by Andrew Stokes, a secondary school teacher with over 
+                  10 years of experience teaching German and French in UK schools. Every story, 
+                  exercise, and feature reflects what actually works in the classroom.
                 </p>
                 <div className="border-l-4 border-orange-500 pl-6 mt-6">
                   <p className="text-lg font-semibold text-gray-900 italic mb-2">
-                    "Teaching is my passion. It's about inspiring students to discover the joy of 
-                    language learning and empowering fellow educators with tools that make a real 
-                    difference in the classroom. Lingoletics.com represents my commitment to creating 
-                    resources that combine authentic cultural experiences with effective pedagogy, 
-                    because I believe that when teachers have the right tools, students can achieve 
-                    extraordinary things."
+                    &ldquo;I built Lingoletics because I couldn&apos;t find a reading platform that was 
+                    pitched at the right level for my KS3 and KS4 pupils. Authentic texts were 
+                    too hard, textbook extracts too boring. These stories fill that gap.&rdquo;
                   </p>
                   <p className="text-base text-gray-600 font-medium">
-                    — Andrew Stokes, Founder & Teacher
+                    &mdash; Andrew Stokes, Founder &amp; MFL Teacher
                   </p>
                 </div>
               </div>
@@ -1595,166 +1639,51 @@ export default function HomePage() {
         </div>
       </section>
 
-              {/* Features Section */}
+              {/* Features Section (trimmed) */}
         <section id="features" className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">Platform Features</h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Discover the comprehensive tools and features that make Lingoletics.com the complete solution for language learning and teaching
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">What&apos;s Inside the Platform</h2>
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                Stories, audio, quizzes, games and tracking &mdash; everything in one place
               </p>
             </div>
 
-            {/* Interactive Learning Features */}
-            <div className="mb-16">
-              <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Interactive Learning Experience</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
-                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h6m2 5.291A7.962 7.962 0 0112 21a7.962 7.962 0 01-5.291-1.709L3 21l1.709-3.709A7.962 7.962 0 013 12a7.962 7.962 0 011.709-5.291m0 10.582A7.962 7.962 0 0112 19a7.962 7.962 0 015.291-1.709M6.709 6.709A7.962 7.962 0 0112 5a7.962 7.962 0 015.291 1.709" />
-                    </svg>
-                  </div>
-                  <h4 className="text-xl font-semibold text-gray-900 mb-4 text-center">Native Audio Integration</h4>
-                  <p className="text-gray-600 text-center text-base sm:text-xl lg:text-lg xl:text-xl">Professional native speaker recordings for perfect pronunciation practice and listening comprehension development.</p>
-                </div>
-
-                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
-                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a1 1 0 01-1-1V9a1 1 0 011-1h1a2 2 0 100-4H4a1 1 0 01-1-1V4a1 1 0 011-1h3a1 1 0 001-1v1z" />
-                    </svg>
-                  </div>
-                  <h4 className="text-xl font-semibold text-gray-900 mb-4 text-center">Interactive Quizzes & Games</h4>
-                  <p className="text-gray-600 text-center text-base sm:text-xl lg:text-lg xl:text-xl">Interactive games and activities to reinforce learning through play and gamification.</p>
-                </div>
-
-                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mb-6 mx-auto">
-                    <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <h4 className="text-xl font-semibold text-gray-900 mb-4 text-center">Progress Analytics</h4>
-                  <p className="text-gray-600 text-center text-base sm:text-xl lg:text-lg xl:text-xl">Comprehensive tracking and analytics to monitor student progress, engagement, and learning outcomes.</p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center">
+                <Headphones className="h-8 w-8 text-blue-600 mx-auto mb-4" />
+                <h4 className="text-base font-semibold text-gray-900 mb-2">Native Audio</h4>
+                <p className="text-gray-600 text-sm">Professional recordings for every story to build listening stamina.</p>
               </div>
-            </div>
-
-            {/* Administrative Features */}
-            <div className="mb-16">
-              <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Administrative & Management Tools</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Institution Management</h4>
-                  </div>
-                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Manage schools, universities, and educational institutions with comprehensive administrative tools.</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Team & Role Management</h4>
-                  </div>
-                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Organize teams, assign roles, and manage permissions for teachers, administrators, and students.</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Activity Monitoring</h4>
-                  </div>
-                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Real-time activity tracking and comprehensive logs for platform usage and student engagement.</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Security & Privacy</h4>
-                  </div>
-                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Advanced security features, data protection, and privacy controls to keep educational data safe.</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900">General Settings</h4>
-                  </div>
-                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Customize platform settings, account preferences, and personal configurations for optimal learning experience.</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Advanced Analytics</h4>
-                  </div>
-                  <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Detailed analytics dashboard with insights into learning patterns, content performance, and institutional metrics.</p>
-                </div>
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center">
+                <GamepadIcon className="h-8 w-8 text-green-600 mx-auto mb-4" />
+                <h4 className="text-base font-semibold text-gray-900 mb-2">Quizzes &amp; Games</h4>
+                <p className="text-gray-600 text-sm">True/false, multiple choice, gap-fill and vocabulary games after each story.</p>
               </div>
-            </div>
-
-            {/* Platform Benefits */}
-            <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl p-8 text-center">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Complete Language Learning Ecosystem</h3>
-              <p className="text-lg text-gray-700 mb-6 max-w-4xl mx-auto">
-                From content creation to student assessment, from institutional management to detailed analytics - 
-                Lingoletics.com provides everything you need for successful language education in one integrated platform.
-              </p>
-              <div className="flex flex-wrap justify-center gap-4 text-sm font-medium">
-                <span className="bg-white text-orange-600 px-4 py-2 rounded-full">Multi-Language Support</span>
-                <span className="bg-white text-orange-600 px-4 py-2 rounded-full">Scalable for Any Institution</span>
-                <span className="bg-white text-orange-600 px-4 py-2 rounded-full">Real-Time Collaboration</span>
-                <span className="bg-white text-orange-600 px-4 py-2 rounded-full">Comprehensive Reporting</span>
-                <span className="bg-white text-orange-600 px-4 py-2 rounded-full">Mobile-Friendly Design</span>
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center">
+                <BarChart3 className="h-8 w-8 text-purple-600 mx-auto mb-4" />
+                <h4 className="text-base font-semibold text-gray-900 mb-2">Progress Analytics</h4>
+                <p className="text-gray-600 text-sm">Track pupil engagement, completion rates and scores across all classes.</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center">
+                <Flag className="h-8 w-8 text-orange-600 mx-auto mb-4" />
+                <h4 className="text-base font-semibold text-gray-900 mb-2">Cultural Insights</h4>
+                <p className="text-gray-600 text-sm">Every story weaves in cultural capital from France, Germany and Spain.</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Short Story Collection Section */}
+        {/* Explore Stories Section (merged Languages + Short Story Collection) */}
         <section id="short-stories" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
-              Short Story Collection
+              Explore Stories in Three Languages
             </h2>
-            <h3 className="text-xl font-semibold text-gray-700 mb-6">
-              Learn languages with short stories!
-            </h3>
             <p className="text-lg text-gray-600 max-w-4xl mx-auto">
-              Welcome to Lingoletics.com! Consolidate language skills and vocabulary with our short stories, 
-              in-line with topics you recognise from the classroom. Each page has references to culture, 
-              audio from a native speaker, games and activities to support learning.
-            </p>
-            <p className="text-lg font-medium text-gray-700 mt-6 mb-8">
-              Click one of the images below to choose the language you want to learn.
+              Each story is curriculum-mapped, includes native-speaker audio, and comes with 
+              quizzes, vocabulary games and cultural insights. Try a preview below.
             </p>
           </div>
           
@@ -1852,324 +1781,71 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Quizzes Section */}
+      {/* Interactive Practice Section (merged Quizzes + Vocabulary Games) */}
       <section id="quizzes" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
-              Quizzes
+              Interactive Practice
             </h2>
-            <h3 className="text-xl font-semibold text-gray-700 mb-6">
-              Test your knowledge with interactive quizzes!
-            </h3>
-            <p className="text-lg text-gray-600 max-w-4xl mx-auto">
-              Challenge yourself with our comprehensive quiz system designed to reinforce your learning. 
-              Choose from different quiz types to match your learning style and track your progress 
-              as you master new vocabulary and grammar concepts.
-            </p>
-            <p className="text-lg font-medium text-gray-700 mt-6 mb-8">
-              Select your preferred quiz type to get started.
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Quizzes and vocabulary games reinforce every story &mdash; building retrieval strength and keeping pupils engaged.
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* True or False Quiz */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
-              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                <div className="text-center text-gray-700">
-                  <h4 className="text-2xl font-bold mb-2">True or False</h4>
-                  <p className="text-gray-600">quick assessment</p>
-                </div>
-              </div>
-              <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">True or False Quizzes</h3>
-                <p className="text-gray-600 mb-4">
-                  Test your understanding with simple true or false questions. Perfect for quick assessments 
-                  and reviewing key concepts from your language lessons.
-                </p>
-                <p className="text-gray-700 font-medium mb-6">
-                  Fast-paced questions to reinforce learning and build confidence!
-                </p>
-                <div className="mt-auto">
-                  <button
-                    onClick={() => openQuizTeaser('true_false')}
-                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
-                  >
-                    Start Quiz
-                  </button>
-                </div>
-              </div>
-            </div>
 
-            {/* Multiple Choice Quiz */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
-              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                <div className="text-center text-gray-700">
-                  <h4 className="text-2xl font-bold mb-2">Multiple Choice</h4>
-                  <p className="text-gray-600">comprehensive testing</p>
-                </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">Quizzes</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center hover:border-orange-300 transition-colors">
+              <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
-              <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Multiple Choice Quizzes</h3>
-                <p className="text-gray-600 mb-4">
-                  Choose the correct answer from multiple options. These quizzes cover vocabulary, 
-                  grammar, and comprehension to give you a well-rounded assessment.
-                </p>
-                <p className="text-gray-700 font-medium mb-6">
-                  Detailed questions with instant feedback to enhance your learning!
-                </p>
-                <div className="mt-auto">
-                  <button
-                    onClick={() => openQuizTeaser('multiple_choice')}
-                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
-                  >
-                    Start Quiz
-                  </button>
-                </div>
-              </div>
+              <h4 className="text-lg font-bold text-gray-900 mb-2">True or False</h4>
+              <p className="text-gray-600 text-sm mb-4">Quick-fire comprehension checks after each story.</p>
+              <button onClick={() => openQuizTeaser('true_false')} className="w-full bg-orange-500 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-orange-600 transition-colors text-sm">Try It</button>
             </div>
-
-            {/* Fill the Gap Quiz */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
-              <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                <div className="text-center text-gray-700">
-                  <h4 className="text-2xl font-bold mb-2">Fill the Gap</h4>
-                  <p className="text-gray-600">active recall</p>
-                </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center hover:border-orange-300 transition-colors">
+              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
-              <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Fill the Gap Quizzes</h3>
-                <p className="text-gray-600 mb-4">
-                  Complete sentences by filling in the missing words. These exercises help you 
-                  practice context clues and reinforce proper usage of vocabulary and grammar.
-                </p>
-                <p className="text-gray-700 font-medium mb-6">
-                  Interactive exercises that improve retention and practical application!
-                </p>
-                <div className="mt-auto">
-                  <button
-                    onClick={() => openQuizTeaser('gap_fill')}
-                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
-                  >
-                    Start Quiz
-                  </button>
-                </div>
+              <h4 className="text-lg font-bold text-gray-900 mb-2">Multiple Choice</h4>
+              <p className="text-gray-600 text-sm mb-4">Vocabulary, grammar and comprehension in one quiz.</p>
+              <button onClick={() => openQuizTeaser('multiple_choice')} className="w-full bg-orange-500 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-orange-600 transition-colors text-sm">Try It</button>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center hover:border-orange-300 transition-colors">
+              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
               </div>
+              <h4 className="text-lg font-bold text-gray-900 mb-2">Fill the Gap</h4>
+              <p className="text-gray-600 text-sm mb-4">Active recall exercises that develop writing accuracy.</p>
+              <button onClick={() => openQuizTeaser('gap_fill')} className="w-full bg-orange-500 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-orange-600 transition-colors text-sm">Try It</button>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Vocabulary Games Section */}
-      <section id="vocabulary-games" className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
-              Vocabulary Games
-            </h2>
-            <h3 className="text-xl font-semibold text-gray-700 mb-6">
-              Games are a great way to learn new vocabulary and consolidate prior knowledge.
-            </h3>
-            <p className="text-lg text-gray-600 max-w-4xl mx-auto mb-8">
-              We have created some fun games for you to try out. 
-              Enroll in the course below for the language you would like to practice. 
-              All the vocabulary games are linked to the stories, to help your understanding of each page. Have fun!
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Spanish Games */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
-              <div className="h-48 bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center relative">
-                <div className="text-center text-gray-700">
-                  <h4 className="text-2xl font-bold mb-2">Spanish</h4>
-                  <p className="text-gray-600">vocabulary games</p>
-                </div>
-                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                  Free
-                </div>
+          <h3 id="vocabulary-games" className="text-xl font-semibold text-gray-900 mb-6 text-center">Vocabulary Games <span className="ml-2 bg-green-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">Free</span></h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center hover:border-orange-300 transition-colors">
+              <div className="flex justify-center mb-4">
+                <FlagIcon language="spanish" size="xl" />
               </div>
-              <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Spanish vocabulary games</h3>
-                <p className="text-gray-600 mb-4">
-                  Practice Spanish vocabulary through interactive games designed to reinforce your learning 
-                  from our stories. Perfect for building vocabulary and improving retention.
-                </p>
-                <div className="mt-auto">
-                  <button
-                    onClick={() => openVocabTeaser('spanish')}
-                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
-                  >
-                    Play now
-                  </button>
-                </div>
-              </div>
+              <h4 className="text-lg font-bold text-gray-900 mb-2">Spanish</h4>
+              <p className="text-gray-600 text-sm mb-4">Vocabulary games linked to each Spanish story.</p>
+              <button onClick={() => openVocabTeaser('spanish')} className="w-full bg-orange-500 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-orange-600 transition-colors text-sm">Play Now</button>
             </div>
-
-            {/* German Games */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
-              <div className="h-48 bg-gradient-to-br from-gray-100 to-red-100 flex items-center justify-center relative">
-                <div className="text-center text-gray-700">
-                  <h4 className="text-2xl font-bold mb-2">German</h4>
-                  <p className="text-gray-600">vocabulary games</p>
-                </div>
-                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                  Free
-                </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center hover:border-orange-300 transition-colors">
+              <div className="flex justify-center mb-4">
+                <FlagIcon language="german" size="xl" />
               </div>
-              <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">German vocabulary games</h3>
-                <p className="text-gray-600 mb-4">
-                  Enhance your German vocabulary with engaging games that complement our story-based learning approach. 
-                  Strengthen your language skills through interactive practice.
-                </p>
-                <div className="mt-auto">
-                  <button
-                    onClick={() => openVocabTeaser('german')}
-                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
-                  >
-                    Play now
-                  </button>
-                </div>
-              </div>
+              <h4 className="text-lg font-bold text-gray-900 mb-2">German</h4>
+              <p className="text-gray-600 text-sm mb-4">Vocabulary games linked to each German story.</p>
+              <button onClick={() => openVocabTeaser('german')} className="w-full bg-orange-500 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-orange-600 transition-colors text-sm">Play Now</button>
             </div>
-
-            {/* French Games */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden hover:border-orange-300 transition-colors shadow-lg flex flex-col">
-              <div className="h-48 bg-gradient-to-br from-blue-50 to-red-100 flex items-center justify-center relative">
-                <div className="text-center text-gray-700">
-                  <h4 className="text-2xl font-bold mb-2">French</h4>
-                  <p className="text-gray-600">vocabulary games</p>
-                </div>
-                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                  Free
-                </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center hover:border-orange-300 transition-colors">
+              <div className="flex justify-center mb-4">
+                <FlagIcon language="french" size="xl" />
               </div>
-              <div className="p-6 flex flex-col flex-grow">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">French vocabulary games</h3>
-                <p className="text-gray-600 mb-4">
-                  Master French vocabulary with our interactive games that support your learning journey. 
-                  Practice and reinforce new words in a fun, engaging way.
-                </p>
-                <div className="mt-auto">
-                  <button
-                    onClick={() => openVocabTeaser('french')}
-                    className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors"
-                  >
-                    Play now
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Target Audiences Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-              Perfect for Every Learning Journey
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
-              Whether you're learning independently, teaching others, or supporting a child's education
-            </p>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <UserCircle className="h-10 w-10 text-orange-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Individual Learners</h3>
-              <ul className="text-gray-600 space-y-2">
-                <li>• Build on your basic language level</li>
-                <li>• Check answers as you progress</li>
-                <li>• New grammar & vocabulary in each story</li>
-                <li>• Self-paced learning experience</li>
-              </ul>
-            </div>
-            <div className="text-center">
-              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <GraduationCap className="h-10 w-10 text-orange-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Teachers & Tutors</h3>
-              <ul className="text-gray-600 space-y-2">
-                <li>• Motivate students with original stories</li>
-                <li>• Develop all four language skills</li>
-                <li>• Access cultural information resources</li>
-                <li>• Track student progress</li>
-              </ul>
-            </div>
-            <div className="text-center">
-              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Heart className="h-10 w-10 text-orange-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Parents & Carers</h3>
-              <ul className="text-gray-600 space-y-2">
-                <li>• Support your child's language learning</li>
-                <li>• Monitor progress through activities</li>
-                <li>• Learn cultural facts together</li>
-                <li>• Encourage reading enjoyment</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Key Features Section */}
-      <section id="learning-resources" className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-              Everything You Need to Succeed
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
-              Comprehensive learning resources designed for beginner to intermediate levels
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                <BookOpen className="h-6 w-6 text-orange-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Original Stories</h3>
-              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Over 10 engaging stories for each language with memorable characters and authentic cultural contexts.</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                <Volume2 className="h-6 w-6 text-orange-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Audio Content</h3>
-              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Professional native speaker recordings for pronunciation practice and listening comprehension.</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                <Languages className="h-6 w-6 text-orange-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Cultural Insights</h3>
-              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Discover traditions, landmarks, and cultural facts about France, Germany, and Spain.</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                <GamepadIcon className="h-6 w-6 text-orange-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Interactive Games</h3>
-              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Fun vocabulary games and comprehension exercises to reinforce learning and track progress.</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                <BarChart3 className="h-6 w-6 text-orange-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Progress Tracking</h3>
-              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Monitor learning progress with detailed reports and achievements for students and teachers.</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                <Download className="h-6 w-6 text-orange-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Free Resources</h3>
-              <p className="text-gray-600 text-base sm:text-xl lg:text-lg xl:text-xl">Access teaching materials, vocabulary lists, and sample stories to enhance your learning experience.</p>
+              <h4 className="text-lg font-bold text-gray-900 mb-2">French</h4>
+              <p className="text-gray-600 text-sm mb-4">Vocabulary games linked to each French story.</p>
+              <button onClick={() => openVocabTeaser('french')} className="w-full bg-orange-500 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-orange-600 transition-colors text-sm">Play Now</button>
             </div>
           </div>
         </div>
@@ -2368,16 +2044,18 @@ export default function HomePage() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-6">
-            Not sure yet?
+            Try Lingoletics Free for 14 Days
           </h2>
-          <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            Then just give it a try and use our platform for free. 
-            Just sign up and start your <span className="font-semibold text-orange-600">14-day free trial</span> now!
+          <p className="text-xl text-gray-600 mb-4 leading-relaxed">
+            No card required. Set up your class in under 5 minutes.
+          </p>
+          <p className="text-base text-gray-500 mb-8">
+            Full access to all stories, quizzes, games and progress tracking across French, German and Spanish.
           </p>
           <div className="flex justify-center">
             <a href="/sign-up">
               <button className="inline-flex items-center justify-center gap-2 bg-orange-500 text-white font-bold text-lg px-8 py-4 rounded-lg hover:bg-orange-600 transition-colors shadow-lg">
-                Start Your 14-Day Free Trial
+                Start Your Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </button>
             </a>
@@ -2390,17 +2068,11 @@ export default function HomePage() {
           <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-                Ready to begin your language journey?
+                Questions? We&apos;d Love to Hear from You
               </h2>
               <p className="mt-3 max-w-3xl text-lg text-gray-500">
-                Join thousands of learners who are already mastering new languages 
-                with Lingoletics.com. Start with a free trial and discover how 
-                personalized learning can transform your fluency.
-              </p>
-              <p className="mt-4 max-w-3xl text-lg text-gray-500">
-                In case of any questions concerning our platform, pricing and any other feedback, 
-                please use our contact form and let us know what we can do for you. We will get back 
-                to you as soon as possible.
+                Whether you want a demo, have pricing questions, or just want to 
+                chat about how Lingoletics could work in your department &mdash; get in touch.
               </p>
               <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                 <p className="text-lg text-gray-700 mb-4">
@@ -2573,7 +2245,7 @@ export default function HomePage() {
           <div className="border-t border-gray-300 mt-8 pt-6">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-gray-600 text-sm">
-                © 2025 All Rights Reserved.
+                © 2026 All Rights Reserved.
               </p>
             </div>
           </div>
