@@ -434,7 +434,7 @@ export async function POST(request: Request) {
       }
 
       const message = await anthropic.messages.create({
-        model: 'claude-3-sonnet-20240229',
+        model: 'claude-sonnet-4-6',
         max_tokens: 4000,
         temperature: 0.7,
         system: 'You are an expert language teacher and educational content creator. Always respond with valid JSON in the exact format requested.',
