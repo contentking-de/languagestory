@@ -460,6 +460,12 @@ export enum ActivityType {
 }
 
 // Password reset tokens table
+export const authRateLimits = pgTable('auth_rate_limits', {
+  bucket: varchar('bucket', { length: 128 }).primaryKey(),
+  hits: integer('hits').notNull(),
+  windowStart: timestamp('window_start').notNull().defaultNow(),
+});
+
 export const passwordResetTokens = pgTable('password_reset_tokens', {
   id: serial('id').primaryKey(),
   userId: integer('user_id')

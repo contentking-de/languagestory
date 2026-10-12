@@ -38,6 +38,7 @@ import { sendWelcomeEmail } from '@/lib/email/welcome-email';
 import { sendNewUserNotificationEmail } from '@/lib/email/new-user-notification-email';
 import { sendInvitationEmail } from '@/lib/email/invitation-email';
 import { validatePassword } from '@/lib/utils';
+import { enforceAuthRateLimit } from '@/lib/auth/rate-limit';
 
 async function ensureUserHasTeam(user: User) {
   const userWithTeam = await getUserWithTeam(user.id);
@@ -92,6 +93,11 @@ const signInSchema = z.object({
 
 export const signIn = validatedAction(signInSchema, async (data, formData) => {
   const { email, password } = data;
+
+  const rateLimitError = await enforceAuthRateLimit('signin');
+  if (rateLimitError) {
+    return { error: rateLimitError, email, password };
+  }
 
   const userWithTeam = await db
     .select({
@@ -188,7 +194,10 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
 });
 
 const signUpSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().trim().min(1, 'Name is required').max(100, 'Name is too long').refine(
+    (name) => !/https?:\/\/|www\.|bit\.ly|t\.me/i.test(name),
+    'Please enter your name without a link'
+  ),
   email: z.string().email(),
   password: z.string().min(8).refine((password) => {
     const validation = validatePassword(password);
@@ -206,6 +215,11 @@ const signUpSchema = z.object({
 
 export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const { name, email, password, role, institutionId, institutionName, parentEmail, inviteId } = data;
+
+  const rateLimitError = await enforceAuthRateLimit('signup');
+  if (rateLimitError) {
+    return { error: rateLimitError, email, password };
+  }
 
   const existingUser = await db
     .select()
