@@ -195,8 +195,8 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
 
 const signUpSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(100, 'Name is too long').refine(
-    (name) => !/https?:\/\/|www\.|bit\.ly|t\.me/i.test(name),
-    'Please enter your name without a link'
+    (name) => !/https?:\/\/|www\.|bit\.ly|t\.me|casino|bonus|viagra|porn|cialis|levitra|kamagra/i.test(name),
+    'Please enter your real name without links or promotional text'
   ),
   email: z.string().email(),
   password: z.string().min(8).refine((password) => {

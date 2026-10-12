@@ -11,7 +11,7 @@ AS $$
 DECLARE
   recent_signups integer;
 BEGIN
-  IF NEW.name ~* '(https?://|bit\.ly|www\.|TL bonus|seni bekliyor)' THEN
+  IF NEW.name ~* '(https?://|bit\.ly|www\.|t\.me|casino|bonus|viagra|porn|cialis|levitra|kamagra|seni bekliyor)' THEN
     RAISE EXCEPTION 'signup rejected';
   END IF;
 
